@@ -151,7 +151,7 @@ The frontend library is composed exclusively of clean TypeScript components buil
 
 ---
 
-## 9. Built Components (Prompt 2a)
+## 9. Built Components (Prompt 2a & 2b)
 
 | Component | File Path | Description |
 |---|---|---|
@@ -163,4 +163,13 @@ The frontend library is composed exclusively of clean TypeScript components buil
 | `LangToggle` | `src/components/LangToggle.tsx` | EN / த switch; 48px tap target; sets `document.documentElement.lang`. |
 | `ThemeToggle` | `src/components/ThemeToggle.tsx` | Light / dark toggle; sets `data-theme` attribute; lazy initial state. |
 | `AppShell` | `src/components/AppShell.tsx` | Responsive header with Logo, nav links, LangToggle, ThemeToggle; DemoBanner slot; mobile nav bar; sticky footer. |
+| `ProgressBanner` | `src/components/ProgressBanner.tsx` | Live summary banner (covered and accepted vs N); fills over 300ms smoothly; `role="status"`, `aria-live="polite"`. |
+| `Timeline` | `src/components/Timeline.tsx` | Live chronological stream of dispatch, IVR, and screening events; 150ms fade-in animation; timestamp chips. |
+| `CallRow` | `src/components/CallRow.tsx` | Donor row showing alias ("Donor A7"), blood group badge, call state icon, distance, ETA chip, and action trigger slot. |
+| `Field` / `Input` / `Select` / `Textarea` | `src/components/Field.tsx` | Accessible form field wrapper with `<label>`, hint, error validation; 48px min height; never placeholder-only. |
+| `ConsentCheckbox` | `src/components/ConsentCheckbox.tsx` | Unticked-by-default multi-line consent checkbox with full keyboard focus support and 48px tap target. |
+| `Keypad` | `src/components/Keypad.tsx` | Big accessible telephone keypad buttons for 1 (Coming), 2 (Can't), and 9 (Opt out) with English and Tamil labels. |
+| `TracePanel` | `src/components/TracePanel.tsx` | Collapsible inspection drawer rendering Gemini extraction results, verbatim quote matches, code decisions, and payment phrases. |
+| `StatTile` | `src/components/StatTile.tsx` | Metric display card showing 44px tabular numerals with comparison baseline lines and trend coloring. |
+| `Toast` / `ToastProvider` | `src/components/Toast.tsx` | Radix Toast notification system with info, success, warning, and danger variants. |
 | `StyleguidePage` | `src/features/styleguide/StyleguidePage.tsx` | `/styleguide` route showing every component in every state, colour palette, typography in English and Tamil. |

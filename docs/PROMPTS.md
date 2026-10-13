@@ -154,6 +154,46 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** ceeeb7a
 - **Human Review:** Design foundation, tokens, fonts, logo, and base components verified cleanly.
 
+### Entry #2b
+- **Date:** 2026-10-14
+- **Goal:** Build the remaining components and the /styleguide page.
+- **Prompt Summary:**
+  1. Built remaining core design system components in `frontend/src/components/`:
+     - `ProgressBanner`: Live summary banner (covered and accepted vs N); fills over 300ms smoothly; `role="status"`, `aria-live="polite"`.
+     - `Timeline`: Live chronological stream of dispatch, IVR, and screening events; 150ms fade-in animation; timestamp chips; empty state handling.
+     - `CallRow`: Donor row showing alias ("Donor A7"), blood group badge, call state icon, distance, ETA chip, and action trigger slot.
+     - `Field`: Accessible form field wrapper with explicit `<label>`, hint, and validation error messages; exported pre-styled `Input`, `Select`, and `Textarea` primitives with 48px touch targets.
+     - `ConsentCheckbox`: Unticked-by-default multi-line consent component with full keyboard focus support, 48px touch target, and full sentence labels.
+     - `Keypad`: Accessible telephone keypad component for the `/sim` screen with large buttons for digits 1 (Coming), 2 (Can't), and 9 (Opt out), with English and Tamil labels.
+     - `TracePanel`: Collapsible inspection drawer displaying Gemini extraction results, verbatim quote matches (kept highlighted, dropped struck through), code decisions, and payment phrases.
+     - `StatTile`: Metric display card showing 44px tabular numerals with comparison baseline lines and trend coloring.
+     - `Toast` & `ToastProvider`: Radix Toast notification system with info, success, warning, and danger variants.
+  2. Updated `frontend/src/features/styleguide/StyleguidePage.tsx` to showcase every single component in every state, across light and dark modes and English and Tamil scripts.
+  3. Conducted browser verification of `/styleguide` at 360px mobile viewport width and saved screenshot to `docs/images/styleguide.png`.
+  4. Added comprehensive unit tests for `ProgressBanner`, `ConsentCheckbox`, and `Keypad` in addition to existing test suites (36 total tests passing).
+  5. Completed the "Built components" table in `docs/DESIGN_SYSTEM.md`.
+- **Files Changed:**
+  - `docs/DESIGN_SYSTEM.md`
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `docs/images/styleguide.png`
+  - `frontend/src/App.tsx`
+  - `frontend/src/components/ProgressBanner.tsx`
+  - `frontend/src/components/ProgressBanner.test.tsx`
+  - `frontend/src/components/Timeline.tsx`
+  - `frontend/src/components/CallRow.tsx`
+  - `frontend/src/components/Field.tsx`
+  - `frontend/src/components/ConsentCheckbox.tsx`
+  - `frontend/src/components/ConsentCheckbox.test.tsx`
+  - `frontend/src/components/Keypad.tsx`
+  - `frontend/src/components/Keypad.test.tsx`
+  - `frontend/src/components/TracePanel.tsx`
+  - `frontend/src/components/StatTile.tsx`
+  - `frontend/src/components/Toast.tsx`
+  - `frontend/src/features/styleguide/StyleguidePage.tsx`
+- **Commit Hash:** 923bd23
+- **Human Review:** All 14 components and /styleguide responsive mobile verification passed.
+
 ---
 
 ## Human Decisions

@@ -150,3 +150,7 @@ Cumulative record of frontend updates and milestones:
 ### Prompt #2a — 2026-10-14
 - **Action:** Built the U2U design foundation: design tokens in `src/styles/tokens.css` (CSS variables, light/dark themes, Tailwind v4 `@theme` mappings, body defaults, focus rings, reduced motion), Google Fonts integration (Anek Tamil, Noto Sans, Noto Sans Tamil), base accessible UI components (`Logo`, `Button`, `Card`, `StatusBadge`, `DemoBanner`, `LangToggle`, `ThemeToggle`, `AppShell`), exported `public/favicon.svg`, added `/styleguide` route showcasing components and color/typography foundations, and verified with unit test suites.
 - **Status:** Complete. All tests pass, lint clean, build clean.
+
+### Prompt #2b — 2026-10-14
+- **Action:** Built remaining design system components in `src/components/`: `ProgressBanner`, `Timeline`, `CallRow`, `Field` (with `Input`, `Select`, `Textarea`), `ConsentCheckbox`, `Keypad`, `TracePanel`, `StatTile`, and Radix `Toast` with `ToastProvider`. Expanded `/styleguide` route to showcase every component in every state, across light/dark themes and English/Tamil scripts. Verified responsive layout at 360px mobile width and saved screenshot to `docs/images/styleguide.png`. Added unit tests for new components.
+- **Status:** Complete. All 36 unit tests pass, lint clean, production build clean.
