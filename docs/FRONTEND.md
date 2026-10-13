@@ -146,3 +146,7 @@ Cumulative record of frontend updates and milestones:
 ### Prompt #1 — 2026-10-14
 - **Action:** Scaffolded React 19 + TypeScript (strict) + Vite application in `frontend/`. Installed allowed dependencies (Tailwind v4 via `@tailwindcss/vite`, React Router DOM, Lucide React, Radix primitives, Firebase SDK, Vitest, Testing Library, jsdom, axe-core). Implemented design system tokens in `src/styles/tokens.css`, all 9 route placeholders in `src/features/`, 404 handler, i18n dictionary stubs, format helpers, and smoke test in `src/App.test.tsx`.
 - **Status:** Complete. `npm run build`, `npm run lint`, and `npm test` verified cleanly with 0 errors.
+
+### Prompt #2a — 2026-10-14
+- **Action:** Built the U2U design foundation: design tokens in `src/styles/tokens.css` (CSS variables, light/dark themes, Tailwind v4 `@theme` mappings, body defaults, focus rings, reduced motion), Google Fonts integration (Anek Tamil, Noto Sans, Noto Sans Tamil), base accessible UI components (`Logo`, `Button`, `Card`, `StatusBadge`, `DemoBanner`, `LangToggle`, `ThemeToggle`, `AppShell`), exported `public/favicon.svg`, added `/styleguide` route showcasing components and color/typography foundations, and verified with unit test suites.
+- **Status:** Complete. All tests pass, lint clean, build clean.

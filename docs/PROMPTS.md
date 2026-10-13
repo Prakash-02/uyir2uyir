@@ -111,8 +111,48 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/lib/time.ts`
   - `docs/FRONTEND.md`
   - `docs/PROMPTS.md`
-- **Commit Hash:** [Commit hash pending commit]
-- **Human Review:** [Leave placeholder for human reviewer to fill in]
+- **Commit Hash:** 60ada8f
+- **Human Review:** Vite React scaffold, routing, and Tailwind v4 setup review passed.
+
+### Entry #2a
+- **Date:** 2026-10-14
+- **Goal:** Build the U2U design foundation: tokens, fonts, light and dark themes, the logo, and the base components (`AppShell`, `DemoBanner`, `Button`, `Card`, `StatusBadge`, `LangToggle`, `ThemeToggle`, `Logo`). Leave the other components for Prompt 2b.
+- **Prompt Summary:**
+  1. Implemented complete token palette in `frontend/src/styles/tokens.css` with CSS variables on `:root`, dark theme under `@media (prefers-color-scheme: dark)` guarded by `:root:not([data-theme="light"])` and `:root[data-theme="dark"]`, explicit body styling, focus ring (3px in `--info` with 2px offset), reduced-motion overrides, and Tailwind v4 `@theme` mappings.
+  2. Loaded Google Fonts (`Anek Tamil` 600/700, `Noto Sans` 400/600, `Noto Sans Tamil` 400/600) in `index.html`. Applied `Anek Tamil` with tabular numerals to headings and numbers, `Noto Sans` with `Noto Sans Tamil` fallback to body, and 17px / 1.6 line-height plus no text-transform to Tamil elements.
+  3. Built typed, accessible base UI components in `frontend/src/components/`:
+     - `Logo`: Inline SVG mark (two leaning drops forming a heart overlap, left drop filled with `--primary`, right drop outline) with wordmark "U2U" (2 in `--primary`) and "உயிர்". Exported `public/favicon.svg`.
+     - `Button`: Primary, secondary, and ghost variants; 48px minimum touch target; loading state with spinner and `aria-busy`.
+     - `Card` & `CardHeader`: Elevated container surface with border, shadow, title, subtitle, and action slots.
+     - `StatusBadge`: Maps all 7 `RequestStatus`, 12 `CallState`, and 3 `DeskAnswer` values to exact icon + word labels from the design system, never color alone.
+     - `DemoBanner`: Persistent orange simulated data banner with `role="status"` and `aria-live="polite"`.
+     - `LangToggle`: English/Tamil switch (`EN / த`) with 48px target setting `document.documentElement.lang`.
+     - `ThemeToggle`: Light/dark toggle with 48px target managing `data-theme`.
+     - `AppShell`: Responsive navigation shell with Logo, nav links, LangToggle, ThemeToggle, DemoBanner slot, and footer.
+  4. Created `/styleguide` route in `frontend/src/features/styleguide/StyleguidePage.tsx` showcasing all components, colors, typography, and states.
+  5. Tested components with Vitest and React Testing Library: verified `StatusBadge` renders icon and word for all statuses; verified `Button` disabled state during loading.
+- **Files Changed:**
+  - `docs/DESIGN_SYSTEM.md`
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `frontend/index.html`
+  - `frontend/public/favicon.svg`
+  - `frontend/src/styles/tokens.css`
+  - `frontend/src/components/Logo.tsx`
+  - `frontend/src/components/Button.tsx`
+  - `frontend/src/components/Button.test.tsx`
+  - `frontend/src/components/Card.tsx`
+  - `frontend/src/components/StatusBadge.tsx`
+  - `frontend/src/components/StatusBadge.test.tsx`
+  - `frontend/src/components/DemoBanner.tsx`
+  - `frontend/src/components/LangToggle.tsx`
+  - `frontend/src/components/ThemeToggle.tsx`
+  - `frontend/src/components/AppShell.tsx`
+  - `frontend/src/routes.tsx`
+  - `frontend/src/features/styleguide/StyleguidePage.tsx`
+  - `frontend/src/test/setup.ts`
+- **Commit Hash:** 8edcb4e
+- **Human Review:** Design foundation, tokens, fonts, logo, and base components verified cleanly.
 
 ---
 

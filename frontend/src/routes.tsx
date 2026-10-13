@@ -8,6 +8,7 @@ import { JoinPage } from './features/join/JoinPage'
 import { SimPage } from './features/sim/SimPage'
 import { ImpactPage } from './features/impact/ImpactPage'
 import { EvalPage } from './features/eval/EvalPage'
+import { StyleguidePage } from './features/styleguide/StyleguidePage'
 import { NotFoundPage } from './features/NotFoundPage'
 
 export function AppRoutes() {
@@ -22,6 +23,7 @@ export function AppRoutes() {
       <Route path="/sim" element={<SimPage />} />
       <Route path="/impact" element={<ImpactPage />} />
       <Route path="/eval" element={<EvalPage />} />
+      <Route path="/styleguide" element={<StyleguidePage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

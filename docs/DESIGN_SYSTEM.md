@@ -148,3 +148,19 @@ The frontend library is composed exclusively of clean TypeScript components buil
 
 - **Symbol:** Two blood drops leaning toward each other. The left drop is solid crimson (`--primary`), and the right drop is an elegant outline (`--border` / `--text`). Their intersection in the center forms a subtle heart shape, symbolizing "life to life".
 - **Wordmark:** "U2U" set in Anek Tamil Bold, where the numeral "2" is rendered in crimson (`--primary`). Beneath the wordmark sits the Tamil script word "உயிர்" in small, crisp type.
+
+---
+
+## 9. Built Components (Prompt 2a)
+
+| Component | File Path | Description |
+|---|---|---|
+| `Logo` | `src/components/Logo.tsx` | Inline SVG mark (two drops, heart overlap) with wordmark "U2U" and "உயிர்"; sizes sm/md/lg. Also exported as `public/favicon.svg`. |
+| `Button` | `src/components/Button.tsx` | Primary / secondary / ghost variants; 48px minimum height; loading state with `aria-busy`; left/right icon slots. |
+| `Card` / `CardHeader` | `src/components/Card.tsx` | Elevated surface container with border and shadow; CardHeader with title, subtitle, action slot. |
+| `StatusBadge` | `src/components/StatusBadge.tsx` | All 7 `RequestStatus`, 12 `CallState`, and 3 `DeskAnswer` values mapped to exact icon + label from the design system; never colour alone. |
+| `DemoBanner` | `src/components/DemoBanner.tsx` | Sticky top orange banner; `role="status"`, `aria-live="polite"`; text from props. |
+| `LangToggle` | `src/components/LangToggle.tsx` | EN / த switch; 48px tap target; sets `document.documentElement.lang`. |
+| `ThemeToggle` | `src/components/ThemeToggle.tsx` | Light / dark toggle; sets `data-theme` attribute; lazy initial state. |
+| `AppShell` | `src/components/AppShell.tsx` | Responsive header with Logo, nav links, LangToggle, ThemeToggle; DemoBanner slot; mobile nav bar; sticky footer. |
+| `StyleguidePage` | `src/features/styleguide/StyleguidePage.tsx` | `/styleguide` route showing every component in every state, colour palette, typography in English and Tamil. |

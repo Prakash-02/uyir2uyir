@@ -1,3 +1,25 @@
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-on: var(--primary-on);
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-info: var(--info);
+  --color-info-tint: var(--info-tint);
+  --color-demo: var(--demo);
+
+  --font-heading: 'Anek Tamil', sans-serif;
+  --font-body: 'Noto Sans', 'Noto Sans Tamil', sans-serif;
+}
+
 :root {
   --bg: #FBF8F4;
   --surface: #FFFFFF;
@@ -18,7 +40,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #141110;
     --surface: #1E1A18;
     --text: #F3EEE9;
@@ -35,5 +57,64 @@
     --info: #7FB4F0;
     --info-tint: #16233A;
     --demo: #FB923C;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #141110;
+  --surface: #1E1A18;
+  --text: #F3EEE9;
+  --muted: #A9A19A;
+  --border: #3A332F;
+  --primary: #FF6B7D;
+  --primary-on: #1C1917;
+  --success: #5FD08E;
+  --success-tint: #15281D;
+  --warning: #F5B54A;
+  --warning-tint: #33240F;
+  --danger: #FF8A7A;
+  --danger-tint: #3A1A17;
+  --info: #7FB4F0;
+  --info-tint: #16233A;
+  --demo: #FB923C;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body, 'Noto Sans', 'Noto Sans Tamil', system-ui, sans-serif);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-heading, 'Anek Tamil', sans-serif);
+  font-feature-settings: "tnum";
+}
+
+.tnum {
+  font-feature-settings: "tnum";
+}
+
+:lang(ta), [lang="ta"] {
+  font-size: 17px;
+  line-height: 1.6;
+  text-transform: none !important;
+}
+
+:focus-visible {
+  outline: 3px solid var(--info);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
