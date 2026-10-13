@@ -151,7 +151,7 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/routes.tsx`
   - `frontend/src/features/styleguide/StyleguidePage.tsx`
   - `frontend/src/test/setup.ts`
-- **Commit Hash:** 8edcb4e
+- **Commit Hash:** ceeeb7a
 - **Human Review:** Design foundation, tokens, fonts, logo, and base components verified cleanly.
 
 ---
