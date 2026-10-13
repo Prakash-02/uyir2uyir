@@ -29,56 +29,47 @@ The application is a single-page application built with React Router, structured
 ```
 frontend/
 ├── public/
-│   ├── favicon.ico
-│   ├── logo.svg
-│   └── audio/                       # Cached audio prompts for simulator
+│   └── favicon.svg
 ├── src/
 │   ├── api/
-│   │   ├── client.ts                # HTTP client wrapper (fetch / axios)
-│   │   ├── mockClient.ts            # Client mock layer for local/offline demo
-│   │   └── types.ts                 # Canonical TypeScript contracts matching API_CONTRACT.md
-│   ├── assets/                      # Static brand graphics and icons
-│   ├── components/                  # Design system component library
-│   │   ├── AppShell.tsx             # Header, navigation, role switcher, DemoBanner
-│   │   ├── Button.tsx               # Primary crimson, secondary, ghost buttons
-│   │   ├── CallRow.tsx              # Donor call item with status icon and actions
-│   │   ├── Card.tsx                 # Base elevated surface container
-│   │   ├── ConsentCheckbox.tsx      # Unchecked consent checkbox with accessible label
-│   │   ├── DemoBanner.tsx           # Persistent orange SIMULATED DATA alert
-│   │   ├── Field.tsx                # Accessible input field with label and error state
-│   │   ├── Keypad.tsx               # Simulator DTMF phone keypad (1, 2, 9)
-│   │   ├── LangToggle.tsx           # English / Tamil language toggle
-│   │   ├── ProgressBanner.tsx       # "X on the way of Y" live visual progress bar
-│   │   ├── StatTile.tsx             # 44px tabular numeral metric tile
-│   │   ├── StatusBadge.tsx          # Icon + label status pill badge
-│   │   ├── Timeline.tsx             # Real-time event log
-│   │   ├── Toast.tsx                # Radix toast notification provider
-│   │   └── TracePanel.tsx           # Gemini extraction and quote verification viewer
-│   ├── context/
-│   │   ├── AuthContext.tsx          # Current role and credentials context
-│   │   └── ConfigContext.tsx        # AppConfig (demo/live, bannerText, weatherAlert)
-│   ├── hooks/
-│   │   ├── useFirestoreLive.ts      # React hook for real-time Firestore collection listeners
-│   │   └── useReducedMotion.ts      # Hook detecting accessibility motion preference
-│   ├── pages/                       # Route view components
-│   │   ├── CentrePage.tsx
-│   │   ├── ConfirmPage.tsx
-│   │   ├── DeskPage.tsx
-│   │   ├── EvalPage.tsx
-│   │   ├── HomePage.tsx
-│   │   ├── HospitalPage.tsx
-│   │   ├── ImpactPage.tsx
-│   │   ├── JoinPage.tsx
-│   │   └── SimPage.tsx
-│   ├── index.css                    # Tailwind CSS v4 entrypoint & custom color variables
-│   ├── main.tsx                     # React application root
-│   └── App.tsx                      # Router provider and app entrypoint
-├── tests/
-│   ├── a11y.test.tsx                # axe-core automated accessibility tests
-│   ├── components.test.tsx          # Component unit tests with Testing Library
-│   └── stateMachine.test.ts         # Client mock rule engine verification
+│   │   ├── client.ts                # API client interface
+│   │   ├── types.ts                 # Canonical TypeScript contracts matching API_CONTRACT.md
+│   │   ├── mock/                    # In-memory mock API client
+│   │   └── http/                    # HTTP REST client
+│   ├── components/                  # Shared UI components
+│   │   ├── AppShell.tsx             # Responsive header, navigation, and persistent DemoBanner
+│   │   └── DemoBanner.tsx           # Orange SIMULATED DATA alert
+│   ├── features/                    # Feature route views
+│   │   ├── hospital/                # HospitalPage (/hospital)
+│   │   ├── centre/                  # CentrePage (/centre)
+│   │   ├── desk/                    # DeskPage (/desk)
+│   │   ├── confirm/                 # ConfirmPage (/confirm/:token)
+│   │   ├── join/                    # JoinPage (/join)
+│   │   ├── sim/                     # SimPage (/sim)
+│   │   ├── impact/                  # ImpactPage (/impact)
+│   │   ├── eval/                    # EvalPage (/eval)
+│   │   ├── landing/                 # LandingPage (/)
+│   │   └── NotFoundPage.tsx         # 404 handler
+│   ├── i18n/                        # Internationalization
+│   │   ├── en.ts                    # English strings
+│   │   ├── ta.ts                    # Tamil strings
+│   │   └── useT.ts                  # Language hook
+│   ├── styles/
+│   │   └── tokens.css               # Design system color tokens (light & dark)
+│   ├── lib/
+│   │   ├── format.ts                # Blood group and masking formatters
+│   │   └── time.ts                  # Relative time and ETA formatters
+│   ├── test/
+│   │   └── setup.ts                 # Vitest test setup with @testing-library/jest-dom
+│   ├── App.test.tsx                 # Smoke test for landing page
+│   ├── App.tsx                      # App router and shell layout
+│   ├── main.tsx                     # Entrypoint mount
+│   ├── routes.tsx                   # Route definitions for all 9 paths + 404
+│   └── index.css                    # Tailwind CSS v4 entrypoint
 ├── package.json
 ├── tsconfig.json
+├── tsconfig.app.json
+├── tsconfig.node.json
 └── vite.config.ts
 ```
 
@@ -129,7 +120,18 @@ flowchart LR
 
 ---
 
-## 4. Build Log
+## 4. Development Commands
+
+Run from `frontend/`:
+- `npm run dev`: Launch Vite local development server.
+- `npm run build`: Typecheck with TypeScript strict mode and build production bundle.
+- `npm run lint`: Lint source files using Oxlint.
+- `npm test`: Run test suite with Vitest.
+- `npm run preview`: Preview production build locally.
+
+---
+
+## 5. Build Log
 
 Cumulative record of frontend updates and milestones:
 
@@ -140,3 +142,7 @@ Cumulative record of frontend updates and milestones:
 ### Prompt #0b — 2026-10-13
 - **Action:** Authored core system documentation set including `docs/FRONTEND.md`, defining all 9 application routes, component catalog, dual data-flow architecture, and accessibility baselines.
 - **Status:** Complete. Ready for Milestone 1 frontend Vite scaffolding.
+
+### Prompt #1 — 2026-10-14
+- **Action:** Scaffolded React 19 + TypeScript (strict) + Vite application in `frontend/`. Installed allowed dependencies (Tailwind v4 via `@tailwindcss/vite`, React Router DOM, Lucide React, Radix primitives, Firebase SDK, Vitest, Testing Library, jsdom, axe-core). Implemented design system tokens in `src/styles/tokens.css`, all 9 route placeholders in `src/features/`, 404 handler, i18n dictionary stubs, format helpers, and smoke test in `src/App.test.tsx`.
+- **Status:** Complete. `npm run build`, `npm run lint`, and `npm test` verified cleanly with 0 errors.

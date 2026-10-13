@@ -66,6 +66,51 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `docs/ROADMAP.md`
   - `README.md`
   - `docs/PROMPTS.md`
+- **Commit Hash:** 13d0acd
+- **Human Review:** Documentation set review passed.
+
+### Entry #1
+- **Date:** 2026-10-14
+- **Goal:** Scaffold the React + TypeScript + Vite app in frontend/ with routing, Tailwind v4, lint and tests.
+- **Prompt Summary:**
+  Initialized Vite React-TS project in `frontend/` with TypeScript strict mode enabled. Installed allowed packages: `react-router-dom`, `lucide-react`, `clsx`, Radix primitives (`@radix-ui/react-switch`, `@radix-ui/react-tabs`, `@radix-ui/react-dialog`, `@radix-ui/react-toast`), `firebase`, `tailwindcss`, `@tailwindcss/vite`, plus dev dependencies `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`, `axe-core`. Configured Tailwind v4 via `@tailwindcss/vite` without config files, imported in `index.css` alongside `tokens.css`. Created clean folder structure with `api/`, `components/`, `features/` (placeholder pages for all 9 paths in `docs/FRONTEND.md` plus 404), `i18n/`, `styles/`, `lib/`, `App.tsx`, and `routes.tsx`. Configured scripts (`dev`, `build`, `lint`, `test`, `preview`). Added smoke test rendering `App` and finding landing heading. Configured `index.html` with title "U2U · Uyir2Uyir", meta description, lang="en", and theme-color #B3122E. Verified that build, lint, and tests pass cleanly. Updated `docs/FRONTEND.md`.
+- **Files Changed:**
+  - `frontend/package.json`
+  - `frontend/tsconfig.json`
+  - `frontend/tsconfig.app.json`
+  - `frontend/tsconfig.node.json`
+  - `frontend/vite.config.ts`
+  - `frontend/index.html`
+  - `frontend/src/index.css`
+  - `frontend/src/main.tsx`
+  - `frontend/src/App.tsx`
+  - `frontend/src/routes.tsx`
+  - `frontend/src/App.test.tsx`
+  - `frontend/src/test/setup.ts`
+  - `frontend/src/styles/tokens.css`
+  - `frontend/src/components/AppShell.tsx`
+  - `frontend/src/components/DemoBanner.tsx`
+  - `frontend/src/api/types.ts`
+  - `frontend/src/api/client.ts`
+  - `frontend/src/api/mock/index.ts`
+  - `frontend/src/api/http/index.ts`
+  - `frontend/src/features/landing/LandingPage.tsx`
+  - `frontend/src/features/hospital/HospitalPage.tsx`
+  - `frontend/src/features/centre/CentrePage.tsx`
+  - `frontend/src/features/desk/DeskPage.tsx`
+  - `frontend/src/features/confirm/ConfirmPage.tsx`
+  - `frontend/src/features/join/JoinPage.tsx`
+  - `frontend/src/features/sim/SimPage.tsx`
+  - `frontend/src/features/impact/ImpactPage.tsx`
+  - `frontend/src/features/eval/EvalPage.tsx`
+  - `frontend/src/features/NotFoundPage.tsx`
+  - `frontend/src/i18n/en.ts`
+  - `frontend/src/i18n/ta.ts`
+  - `frontend/src/i18n/useT.ts`
+  - `frontend/src/lib/format.ts`
+  - `frontend/src/lib/time.ts`
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
 - **Commit Hash:** [Commit hash pending commit]
 - **Human Review:** [Leave placeholder for human reviewer to fill in]
 
