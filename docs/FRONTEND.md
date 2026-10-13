@@ -77,42 +77,46 @@ frontend/
 
 ## 3. Data Flow: Mock Mode vs HTTP Mode
 
-The frontend supports seamless dual-mode execution controlled by `VITE_DATA_MODE`:
+The frontend supports seamless dual-mode execution controlled by `VITE_API_MODE` (defaulting to `mock`). The UI screens never need to know which mode is running:
+
+> **Core Architecture Rule:** The mock engine imitates the backend rules for UI development; the backend is the source of truth.
 
 ```mermaid
 flowchart LR
-    subgraph UI["React UI Components"]
-        VIEW["Screen Views"]
+    subgraph UI["React UI Screens"]
+        SCREENS["Screens (/hospital, /centre, /desk, /sim, /impact, etc.)"]
     end
 
-    subgraph Service["API Abstraction Layer"]
-        ADAPT["API Adapter Layer"]
+    subgraph Selector["Client Selector"]
+        GETAPI["getApi()"]
     end
 
-    subgraph ModeMock["Mock Mode (VITE_DATA_MODE=demo & MOCK=true)"]
-        MCLIENT["mockClient.ts"]
-        MSTORE[("In-Memory State Engine\n(N+1 rules replica)")]
+    subgraph Modes["API Mode Implementations"]
+        subgraph ModeMock["Mock Mode (VITE_API_MODE=mock, default)"]
+            MCLIENT["MockApiClient (mockClient)"]
+            MENGINE[("MockEngine (In-memory Store\n+ Event Emitters + Counting Rule)")]
+        end
+
+        subgraph ModeHTTP["HTTP Mode (VITE_API_MODE=http)"]
+            HCLIENT["HttpApiClient (httpClient)"]
+            BACKEND["FastAPI Backend (Cloud Run)"]
+            FIRESTORE[("Cloud Firestore\n(Read-only snapshots)")]
+        end
     end
 
-    subgraph ModeHTTP["HTTP / Live Mode"]
-        HCLIENT["client.ts"]
-        API["FastAPI Backend (Cloud Run)"]
-        FS[("Cloud Firestore\n(Read-only snapshot listener)")]
-    end
+    SCREENS -->|Methods & Subscriptions| GETAPI
+    GETAPI -->|Default / Mock| MCLIENT
+    GETAPI -->|VITE_API_MODE=http| HCLIENT
 
-    VIEW --> ADAPT
-    ADAPT -->|Local Demo| MCLIENT
-    MCLIENT <--> MSTORE
-
-    ADAPT -->|Live Network| HCLIENT
-    HCLIENT -->|Mutations: POST/GET| API
-    VIEW -.->|Live Subscriptions| FS
+    MCLIENT <-->|Pure rules & live updates| MENGINE
+    HCLIENT -->|REST API Mutations| BACKEND
+    HCLIENT -.->|Live Snapshots| FIRESTORE
 ```
 
 ### 3.1 Mock Mode
 - **Zero-Latency Evaluation:** Designed for judges and offline evaluations where Cloud Run backend connectivity is absent.
-- **In-Memory Rule Imitation:** `mockClient.ts` emulates the exact $N+1$ counting rule, state transitions, donor round dials, and Request Desk responses defined in `backend/app/rules/`.
-- **Honesty Rule:** Mock handlers never attribute simulated responses to live Gemini or Twilio APIs.
+- **In-Memory Rule Imitation:** `mockClient` and `MockEngine` emulate the exact $N+1$ counting rule, state transitions, donor round dials, and Request Desk responses defined in `backend/app/rules/`.
+- **Honesty Rule:** Mock handlers never attribute simulated responses to live Gemini or Twilio APIs (`geminiChoice` is explicitly tagged `"Mock extractor (not Gemini)"`).
 
 ### 3.2 HTTP / Live Mode
 - **Mutations via REST:** All user actions (creating requests, accepting donors, submitting desk text) invoke authenticated backend endpoints on Cloud Run.
@@ -154,3 +158,14 @@ Cumulative record of frontend updates and milestones:
 ### Prompt #2b — 2026-10-14
 - **Action:** Built remaining design system components in `src/components/`: `ProgressBanner`, `Timeline`, `CallRow`, `Field` (with `Input`, `Select`, `Textarea`), `ConsentCheckbox`, `Keypad`, `TracePanel`, `StatTile`, and Radix `Toast` with `ToastProvider`. Expanded `/styleguide` route to showcase every component in every state, across light/dark themes and English/Tamil scripts. Verified responsive layout at 360px mobile width and saved screenshot to `docs/images/styleguide.png`. Added unit tests for new components.
 - **Status:** Complete. All 36 unit tests pass, lint clean, production build clean.
+
+### Prompt #3 — 2026-10-14
+- **Action:** Implemented typed API layer with dual mock and HTTP modes (`client.ts`, `getApi()` selector):
+  - Pure counting rule in `src/api/mock/countingRule.ts` ($N+1$ pause, reopen below $N$, fulfil at $N$, late accept after pause/fulfil).
+  - In-memory reactive store in `src/api/mock/engine.ts` with event emitters for live subscriptions (`subscribeRequest`, `subscribeCalls`, `subscribeEvents`, `subscribeRequests`, `subscribeSimCalls`).
+  - Realistic fixtures in `src/api/mock/fixtures.ts` (3 fictional Chennai hospitals, 2 blood centres, 30 simulated donors).
+  - Fake rules-based Request Desk extractor in `src/api/mock/desk.ts` (VERIFIED_MATCH, SENT_TO_HOSPITAL with demo confirm tokens, NOT_VERIFIED with NBTC payment detection, 6 sample messages across EN/TA/Tanglish, 600ms latency, honesty tag `Mock extractor (not Gemini)`).
+  - Demo story runner in `src/api/mock/story.ts` executing steps 1–5 from `U2U_BRIEF.md` section 7.
+  - HTTP client stub in `src/api/http/index.ts` throwing "not implemented yet".
+  - Vitest test suite (`countingRule.test.ts`, `story.test.ts`) covering all counting transitions and the demo story lifecycle.
+- **Status:** Complete. 52 tests pass, lint clean, build clean.

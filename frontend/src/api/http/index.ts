@@ -1,44 +1,111 @@
-import type { ApiClient } from '../client'
-import type { AppConfig, BloodRequest, DeskResult, Metrics, EvalResult } from '../types'
+import type { ApiClient, CreateRequestInput, DonorSignupInput, Unsubscribe } from '../client'
+import type {
+  AppConfig,
+  BloodRequest,
+  Call,
+  ConfirmAction,
+  DeskResult,
+  EvalResult,
+  Metrics,
+  PublicStatus,
+  RequestPreview,
+  SimKey,
+  TimelineEvent,
+} from '../types'
 
+/**
+ * Stub HTTP API client implementing ApiClient.
+ * Full Cloud Run REST integration and Firestore listeners are implemented in Prompt 12.
+ */
 export class HttpApiClient implements ApiClient {
-  private baseUrl: string
-
-  constructor(baseUrl = '') {
-    this.baseUrl = baseUrl
+  public async getConfig(): Promise<AppConfig> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
   }
 
-  async getConfig(): Promise<AppConfig> {
-    const res = await fetch(`${this.baseUrl}/config`)
-    return res.json()
+  public async createRequest(_input: CreateRequestInput): Promise<BloodRequest> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
   }
 
-  async getMetrics(): Promise<Metrics> {
-    const res = await fetch(`${this.baseUrl}/metrics`)
-    return res.json()
+  public async cancelRequest(_id: string): Promise<BloodRequest> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
   }
 
-  async getLatestEval(): Promise<EvalResult> {
-    const res = await fetch(`${this.baseUrl}/eval/latest`)
-    return res.json()
+  public async getRequestStatus(_id: string): Promise<PublicStatus> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
   }
 
-  async checkDesk(text: string): Promise<DeskResult> {
-    const res = await fetch(`${this.baseUrl}/desk/check`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
-    })
-    return res.json()
+  public async checkDesk(_text: string): Promise<DeskResult> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
   }
 
-  async createRequest(data: Partial<BloodRequest>): Promise<BloodRequest> {
-    const res = await fetch(`${this.baseUrl}/requests`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    return res.json()
+  public async getConfirmPreview(_token: string): Promise<RequestPreview> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public async confirmRequest(
+    _token: string,
+    _action: ConfirmAction,
+  ): Promise<BloodRequest | { status: 'REJECTED' }> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public async simPressKey(_callId: string, _key: SimKey): Promise<Call> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public async acceptCall(_callId: string): Promise<Call> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public async deferCall(_callId: string, _returnDate?: string): Promise<Call> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public async signupDonor(_input: DonorSignupInput): Promise<{ donorAlias: string }> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public async getMetrics(): Promise<Metrics> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public async getLatestEval(): Promise<EvalResult> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public async runScenario(_id: string): Promise<{ ok: true }> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public async reset(): Promise<{ ok: true }> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public async setWeatherAlert(_on: boolean): Promise<AppConfig> {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public subscribeRequest(_id: string, _cb: (request: BloodRequest | null) => void): Unsubscribe {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public subscribeCalls(_requestId: string, _cb: (calls: Call[]) => void): Unsubscribe {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public subscribeEvents(_requestId: string, _cb: (events: TimelineEvent[]) => void): Unsubscribe {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public subscribeRequests(
+    _filter: { hospitalId?: string; centreId?: string },
+    _cb: (requests: BloodRequest[]) => void,
+  ): Unsubscribe {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
+  }
+
+  public subscribeSimCalls(_cb: (calls: Call[]) => void): Unsubscribe {
+    throw new Error('HTTP client not implemented yet (scheduled for Prompt 12)')
   }
 }
 

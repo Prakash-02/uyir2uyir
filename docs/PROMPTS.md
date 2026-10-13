@@ -191,8 +191,38 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/components/StatTile.tsx`
   - `frontend/src/components/Toast.tsx`
   - `frontend/src/features/styleguide/StyleguidePage.tsx`
-- **Commit Hash:** 923bd23
+- **Commit Hash:** 161600c
 - **Human Review:** All 14 components and /styleguide responsive mobile verification passed.
+
+### Entry #3
+- **Date:** 2026-10-14
+- **Goal:** Create the typed API layer with two modes: mock (in-browser engine that imitates the backend, including live updates) and http (real backend, added later). The screens never know which mode is running.
+- **Prompt Summary:**
+  1. Maintained canonical contracts in `src/api/types.ts` mirroring `docs/API_CONTRACT.md` verbatim.
+  2. Implemented `ApiClient` interface in `src/api/client.ts` with all endpoints from contract table, live reactive subscriptions (`subscribeRequest`, `subscribeCalls`, `subscribeEvents`, `subscribeRequests`, `subscribeSimCalls`), and `getApi()` selector switching on `VITE_API_MODE` (default mock).
+  3. Created pure counting rule in `src/api/mock/countingRule.ts` implementing $N+1$ pause, reopen below $N$, fulfil at $N$, and late accept.
+  4. Built in-memory reactive store in `src/api/mock/engine.ts` with event emitters, donor dispatch rounds of 5, DTMF simulator keys 1, 2, 9, clinical acceptance, temporary deferral, and stand-down actions.
+  5. Built realistic fixtures in `src/api/mock/fixtures.ts` (3 fictional Chennai hospitals, 2 blood centres, 30 simulated donors `Donor A1`..`Donor C10`).
+  6. Implemented rules-based Request Desk extractor in `src/api/mock/desk.ts` (VERIFIED_MATCH, SENT_TO_HOSPITAL with demo confirm token, NOT_VERIFIED with NBTC payment detection, 6 sample messages across EN/TA/Tanglish, 600ms latency, honesty tag `Mock extractor (not Gemini)`).
+  7. Implemented demo story scenario runner `runStory()` and `resetStory()` in `src/api/mock/story.ts` executing steps 1–5 from `U2U_BRIEF.md` section 7.
+  8. Created `HttpApiClient` stub in `src/api/http/index.ts` throwing "not implemented yet" for Prompt 12.
+  9. Added Vitest unit test suites (`countingRule.test.ts`, `story.test.ts`) covering all counting transitions and the demo story lifecycle (52 total unit tests passing).
+- **Files Changed:**
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `frontend/src/api/client.ts`
+  - `frontend/src/api/types.ts`
+  - `frontend/src/api/mock/countingRule.ts`
+  - `frontend/src/api/mock/countingRule.test.ts`
+  - `frontend/src/api/mock/engine.ts`
+  - `frontend/src/api/mock/fixtures.ts`
+  - `frontend/src/api/mock/desk.ts`
+  - `frontend/src/api/mock/story.ts`
+  - `frontend/src/api/mock/story.test.ts`
+  - `frontend/src/api/mock/index.ts`
+  - `frontend/src/api/http/index.ts`
+- **Commit Hash:** 9b265fd
+- **Human Review:** Typed API layer, mock engine, counting rule, fixtures, and story runner verified cleanly.
 
 ---
 

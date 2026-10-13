@@ -1,80 +1,119 @@
-import type { ApiClient } from '../client'
-import type { AppConfig, BloodRequest, DeskResult, Metrics, EvalResult } from '../types'
+import type { ApiClient, CreateRequestInput, DonorSignupInput, Unsubscribe } from '../client'
+import type {
+  AppConfig,
+  BloodRequest,
+  Call,
+  ConfirmAction,
+  DeskResult,
+  EvalResult,
+  Metrics,
+  PublicStatus,
+  RequestPreview,
+  SimKey,
+  TimelineEvent,
+} from '../types'
+import { mockEngine } from './engine'
+import { runStory } from './story'
 
 export class MockApiClient implements ApiClient {
-  async getConfig(): Promise<AppConfig> {
-    return {
-      dataMode: 'demo',
-      bannerText: 'SIMULATED DATA — All hospitals, donors and patients shown are simulated.',
-      weatherAlert: false,
-    }
+  public async getConfig(): Promise<AppConfig> {
+    return mockEngine.getConfig()
   }
 
-  async getMetrics(): Promise<Metrics> {
-    return {
-      requests: 0,
-      medianMinutesToFirstOnTheWay: 0,
-      medianMinutesToCovered: 0,
-      medianMinutesToFulfilled: 0,
-      baseline: { toFirstOnTheWay: 0, toCovered: 0, toFulfilled: 0 },
-      callsPerAccepted: 0,
-      standDownReachPct: 0,
-      isSimulated: true,
-    }
+  public async createRequest(input: CreateRequestInput): Promise<BloodRequest> {
+    return mockEngine.createRequest(input)
   }
 
-  async getLatestEval(): Promise<EvalResult> {
-    return {
-      promptVersion: 'v1-demo',
-      runAt: new Date().toISOString(),
-      total: 0,
-      correct: 0,
-      paymentToHospital: 0,
-      wrongHospitalIds: 0,
-      p95LatencyMs: 0,
-      rows: [],
-    }
+  public async cancelRequest(id: string): Promise<BloodRequest> {
+    return mockEngine.cancelRequest(id)
   }
 
-  async checkDesk(_text: string): Promise<DeskResult> {
-    return {
-      answer: 'NOT_VERIFIED',
-      message: "Couldn't verify. Please call the hospital.",
-      footer: 'Nobody may charge you for a donor.',
-      trace: {
-        hospital: { value: null, quote: null, kept: false },
-        patientNumber: { value: null, quote: null, kept: false },
-        bloodGroup: { value: null, quote: null, kept: false },
-        component: { value: null, quote: null, kept: false },
-        units: { value: null, quote: null, kept: false },
-        paymentPhrases: [],
-        geminiChoice: 'NONE',
-        codeDecision: 'NOT_VERIFIED',
-      },
-    }
+  public async getRequestStatus(id: string): Promise<PublicStatus> {
+    return mockEngine.getRequestStatus(id)
   }
 
-  async createRequest(data: Partial<BloodRequest>): Promise<BloodRequest> {
-    return {
-      id: 'req-mock-1',
-      hospitalId: data.hospitalId ?? 'hosp-1',
-      hospitalName: data.hospitalName ?? 'Kauvery Hospital',
-      centreId: data.centreId ?? 'centre-1',
-      centreName: data.centreName ?? 'Rotary Central Blood Bank',
-      bloodGroup: data.bloodGroup ?? 'O+',
-      component: data.component ?? 'RED_CELLS',
-      unitsNeeded: data.unitsNeeded ?? 2,
-      status: 'OPEN',
-      accepted: 0,
-      onTheWay: 0,
-      round: 1,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 3600000 * 4).toISOString(),
-      isSimulated: true,
-      patientRef: data.patientRef,
+  public async checkDesk(text: string): Promise<DeskResult> {
+    return mockEngine.checkDesk(text)
+  }
+
+  public async getConfirmPreview(token: string): Promise<RequestPreview> {
+    return mockEngine.getConfirmPreview(token)
+  }
+
+  public async confirmRequest(
+    token: string,
+    action: ConfirmAction,
+  ): Promise<BloodRequest | { status: 'REJECTED' }> {
+    return mockEngine.confirmRequest(token, action)
+  }
+
+  public async simPressKey(callId: string, key: SimKey): Promise<Call> {
+    return mockEngine.simPressKey(callId, key)
+  }
+
+  public async acceptCall(callId: string): Promise<Call> {
+    return mockEngine.acceptCall(callId)
+  }
+
+  public async deferCall(callId: string, returnDate?: string): Promise<Call> {
+    return mockEngine.deferCall(callId, returnDate)
+  }
+
+  public async signupDonor(input: DonorSignupInput): Promise<{ donorAlias: string }> {
+    return mockEngine.signupDonor(input)
+  }
+
+  public async getMetrics(): Promise<Metrics> {
+    return mockEngine.getMetrics()
+  }
+
+  public async getLatestEval(): Promise<EvalResult> {
+    return mockEngine.getLatestEval()
+  }
+
+  public async runScenario(id: string): Promise<{ ok: true }> {
+    if (id === 'story' || id === 'demo' || id === '1') {
+      await runStory({ stepDelayMs: 1500 })
     }
+    return { ok: true }
+  }
+
+  public async reset(): Promise<{ ok: true }> {
+    mockEngine.reset()
+    return { ok: true }
+  }
+
+  public async setWeatherAlert(on: boolean): Promise<AppConfig> {
+    return mockEngine.setWeatherAlert(on)
+  }
+
+  public subscribeRequest(id: string, cb: (request: BloodRequest | null) => void): Unsubscribe {
+    return mockEngine.subscribeRequest(id, cb)
+  }
+
+  public subscribeCalls(requestId: string, cb: (calls: Call[]) => void): Unsubscribe {
+    return mockEngine.subscribeCalls(requestId, cb)
+  }
+
+  public subscribeEvents(requestId: string, cb: (events: TimelineEvent[]) => void): Unsubscribe {
+    return mockEngine.subscribeEvents(requestId, cb)
+  }
+
+  public subscribeRequests(
+    filter: { hospitalId?: string; centreId?: string },
+    cb: (requests: BloodRequest[]) => void,
+  ): Unsubscribe {
+    return mockEngine.subscribeRequests(filter, cb)
+  }
+
+  public subscribeSimCalls(cb: (calls: Call[]) => void): Unsubscribe {
+    return mockEngine.subscribeSimCalls(cb)
   }
 }
 
 export const mockClient = new MockApiClient()
+export { mockEngine } from './engine'
+export { runStory, resetStory } from './story'
+export { evaluateCountingRule, isLateAccept } from './countingRule'
+export { MOCK_HOSPITALS, MOCK_CENTRES, MOCK_DONORS } from './fixtures'
+export { SAMPLE_MESSAGES } from './desk'
