@@ -24,9 +24,15 @@ During medical emergencies, families frequently scramble at odd hours forwarding
 - [U2U_BRIEF.md](U2U_BRIEF.md) — Single source of truth specification
 - [AGENTS.md](AGENTS.md) — Agent coding rules, stack constraints, and guardrails
 - [docs/PROMPTS.md](docs/PROMPTS.md) — Milestone prompts log and human architecture decisions
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — System architecture (Status: planned)
-- [docs/API_CONTRACT.md](docs/API_CONTRACT.md) — Shared API type schemas and endpoints (Status: planned)
-- [docs/FRONTEND.md](docs/FRONTEND.md) — Design system and UI documentation (Status: planned)
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — System architecture, modules, state machines, and reliability
+- [docs/API_CONTRACT.md](docs/API_CONTRACT.md) — Verbatim TypeScript types and REST endpoint contract
+- [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) — Visual tokens, status mappings, typography, and components
+- [docs/FRONTEND.md](docs/FRONTEND.md) — Route catalog, directory structure, data flows, and build log
+- [docs/AI_DESIGN.md](docs/AI_DESIGN.md) — Gemini Flash pipeline, verbatim quote checking, and safety guardrails
+- [docs/PRIVACY_SAFETY.md](docs/PRIVACY_SAFETY.md) — Data minimization, consent, opt-out mechanisms, and clinical boundaries
+- [docs/TESTING.md](docs/TESTING.md) — Multi-tier test strategy, benchmark metrics, and pre-commit checks
+- [docs/DEMO.md](docs/DEMO.md) — 6-step emergency scenario, 2-minute judge walkthrough, and demo access
+- [docs/ROADMAP.md](docs/ROADMAP.md) — Out-of-scope boundaries, development milestones, and clinical pilot pathway
 
 ---
 
@@ -127,6 +133,7 @@ uvicorn app.main:app --reload
 ## Roadmap
 
 - [x] Milestone 0a: Repository structure, agent rules, and README skeleton.
+- [x] Milestone 0b: Canonical documentation set and architecture specifications.
 - [ ] Milestone 1: Frontend Vite scaffold, Tailwind v4 design system tokens, and core UI components.
 - [ ] Milestone 2: Hospital, Blood Centre, and Request Desk interactive views with mock service worker.
 - [ ] Milestone 3: Backend FastAPI modular monolith with core domain models and rule engine.

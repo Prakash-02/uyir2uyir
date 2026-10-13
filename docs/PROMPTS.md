@@ -36,7 +36,37 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `docs/images/.gitkeep`
   - `docs/PROMPTS.md`
   - `infra/.gitkeep`
-- **Commit Hash:** [Commit hash pending initial commit]
+- **Commit Hash:** 17cf7de
+- **Human Review:** Initial skeleton review passed.
+
+### Entry #0b
+- **Date:** 2026-10-13
+- **Goal:** Write the documentation set from the brief so the repo explains itself to judges and to the coding agent.
+- **Prompt Summary:**
+  Authored the complete 9-document specification set derived directly from `U2U_BRIEF.md`:
+  1. `docs/ARCHITECTURE.md`: modular monolith architecture, the 9 backend modules, data modes (`demo` vs `live`), Mermaid state machine diagrams for blood requests and call lifecycles, Firestore collections schema, and system reliability rules.
+  2. `docs/API_CONTRACT.md`: Section 5 verbatim TypeScript interfaces and endpoint specification table.
+  3. `docs/DESIGN_SYSTEM.md`: Section 6 warm-paper and crimson palette tokens, status mappings with icons and labels, typography scale with Tamil rules, 14 core components, layout breakpoints, and accessibility standards.
+  4. `docs/FRONTEND.md`: route catalog across all 9 paths, directory layout, dual data flow (mock vs HTTP mode), and cumulative build log.
+  5. `docs/AI_DESIGN.md`: Gemini Flash Vertex AI pipeline at temperature 0, character caps, JSON schema with hospital enum, Python verbatim quote verification, remuneration phrase detection, fallback handling, and `/eval` testing metrics.
+  6. `docs/PRIVACY_SAFETY.md`: data kept vs purged, donor masking and aliases, explicit purpose-based consent checkboxes, press-9 instant opt-out, regulatory declaration ("Prototype, not a medical device"), and staff-only clinical authority.
+  7. `docs/TESTING.md`: multi-tier test plan spanning frontend unit/a11y, backend state machine unit tests, API integration, AI safety evals, and pending metric benchmark table.
+  8. `docs/DEMO.md`: 6-step emergency dispatch scenario ($N=2$ units O+ red cells) with Mermaid sequence diagram, 2-minute judge walkthrough script, and demo role switcher access.
+  9. `docs/ROADMAP.md`: Section 8 out-of-scope boundaries, hackathon development milestones, and post-hackathon clinical pilot pathway.
+  Updated `README.md` documentation index and roadmap milestone tracking.
+- **Files Changed:**
+  - `docs/ARCHITECTURE.md`
+  - `docs/API_CONTRACT.md`
+  - `docs/DESIGN_SYSTEM.md`
+  - `docs/FRONTEND.md`
+  - `docs/AI_DESIGN.md`
+  - `docs/PRIVACY_SAFETY.md`
+  - `docs/TESTING.md`
+  - `docs/DEMO.md`
+  - `docs/ROADMAP.md`
+  - `README.md`
+  - `docs/PROMPTS.md`
+- **Commit Hash:** [Commit hash pending commit]
 - **Human Review:** [Leave placeholder for human reviewer to fill in]
 
 ---
