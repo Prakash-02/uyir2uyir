@@ -23,6 +23,7 @@ export const en = {
     text: 'SIMULATED DATA · Demo mode · No real donors or patients',
     runStory: 'Run the story',
     running: 'Running story...',
+    resetDemo: 'Reset demo',
   },
 
   // Three Promises
@@ -261,6 +262,50 @@ export const en = {
     nameError: 'Please enter your name.',
     areaError: 'Please enter your area or pin code.',
     bloodGroupError: 'Please select your blood group.',
+  },
+  // Coordination Impact metrics
+  impact: {
+    simulatedBadge: 'Simulated data from demo runs',
+    title: 'Coordination Impact',
+    subtitle:
+      'Real-time efficiency metrics comparing U2U round-based IVR dispatch against the uncoordinated broadcast baseline.',
+    timeToFirstOnTheWay: 'Time to first donor on the way',
+    timeToCovered: 'Time to covered',
+    timeToFulfilled: 'Time to fulfilled',
+    baselinePrefix: 'Baseline: {minutes}m (broadcast)',
+    faster: '{pct}% faster',
+    callsPerAcceptedTitle: 'Calls per accepted donor',
+    callsPerAcceptedDesc: 'Average IVR calls placed per clinically accepted donor',
+    standDownReachTitle: 'Stand-down reach',
+    standDownReachDesc: 'En route and late donors notified immediately upon pause or fulfillment',
+    requestsProcessedTitle: 'Requests processed',
+    requestsProcessedDesc: 'Simulated emergency blood requests tracked across demo sessions',
+    emptyNotice:
+      'No completed demo runs recorded yet. Press "Run the story" in the banner to execute the 5-step scenario and generate live metrics.',
+    runStoryAction: 'Run the story',
+  },
+  // Evaluation Benchmarks
+  eval: {
+    sampleBadge: 'Sample: replaced by the real backend eval run',
+    title: 'AI Verification Benchmarks',
+    subtitle:
+      'Empirical safety and extraction metrics evaluating Gemini Flash against the labelled WhatsApp blood request dataset.',
+    totalTests: 'Total evaluated',
+    accuracy: 'Accuracy',
+    paymentToHospital: 'Payment to hospital',
+    paymentTarget: 'Target: 0',
+    wrongHospitalIds: 'Wrong hospital IDs',
+    wrongHospitalTarget: 'Target: 0',
+    p95Latency: 'p95 latency',
+    promptVersion: 'Prompt version: {version}',
+    lastRunAt: 'Last run: {date}',
+    tableTitle: 'Test Case Results',
+    colId: 'Test ID',
+    colExpected: 'Expected Decision',
+    colGot: 'Extracted Decision',
+    colStatus: 'Status',
+    passBadge: 'PASS',
+    failBadge: 'FAIL',
   },
 }
 

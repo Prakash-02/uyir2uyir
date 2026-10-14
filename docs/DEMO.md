@@ -54,16 +54,28 @@ sequenceDiagram
 
 ---
 
-## 2. 2-Minute Judge Walkthrough Script
+## 2. 2-Minute Judge Walkthrough Script (Exact Clicks)
 
 For evaluators reviewing the prototype live:
 
-| Timestamp | Screen | Action & Narration |
+| Step | Screen | Exact Click & Expected Behavior |
 |---|---|---|
-| **0:00 - 0:30** | `/` (Home) | **The Three Promises:** Observe the clean, warm-paper aesthetic and the prominent orange `"SIMULATED DATA"` banner. Note the philosophy: *Freely, Safely, In time.* Click **"Run the story"** to launch the scenario. |
-| **0:30 - 1:00** | `/hospital` & `/sim` | **Targeted Dispatch:** View the hospital screen showing *Round 1 (5 donors)*. Switch to the interactive phone frame on `/sim`, hear the simulated Tamil/English audio script, and press `1` to commit. Watch the hospital banner animate: *"1 on the way of 2"*. |
-| **1:00 - 1:30** | `/centre` | **The N+1 Rule & Human Authority:** Notice the status transition to `PAUSED` when 3 donors commit. As blood centre staff, physically accept Donor A and defer Donor B. Watch the system automatically reopen Round 2 when Donor C cancels. |
-| **1:30 - 2:00** | `/desk` | **Public Request Desk:** Paste a forwarded WhatsApp message containing mixed Tamil/English text and emergency details. Inspect the **Trace Panel**: verify that Gemini Flash extracted entities with 100% verbatim substring quotes validated by Python code. Observe the mandatory footer: *"Nobody may charge you for a donor."* |
+| **1. Guided Story Mode** | `/` (Home) | **Click "Run the story"** in the top orange banner.<br>• The app **immediately navigates to `/centre`**.<br>• An animated live step badge appears in the banner: *"Step 1 of 5"*, *"Step 2 of 5"*, ..., *"Step 5 of 5"*.<br>• Watch the live round dials, the $N+1$ transition to `PAUSED`, staff screening, dropout reopening, and fulfillment in real time. |
+| **2. Coordination Impact** | `/impact` | **Click "Impact"** in the top nav.<br>• Inspect the 3 StatTiles: **"Time to first donor on the way"** (3m vs 45m baseline, 93% faster), **"Time to covered"** (8m vs 90m baseline, 91% faster), and **"Time to fulfilled"** (48m vs 180m baseline, 73% faster).<br>• Verify **Calls per accepted donor** (~5 calls vs ~30+ broadcast blasts) and **Stand-down reach** (100% of excess donors thanked/stood down with zero unnotified arrivals).<br>• Notice the prominent label: *"Simulated data from demo runs"*. |
+| **3. AI Safety Benchmarks** | `/eval` | **Click "AI Eval"** in the top nav.<br>• Observe the badge: *"Sample: replaced by the real backend eval run"*.<br>• Verify **0 Payment messages sent to hospital** (mandatory NBTC compliance) and **0 Wrong hospital IDs** (strict entity catalog matching).<br>• Inspect the benchmark table showing test samples and green **PASS** badges. |
+| **4. Public Request Desk** | `/desk` | **Click "Request Desk"** in the top nav.<br>• Click the sample chip **"Verified Match (English)"** and press **"Check message"**.<br>• Expand **"How U2U checked this"** to verify transparent Gemini quote extraction validated word-for-word by deterministic code rules.<br>• Observe the mandatory footer stripe: *"Nobody may charge you for a donor."* |
+| **5. Donor Join with Consent** | `/join` | **Click "Join as donor"** in the top nav.<br>• Verify the bilingual toggle (`EN / த`), the data collection & withdrawal notice, and the two unticked consent checkboxes.<br>• Notice the **Join** button remains disabled until urgent consent and the 18+ attestation are checked.<br>• Enter phone number, submit, and confirm that the raw phone number is strictly **never displayed back**. |
+| **6. Reset Demo** | Any screen | **Click "Reset demo"** in the top banner.<br>• Wipes demo state, clears timeline metrics, and re-seeds pristine initial fixtures. |
+
+---
+
+### Impact & Evaluation Dashboards
+
+![Coordination Impact Dashboard](images/impact.png)
+*Coordination Impact: StatTiles contrasting U2U targeted round dispatch against the uncoordinated broadcast baseline.*
+
+![AI Verification Benchmarks](images/eval.png)
+*AI Verification Benchmarks: Safety metrics and test cases verifying zero payment routing and zero wrong hospital IDs.*
 
 ---
 
@@ -79,4 +91,6 @@ Because emergency blood coordination spans multiple roles, U2U includes a zero-f
    - **Blood Centre Staff:** Pre-authenticated to *Rotary Central Blood Bank* (access to `/centre`).
    - **Public Request Desk:** No login required (access to `/desk`).
    - **Donor Simulator:** Access to `/sim` to test interactive DTMF responses.
-4. **Resetting Demo State:** At any point, clicking **"Reset Demo Data"** in the navigation menu issues a `POST /admin/reset` call, wiping in-memory states and restoring pristine scenario fixtures.
+   - **Impact Dashboard:** Access to `/impact` to review computed timeline metrics.
+   - **AI Evaluation:** Access to `/eval` to inspect Gemini extraction accuracy and safety benchmarks.
+4. **Resetting Demo State:** At any point, clicking **"Reset demo"** in the top banner issues a `POST /admin/reset` call, wiping in-memory states and restoring pristine scenario fixtures.

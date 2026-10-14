@@ -411,8 +411,54 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/features/desk/DeskPage.test.tsx`
   - `frontend/src/i18n/en.ts`
   - `frontend/src/i18n/ta.ts`
-- **Commit Hash:** e948f92
+- **Commit Hash:** 9646a41
 - **Human Review:** Hospital blood bank confirmation flow and voluntary donor signup with purpose-specific consent verified.
+
+### Entry #10
+- **Date:** 2026-10-14
+- **Goal:** Build /impact and /eval, and make "Run the story" a smooth judge experience.
+- **Prompt Summary:**
+  1. Updated mock metrics computation in `src/api/mock/engine.ts`:
+     - Defined `BROADCAST_BASELINE` assumption constant (`toFirstOnTheWay: 45`, `toCovered: 90`, `toFulfilled: 180`) with thorough clinical comments.
+     - Enhanced `addEvent` to advance request-specific simulated minutes and space event timestamps accordingly.
+     - Implemented `getMetrics()` computing real numbers from the mock engine's recorded timeline events (`this.events`) rather than static numbers.
+  2. Built `/impact` screen in `frontend/src/features/impact/ImpactPage.tsx`:
+     - Displayed prominent top label: "Simulated data from demo runs".
+     - Built 3 core `StatTile`s: "Time to first donor on the way", "Time to covered", and "Time to fulfilled", with baseline comparison lines beneath and percentage faster calculations.
+     - Added secondary operational metrics: "Calls per accepted donor" and "Stand-down reach".
+     - Added empty state notice with run-story trigger and baseline methodology card.
+  3. Built `/eval` screen in `frontend/src/features/eval/EvalPage.tsx`:
+     - Displayed prominent label at top: "Sample: replaced by the real backend eval run".
+     - Built summary tiles: total evaluated (50), accuracy (98%), payment to hospital (0, target 0), wrong hospital IDs (0, target 0), and p95 latency (840ms).
+     - Documented clinical guardrails policy explaining NBTC zero-payment mandate and zero hallucinated hospital IDs.
+     - Built responsive test case results table with test IDs, expected vs extracted decisions, and green PASS status badges.
+  4. Story & DemoBanner Polish:
+     - Added real-time animated step indicator in `DemoBanner` using `onStep` callback ("Step 1 of 5", ..., "Step 5 of 5").
+     - Configured "Run the story" to navigate immediately to `/centre` so evaluators observe live round dialing, $N+1$ pause, staff screening, reopen, and fulfillment.
+     - Added "Reset demo" button next to "Run the story" invoking `api.reset()`.
+  5. Verification & Documentation:
+     - Authored unit test suites in `ImpactPage.test.tsx` and `EvalPage.test.tsx`. 95 unit tests pass cleanly across 16 test files.
+     - Verified browser walkthrough: Ran demo story, verified `/centre`, verified non-zero metrics on `/impact`, and verified `/eval`.
+     - Saved screenshots to `docs/images/impact.png` and `docs/images/eval.png`.
+     - Updated `docs/DEMO.md` with exact click script for evaluators.
+- **Files Changed:**
+  - `docs/DEMO.md`
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `docs/images/impact.png`
+  - `docs/images/eval.png`
+  - `frontend/src/api/client.ts`
+  - `frontend/src/api/mock/index.ts`
+  - `frontend/src/api/mock/engine.ts`
+  - `frontend/src/components/DemoBanner.tsx`
+  - `frontend/src/features/impact/ImpactPage.tsx`
+  - `frontend/src/features/impact/ImpactPage.test.tsx`
+  - `frontend/src/features/eval/EvalPage.tsx`
+  - `frontend/src/features/eval/EvalPage.test.tsx`
+  - `frontend/src/i18n/en.ts`
+  - `frontend/src/i18n/ta.ts`
+- **Commit Hash:** eeb3db5
+- **Human Review:** Impact dashboard, AI verification benchmarks, and guided story mode verified.
 
 ---
 

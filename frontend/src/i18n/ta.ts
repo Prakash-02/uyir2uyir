@@ -25,6 +25,7 @@ export const ta: TranslationKeys = {
     text: 'மாதிரித் தரவு · டெமோ பயன்முறை · உண்மையான கொடையாளர்களோ நோயாளிகளோ இல்லை', // REVIEW
     runStory: 'கதையை இயக்கு', // REVIEW
     running: 'கதை இயங்குகிறது...', // REVIEW
+    resetDemo: 'டெமோவை மீட்டமைக்க', // REVIEW
   },
 
   // Three Promises
@@ -263,5 +264,51 @@ export const ta: TranslationKeys = {
     nameError: 'உங்கள் பெயரை உள்ளிடவும்.', // REVIEW: Native speaker verify
     areaError: 'உங்கள் பகுதியை உள்ளிடவும்.', // REVIEW: Native speaker verify
     bloodGroupError: 'உங்கள் இரத்த வகையைத் தேர்ந்தெடுக்கவும்.', // REVIEW: Native speaker verify
+  },
+  // Coordination Impact metrics
+  impact: {
+    simulatedBadge: 'டெமோ சுற்றுகளிலிருந்து பெறப்பட்ட மாதிரித் தரவு', // REVIEW
+    title: 'அவசர ஒருங்கிணைப்புத் தாக்கம்', // REVIEW
+    subtitle:
+      'பாரம்பரிய அறிவிப்பு முறையுடன் ஒப்பிடும்போது U2U தானியங்கி அழைப்பு அமைப்பின் செயல்திறன் அளவீடுகள்.', // REVIEW
+    timeToFirstOnTheWay: 'முதல் கொடையாளர் புறப்படும் நேரம்', // REVIEW
+    timeToCovered: 'தேவையான கொடையாளர்கள் உறுதி செய்யப்பட்ட நேரம்', // REVIEW
+    timeToFulfilled: 'இரத்தம் பெறப்பட்டு கோரிக்கை நிறைவேறிய நேரம்', // REVIEW
+    baselinePrefix: 'பாரம்பரிய முறை: {minutes}நி (பொது அறிவிப்பு)', // REVIEW
+    faster: '{pct}% விரைவானது', // REVIEW
+    callsPerAcceptedTitle: 'ஒரு கொடையாளருக்கான சராசரி அழைப்புகள்', // REVIEW
+    callsPerAcceptedDesc:
+      'ஏற்றுக்கொள்ளப்பட்ட ஒரு கொடையாளருக்கு மேற்கொள்ளப்பட்ட தொலைபேசி அழைப்புகளின் எண்ணிக்கை', // REVIEW
+    standDownReachTitle: 'விலகியோர் அறிக்கை வீச்சு', // REVIEW
+    standDownReachDesc:
+      'தேவை பூர்த்தியானதும் உடனடியாக தகவல் தெரிவிக்கப்பட்டு விடுவிக்கப்பட்ட கொடையாளர்களின் சதவீதம்', // REVIEW
+    requestsProcessedTitle: 'கையாளப்பட்ட கோரிக்கைகள்', // REVIEW
+    requestsProcessedDesc: 'டெமோ அமர்வுகளில் கண்காணிக்கப்பட்ட அவசர இரத்தக் கோரிக்கைகள்', // REVIEW
+    emptyNotice:
+      'இதுவரை முடிவடைந்த டெமோ சுற்றுகள் இல்லை. அளவீடுகளை உருவாக்க மேலே உள்ள "கதையை இயக்கு" பொத்தானை அழுத்தவும்.', // REVIEW
+    runStoryAction: 'கதையை இயக்கு', // REVIEW
+  },
+  // Evaluation Benchmarks
+  eval: {
+    sampleBadge: 'மாதிரி: உண்மையான பின்தள மதிப்பீட்டு ஓட்டத்தால் மாற்றப்படும்', // REVIEW
+    title: 'AI சரிபார்ப்பு மதிப்பீடுகள்', // REVIEW
+    subtitle:
+      'வாட்ஸ்அப் இரத்தக் கோரிக்கைகளில் ஜெமினி ஃப்ளாஷ் மாதிரியின் துல்லியம் மற்றும் பாதுகாப்புத் தரவுகளின் மதிப்பீடு.', // REVIEW
+    totalTests: 'மொத்த சோதனைகள்', // REVIEW
+    accuracy: 'துல்லியம்', // REVIEW
+    paymentToHospital: 'பணப்பரிவர்த்தனை செய்தி மருத்துவமனைக்கு அனுப்பப்பட்டது', // REVIEW
+    paymentTarget: 'இலக்கு: 0', // REVIEW
+    wrongHospitalIds: 'தவறான மருத்துவமனை அடையாளங்கள்', // REVIEW
+    wrongHospitalTarget: 'இலக்கு: 0', // REVIEW
+    p95Latency: 'p95 தாமதம்', // REVIEW
+    promptVersion: 'ப்ராம்ப்ட் பதிப்பு: {version}', // REVIEW
+    lastRunAt: 'கடைசி இயக்கம்: {date}', // REVIEW
+    tableTitle: 'சோதனை முடிவுகள் அட்டவணை', // REVIEW
+    colId: 'சோதனை எண்', // REVIEW
+    colExpected: 'எதிர்பார்க்கப்பட்ட முடிவு', // REVIEW
+    colGot: 'பெறப்பட்ட முடிவு', // REVIEW
+    colStatus: 'நிலை', // REVIEW
+    passBadge: 'வெற்றி', // REVIEW
+    failBadge: 'தோல்வி', // REVIEW
   },
 }

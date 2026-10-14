@@ -71,9 +71,12 @@ export class MockApiClient implements ApiClient {
     return mockEngine.getLatestEval()
   }
 
-  public async runScenario(id: string): Promise<{ ok: true }> {
+  public async runScenario(
+    id: string,
+    onStep?: (stepNumber: number, label: string) => void,
+  ): Promise<{ ok: true }> {
     if (id === 'story' || id === 'demo' || id === '1') {
-      await runStory({ stepDelayMs: 1500 })
+      await runStory({ stepDelayMs: 1500, onStep })
     }
     return { ok: true }
   }

@@ -55,7 +55,7 @@ export interface ApiClient {
   signupDonor(input: DonorSignupInput): Promise<{ donorAlias: string }>
   getMetrics(): Promise<Metrics>
   getLatestEval(): Promise<EvalResult>
-  runScenario(id: string): Promise<{ ok: true }>
+  runScenario(id: string, onStep?: (stepNumber: number, label: string) => void): Promise<{ ok: true }>
   reset(): Promise<{ ok: true }>
   setWeatherAlert(on: boolean): Promise<AppConfig>
 

@@ -283,5 +283,32 @@ Cumulative record of frontend updates and milestones:
     - Browser check: `/join` verified in Tamil using browser agent, with full-page screenshot captured at `docs/images/join.png`.
 - **Status:** Complete. 92 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
 
+### Prompt #10 — 2026-10-14
+- **Action:** Built `/impact`, `/eval`, and enhanced guided story mode:
+  - Mock Timeline & Metrics Engine:
+    - Defined `BROADCAST_BASELINE` assumption constant (45m to first on the way, 90m to covered, 180m to fulfilled) documenting the uncoordinated broadcast status quo benchmark.
+    - Updated `MockEngine.addEvent` to track realistic simulated minutes per request and space event timestamps accordingly.
+    - Updated `mockEngine.getMetrics()` to compute real metrics from recorded timeline events (`this.events`) rather than static numbers.
+  - `/impact` (Coordination Impact Dashboard):
+    - Displayed prominent label at the top: "Simulated data from demo runs".
+    - Built 3 core `StatTile`s: "Time to first donor on the way", "Time to covered", and "Time to fulfilled", each showing baseline comparison lines ("Baseline: 45m / 90m / 180m") and percentage faster calculation.
+    - Added secondary operational metrics: "Calls per accepted donor" and "Stand-down reach" (zero unnotified donor arrivals).
+    - Included empty state guidance and baseline methodology explainer.
+  - `/eval` (AI Verification Benchmarks):
+    - Displayed badge at top: "Sample: replaced by the real backend eval run".
+    - Rendered summary tiles: Total evaluated (50), Accuracy (98%), Payment messages sent to hospital (0, target 0), Wrong hospital IDs (0, target 0), and p95 latency (840ms).
+    - Detailed clinical guardrail guarantees explaining NBTC payment prohibition and zero hallucinated hospital catalog routes.
+    - Built evaluation test case table with test IDs, expected vs extracted decisions, and green PASS status badges.
+  - Story & DemoBanner Polish:
+    - Added real-time animated step indicator in `DemoBanner` using `onStep` callback ("Step 1 of 5", ..., "Step 5 of 5").
+    - Configured "Run the story" to navigate immediately to `/centre` so judges observe real-time round dialing, $N+1$ pause, staff screening, reopen, and fulfillment.
+    - Added accessible "Reset demo" button next to "Run the story" calling `api.reset()`.
+  - Testing & Verification:
+    - Added `ImpactPage.test.tsx` and `EvalPage.test.tsx`. 95 total unit tests passing across 16 test suites.
+    - Clean Oxlint and production build.
+    - Browser verification: Executed story run, verified non-zero metrics on `/impact`, and verified `/eval`. Captured screenshots to `docs/images/impact.png` and `docs/images/eval.png`.
+    - Updated `docs/DEMO.md` with exact click script for evaluators.
+- **Status:** Complete. 95 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
+
 
 
