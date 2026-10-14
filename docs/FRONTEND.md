@@ -193,4 +193,24 @@ Cumulative record of frontend updates and milestones:
   - Verified responsive visual layout in browser subagent at 1280px and 360px viewport widths and saved screenshot to `docs/images/hospital.png`.
 - **Status:** Complete. 61 tests pass, lint clean (0 warnings, 0 errors), production build clean.
 
+### Prompt #6 — 2026-10-14
+- **Action:** Built the Blood Centre staff operations screen (`/centre`) for monitoring live call rounds, clinical arrival screening, accept/defer actions, event timeline, and weather emergency dispatch controls:
+  - Header: Role badge "Blood Centre · Signed in as staff", title "Sample Blood Centre (demo)", and Radix switch for "IMD orange alert (rain)" calling `api.setWeatherAlert`. When active, displays live notice: "Calls now include: If roads near you are unsafe because of rain, please press 2."
+  - Live active requests list: Subscribed via `api.subscribeRequests({ centreId })`, displaying blood group, component, units needed, status badge, and coverage summary. Selecting an item loads its live triage stream.
+  - Selected request workspace:
+    - `ProgressBanner` displaying covered vs N+1 target and accepted vs N target, with visual animated track.
+    - Explicit text `Round {round}` and active status badge.
+    - When `PAUSED`: warning notice "Enough donors on the way. Calling paused. U2U will call again if someone drops out."
+    - When `FULFILLED`: success notice "Target of {unitsNeeded} units clinically accepted. Request Fulfilled."
+    - Live donor call rows via `api.subscribeCalls`: alias ("Donor A7"), blood group, distance in km, ETA chip (`X min away`, `Arrived`), and status badge. Phone numbers are strictly never exposed.
+    - On `ON_THE_WAY` rows: primary "Accept" button and secondary "Defer" button.
+    - Deferral modal (`@radix-ui/react-dialog`) with optional return date input and "Confirm deferral" calling `api.deferCall`.
+    - Mandatory clinical screening warning under actions: "Accept only after your own screening. U2U never decides eligibility."
+  - Event timeline (`api.subscribeEvents`): adaptive layout rendered as a tab on mobile screens (`< 1024px`) via Radix Tabs, and as a dedicated right column at 1024px and wider. New events fade in with CSS keyframe animation.
+  - Screen reader accessibility: `aria-live="polite"` applied to status banners, round counters, coverage metrics, and live event streams.
+  - Added comprehensive Vitest suite in `src/features/centre/CentrePage.test.tsx` covering all interactions, including the mock engine test verifying three press 1s trigger `PAUSED` and accepting two donors leads to `FULFILLED`. All 70 unit tests pass.
+  - Verified in browser subagent by triggering "Run the story" in the banner, watching all 5 steps complete, and confirming `/centre` ends with Fulfilled. Saved screenshot to `docs/images/centre.png`.
+- **Status:** Complete. 70 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
+
+
 

@@ -273,6 +273,36 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** 16de2a5
 - **Human Review:** Hospital blood request desk, live coverage progress banner, cancellation dialog, and Uyir chain message verified cleanly.
 
+### Entry #6
+- **Date:** 2026-10-14
+- **Goal:** Build /centre: staff see call rounds live, accept or defer donors, follow the timeline, and switch on the weather alert.
+- **Prompt Summary:**
+  1. Built the Blood Centre staff operations screen in `frontend/src/features/centre/CentrePage.tsx` with header: "Sample Blood Centre (demo)".
+  2. Implemented the weather alert switch (`@radix-ui/react-switch`) labelled "IMD orange alert (rain)", calling `api.setWeatherAlert`. When toggled on, displays the safety note: "Calls now include: If roads near you are unsafe because of rain, please press 2."
+  3. Integrated active blood requests list (`api.subscribeRequests({ centreId })`) with blood group, component, units needed, and `StatusBadge`. Clicking any card selects it for live monitoring.
+  4. Selected request workspace displays:
+     - `ProgressBanner` showing covered vs N+1 target and accepted vs N target.
+     - Text "Round {round}" with status badge.
+     - Warning note when `PAUSED`: "Enough donors on the way. Calling paused. U2U will call again if someone drops out."
+     - Fulfilled state card when `FULFILLED`: "Target of {unitsNeeded} units clinically accepted. Request Fulfilled."
+     - Live call rows (`api.subscribeCalls`) showing donor alias, distance in km, ETA chip, and state. Full phone numbers are never displayed.
+     - Primary "Accept" button and secondary "Defer" button on `ON_THE_WAY` rows.
+     - Deferral modal (`@radix-ui/react-dialog`) with optional return date input calling `api.deferCall`.
+     - Mandatory screening note under actions: "Accept only after your own screening. U2U never decides eligibility."
+  5. Built adaptive event timeline (`api.subscribeEvents`): rendered inside a dedicated tab on mobile viewports (< 1024px) via Radix Tabs, and as a sticky right column at 1024px and wider, with new events fading in smoothly.
+  6. Applied `aria-live="polite"` across all live counters, status banners, and event logs.
+  7. Built comprehensive test suite in `frontend/src/features/centre/CentrePage.test.tsx` verifying all interactions, including the mock engine test where three press 1s lead to PAUSED and accepting two donors leads to FULFILLED. All 70 unit tests pass.
+  8. Verified browser flow: clicked "Run the story" in demo banner, confirmed automated 5-step scenario completed, and verified `/centre` ends with Fulfilled. Saved screenshot to `docs/images/centre.png`.
+- **Files Changed:**
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `docs/images/centre.png`
+  - `frontend/src/features/centre/CentrePage.tsx`
+  - `frontend/src/features/centre/CentrePage.test.tsx`
+  - `frontend/src/i18n/en.ts`
+  - `frontend/src/i18n/ta.ts`
+  - `frontend/src/styles/tokens.css`
+
 ---
 
 ## Human Decisions
