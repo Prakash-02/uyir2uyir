@@ -221,8 +221,38 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/api/mock/story.test.ts`
   - `frontend/src/api/mock/index.ts`
   - `frontend/src/api/http/index.ts`
-- **Commit Hash:** 642737d
-- **Human Review:** Typed API layer, mock engine, counting rule, fixtures, and story runner verified cleanly.
+### Entry #4
+- **Date:** 2026-10-14
+- **Goal:** Wire the AppShell, demo banner, English and Tamil text, and the landing page.
+- **Prompt Summary:**
+  1. Built comprehensive i18n dictionaries in `frontend/src/i18n/en.ts` and `frontend/src/i18n/ta.ts` with natural Tamil translations and `// REVIEW` review tags on all Tamil strings.
+  2. Implemented `LangContext`, `LangProvider`, and `useT()` hook with `localStorage` persistence inside `try/catch` and automatic `document.documentElement.lang` synchronisation.
+  3. Implemented `ThemeChoice` ('light' | 'dark' | 'system') with `ThemeProvider` and updated `ThemeToggle` supporting light, dark, and system modes with `localStorage` persistence and OS media query listeners.
+  4. Updated `DemoBanner` with `getApi().getConfig()` dataMode check, orange styling, and an interactive "Run the story" button invoking the 5-step scenario runner and navigating to `/centre`.
+  5. Updated `AppShell` with the 5 primary navigation links (Hospital, Blood centre, Request Desk, Join as donor, Impact), secondary demo inspection links, language/theme toggles, and prototype footer with `"Nobody may charge you for a donor."`.
+  6. Implemented landing page (`/`) featuring Hero section with Logo, title "Uyir2Uyir", tagline "Life passes on. Freely. Safely. In time.", product summary, three promise cards (Freely, Safely, In time), role cards linking to `/hospital`, `/centre`, `/desk`, `/join`, and a 4-step "How It Works" workflow strip.
+  7. Verified visual responsiveness in browser subagent at 1280px desktop and 360px mobile viewports, saving screenshot to `docs/images/landing.png`. All 56 unit tests pass, lint clean, production build clean.
+- **Files Changed:**
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `docs/images/landing.png`
+  - `frontend/src/App.tsx`
+  - `frontend/src/App.test.tsx`
+  - `frontend/src/components/AppShell.tsx`
+  - `frontend/src/components/DemoBanner.tsx`
+  - `frontend/src/components/LangToggle.tsx`
+  - `frontend/src/components/ThemeToggle.tsx`
+  - `frontend/src/features/landing/LandingPage.tsx`
+  - `frontend/src/i18n/en.ts`
+  - `frontend/src/i18n/ta.ts`
+  - `frontend/src/i18n/LangContext.ts`
+  - `frontend/src/i18n/LangProvider.tsx`
+  - `frontend/src/i18n/useT.ts`
+  - `frontend/src/lib/themeContext.ts`
+  - `frontend/src/lib/ThemeProvider.tsx`
+  - `frontend/src/lib/theme.ts`
+- **Commit Hash:** pending
+- **Human Review:** AppShell, DemoBanner, EN/TA i18n, ThemeToggle, and responsive landing page verified cleanly.
 
 ---
 

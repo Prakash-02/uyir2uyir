@@ -169,3 +169,15 @@ Cumulative record of frontend updates and milestones:
   - HTTP client stub in `src/api/http/index.ts` throwing "not implemented yet".
   - Vitest test suite (`countingRule.test.ts`, `story.test.ts`) covering all counting transitions and the demo story lifecycle.
 - **Status:** Complete. 52 tests pass, lint clean, build clean.
+
+### Prompt #4 — 2026-10-14
+- **Action:** Wired the AppShell, demo banner, English and Tamil i18n, and the landing page:
+  - Created typed i18n dictionaries in `src/i18n/en.ts` and `src/i18n/ta.ts` with natural Tamil translations and `// REVIEW` native speaker review tags.
+  - Implemented `LangContext`, `LangProvider`, and `useT()` hook in `src/i18n/` with `localStorage` persistence wrapped in `try/catch` and automatic `document.documentElement.lang` synchronisation.
+  - Implemented `ThemeProvider`, `ThemeContext`, and updated `ThemeToggle` supporting light, dark, and system modes with `localStorage` persistence and OS media query listeners.
+  - Updated `DemoBanner` to dynamically fetch `AppConfig` via `getApi().getConfig()`, displaying the simulated data disclaimer in demo mode and providing a "Run the story" button that triggers the 5-step scenario runner and navigates to `/centre`.
+  - Updated `AppShell` with primary navigation links (Hospital, Blood centre, Request Desk, Join as donor, Impact), language/theme controls, responsive mobile horizontal scrolling, and prototype safety footer with `"Nobody may charge you for a donor."`.
+  - Built the landing page (`/`) featuring Hero with logo and tagline, one-sentence product summary, three promise cards (Freely, Safely, In time), role cards linking to `/hospital`, `/centre`, `/desk`, `/join`, and 4-step "How It Works" strip.
+  - Verified responsive visual layout in browser at 1280px and 360px viewport widths and saved screenshot to `docs/images/landing.png`.
+- **Status:** Complete. All 56 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
+
