@@ -221,6 +221,9 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/api/mock/story.test.ts`
   - `frontend/src/api/mock/index.ts`
   - `frontend/src/api/http/index.ts`
+- **Commit Hash:** 75304c8
+- **Human Review:** Typed API client, pure counting rule, mock engine, and demo story runner verified.
+
 ### Entry #4
 - **Date:** 2026-10-14
 - **Goal:** Wire the AppShell, demo banner, English and Tamil text, and the landing page.
@@ -251,6 +254,9 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/lib/themeContext.ts`
   - `frontend/src/lib/ThemeProvider.tsx`
   - `frontend/src/lib/theme.ts`
+- **Commit Hash:** e8620a8
+- **Human Review:** AppShell navigation, i18n English/Tamil providers, theme toggles, and landing page verified.
+
 ### Entry #5
 - **Date:** 2026-10-14
 - **Goal:** Build /hospital: raise a request and watch it get covered live.
@@ -459,6 +465,58 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/i18n/ta.ts`
 - **Commit Hash:** eeb3db5
 - **Human Review:** Impact dashboard, AI verification benchmarks, and guided story mode verified.
+
+### Entry #11
+- **Date:** 2026-10-14
+- **Goal:** Make every screen solid on a cheap Android phone (360px viewport), in Tamil, in dark mode, and with a screen reader.
+- **Prompt Summary:**
+  1. Per-route accessibility & responsiveness audit:
+     - 360px viewport responsiveness: Verified zero horizontal overflow (`scrollWidth <= window.innerWidth`).
+     - 48px tap targets: Bumped `Toast` close button to `min-w-[48px] min-h-[48px]`, `HospitalPage` action buttons to `min-h-[48px]`, ensured buttons, inputs, switches, tabs, and keypad comply with mobile touch guidelines.
+     - Visible focus rings: `3px solid var(--info)` with 2px offset on all focusable elements.
+     - Form labels: Attached explicit `<label for="...">` or `<Field id="...">` to every input.
+     - Heading hierarchy: Single semantic `<h1>` on every route with matching accessible names (`aria-label`) and strictly nested `<h2>`/`<h3>` tags.
+     - Tamil font & language tagging: Tagged Tamil nodes with `lang="ta"`, prioritized Tamil typography (`Tiro Tamil`, `Noto Sans Tamil`, `Latha`).
+     - Non-color signals: Paired status colors with distinct Lucide icons (`CheckCircle2`, `Clock`, `ShieldAlert`, `PhoneCall`, `XCircle`) and text labels.
+  2. State management & offline resilience:
+     - Implemented empty, loading (`RouteLoadingFallback`, `Skeleton`), and error state recovery handlers across routes.
+     - Added global offline banner in `AppShell` driven by `navigator.onLine` and `window` event listeners (`online` / `offline`).
+  3. Reduced motion:
+     - Implemented `@media (prefers-reduced-motion: reduce)` in `index.css` to disable CSS animations and transitions for sensitive users.
+  4. Automated `axe-core` accessibility testing:
+     - Authored `frontend/src/accessibility.test.tsx` testing 11 routes (`/`, `/hospital`, `/centre`, `/desk`, `/confirm/:token`, `/join`, `/sim`, `/impact`, `/eval`, `/styleguide`, `404`).
+     - Zero serious or critical violations across all 11 routes.
+  5. Color contrast audit:
+     - Validated all design system token pairs mathematically in light (6.0:1 to 17.2:1) and dark (6.39:1 to 18.2:1) themes against WCAG AA standards.
+  6. Internationalization dictionary audit:
+     - Externalized remaining hardcoded strings in `LandingPage` and `HospitalPage` into `en.ts` and `ta.ts` dictionaries.
+  7. Route lazy loading & performance:
+     - Configured `React.lazy()` and `<Suspense>` in `routes.tsx` for all routes.
+     - Main bundle chunk: 311.27 kB (gzip: 98.71 kB); route chunks: 7–28 kB.
+  8. Verification:
+     - 106 passing tests across 17 test suites with Vitest.
+     - Oxlint clean with 0 warnings, 0 errors.
+     - Headless browser audit of `/centre` and `/desk` at 360px viewport in dark mode and Tamil (`lang="ta"`).
+- **Files Changed:**
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `docs/TESTING.md`
+  - `frontend/src/App.test.tsx`
+  - `frontend/src/accessibility.test.tsx`
+  - `frontend/src/components/AppShell.tsx`
+  - `frontend/src/components/DemoBanner.tsx`
+  - `frontend/src/components/Toast.tsx`
+  - `frontend/src/features/hospital/HospitalPage.tsx`
+  - `frontend/src/features/impact/ImpactPage.tsx`
+  - `frontend/src/features/eval/EvalPage.tsx`
+  - `frontend/src/features/join/JoinPage.tsx`
+  - `frontend/src/features/landing/LandingPage.tsx`
+  - `frontend/src/features/styleguide/StyleguidePage.tsx`
+  - `frontend/src/i18n/en.ts`
+  - `frontend/src/i18n/ta.ts`
+  - `frontend/src/routes.tsx`
+- **Commit Hash:** 236ac34
+- **Human Review:** Full accessibility, responsive design, contrast, and internationalization pass verified.
 
 ---
 

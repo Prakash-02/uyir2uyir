@@ -120,25 +120,25 @@ export function DemoBanner({
 
         {showRunButton && (
           <div className="flex items-center gap-2 shrink-0 flex-wrap justify-center">
-            {/* Run the story button */}
+            {/* Run the story button (48px tap target) */}
             <button
               type="button"
               onClick={handleRunStory}
               disabled={isRunning || isResetting}
               aria-label="Run the 5-step emergency blood dispatch demo story and open blood centre"
-              className="min-h-[36px] px-3.5 py-1.5 bg-[#1C1917] text-white hover:bg-[#3A332F] rounded text-xs font-bold tracking-wide uppercase transition-colors inline-flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50 focus-visible:outline-3 focus-visible:outline-white"
+              className="min-h-[48px] px-3.5 py-2 bg-[#1C1917] text-white hover:bg-[#3A332F] rounded text-xs font-bold tracking-wide uppercase transition-colors inline-flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50 focus-visible:outline-3 focus-visible:outline-white"
             >
               <Play className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
               <span>{isRunning ? t.demoBanner.running : t.demoBanner.runStory}</span>
             </button>
 
-            {/* Step 4: Reset demo button */}
+            {/* Step 4: Reset demo button (48px tap target) */}
             <button
               type="button"
               onClick={handleReset}
               disabled={isRunning || isResetting}
               aria-label="Reset demo data to initial fixtures"
-              className="min-h-[36px] px-3 py-1.5 bg-black/15 hover:bg-black/25 text-[#1C1917] border border-[#1C1917]/20 rounded text-xs font-bold tracking-wide uppercase transition-colors inline-flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50 focus-visible:outline-3 focus-visible:outline-[#1C1917]"
+              className="min-h-[48px] px-3 py-2 bg-black/15 hover:bg-black/25 text-[#1C1917] border border-[#1C1917]/20 rounded text-xs font-bold tracking-wide uppercase transition-colors inline-flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50 focus-visible:outline-3 focus-visible:outline-[#1C1917]"
             >
               <RotateCcw className={clsx('w-3.5 h-3.5', isResetting && 'animate-spin')} aria-hidden="true" />
               <span>{isResetting ? 'Resetting…' : t.demoBanner.resetDemo}</span>

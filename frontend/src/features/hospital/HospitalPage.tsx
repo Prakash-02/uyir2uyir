@@ -194,13 +194,25 @@ export function HospitalPage() {
         </div>
       </div>
 
+      <div className="border-b border-[var(--border)] pb-4">
+        <h1
+          aria-label="Hospital Request Desk"
+          className="text-2xl sm:text-3xl font-heading font-bold text-[var(--text)] tracking-tight"
+        >
+          {t.hospital.title}
+        </h1>
+        <p className="text-sm text-[var(--muted)] mt-1">
+          {t.hospital.subtitle}
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* 2. Raise Request Form (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           <Card className="border-[var(--border)] bg-[var(--surface)]">
             <CardHeader
               title={t.hospital.formTitle}
-              subtitle="Initiate automated outreach to nearby consented donors."
+              subtitle={t.hospital.formSubtitle}
               action={
                 <div className="w-8 h-8 rounded-full bg-[var(--danger-tint)] text-[var(--primary)] flex items-center justify-center">
                   <PlusCircle className="w-5 h-5" aria-hidden="true" />
@@ -343,7 +355,7 @@ export function HospitalPage() {
                         <Button
                           variant="ghost"
                           onClick={() => setIsCancelDialogOpen(true)}
-                          className="text-xs text-[var(--danger)] hover:bg-[var(--danger-tint)] min-h-[36px] px-3 py-1"
+                          className="text-xs text-[var(--danger)] hover:bg-[var(--danger-tint)] min-h-[48px] px-3 py-1"
                         >
                           {t.hospital.cancelButton}
                         </Button>
@@ -401,7 +413,7 @@ export function HospitalPage() {
                   </h3>
                   <span className="text-xs text-[var(--muted)] flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>Real-time stream</span>
+                    <span>{t.hospital.liveStream}</span>
                   </span>
                 </div>
                 <Timeline events={events} maxItems={6} />
@@ -411,10 +423,10 @@ export function HospitalPage() {
             <div className="p-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-center space-y-2">
               <Droplet className="w-8 h-8 mx-auto text-[var(--primary)] opacity-40" aria-hidden="true" />
               <h3 className="font-heading font-bold text-base text-[var(--text)]">
-                No Active Request Selected
+                {t.hospital.noActiveSelectedTitle}
               </h3>
               <p className="text-xs text-[var(--muted)]">
-                Fill the form on the left to raise an emergency blood request.
+                {t.hospital.noActiveSelectedDesc}
               </p>
             </div>
           )}
@@ -428,7 +440,10 @@ export function HospitalPage() {
             {t.hospital.myRequestsTitle}
           </h2>
           <span className="text-xs text-[var(--muted)]">
-            {hospitalRequests.length} {hospitalRequests.length === 1 ? 'request' : 'requests'} on record
+            {hospitalRequests.length}{' '}
+            {hospitalRequests.length === 1
+              ? t.hospital.requestOnRecord
+              : t.hospital.requestsOnRecord}
           </span>
         </div>
 

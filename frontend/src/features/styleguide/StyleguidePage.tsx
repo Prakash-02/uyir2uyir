@@ -153,7 +153,7 @@ Please contact blood bank directly.`
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold font-heading text-[var(--text)]">
-              U2U Design System Styleguide
+              U2U Design System & Component Styleguide
             </h1>
             <p className="text-base text-[var(--muted)] mt-1">
               Design tokens, typography, brand marks, and 14 accessible core components.

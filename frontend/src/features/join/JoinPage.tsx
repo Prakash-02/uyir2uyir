@@ -202,7 +202,7 @@ export function JoinPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-heading font-bold text-[var(--text)] tracking-tight">
-          {t.join.title}
+          {t.join.title} · Join U2U Donor Network
         </h1>
         <p className="text-sm text-[var(--muted)] mt-1.5 leading-relaxed">
           {t.join.subtitle}

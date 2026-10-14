@@ -72,7 +72,7 @@ describe('ImpactPage (/impact)', () => {
     expect(metrics.standDownReachPct).toBe(100)
 
     // Verify rendered on page
-    expect(screen.getByText(`${metrics.medianMinutesToFirstOnTheWay}m`)).toBeInTheDocument()
+    expect(await screen.findByText(`${metrics.medianMinutesToFirstOnTheWay}m`)).toBeInTheDocument()
     expect(screen.getByText(`${metrics.medianMinutesToCovered}m`)).toBeInTheDocument()
     expect(screen.getByText(`${metrics.medianMinutesToFulfilled}m`)).toBeInTheDocument()
     expect(screen.getByText(`${metrics.callsPerAccepted}`)).toBeInTheDocument()

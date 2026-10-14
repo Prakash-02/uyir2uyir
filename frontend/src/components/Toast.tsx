@@ -86,7 +86,7 @@ export function Toast({
 
       <ToastPrimitive.Close
         aria-label="Close notification"
-        className="absolute top-3 right-3 min-w-[36px] min-h-[36px] rounded-md text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--border)]/30 flex items-center justify-center transition-colors focus-visible:outline-3 focus-visible:outline-[var(--info)] cursor-pointer"
+        className="absolute top-2 right-2 min-w-[48px] min-h-[48px] rounded-md text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--border)]/30 flex items-center justify-center transition-colors focus-visible:outline-3 focus-visible:outline-[var(--info)] cursor-pointer"
       >
         <X className="w-4 h-4" />
       </ToastPrimitive.Close>

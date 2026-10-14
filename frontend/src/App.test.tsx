@@ -5,7 +5,7 @@ import App from './App'
 describe('App smoke test & landing page', () => {
   it('renders App and finds the landing hero heading and tagline', async () => {
     render(<App />)
-    const heading = screen.getByRole('heading', { name: /Uyir2Uyir/i, level: 1 })
+    const heading = await screen.findByRole('heading', { name: /Uyir2Uyir/i, level: 1 })
     expect(heading).toBeInTheDocument()
 
     expect(screen.getByText(/Life passes on\. Freely\. Safely\. In time\./i)).toBeInTheDocument()
@@ -14,7 +14,7 @@ describe('App smoke test & landing page', () => {
 
   it('renders the three promises cards (Freely, Safely, In time)', async () => {
     render(<App />)
-    expect(screen.getByRole('heading', { name: /^Freely$/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /^Freely$/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /^Safely$/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /^In time$/i })).toBeInTheDocument()
     await waitFor(() => expect(screen.getByText(/Run the story/i)).toBeInTheDocument())
@@ -22,6 +22,7 @@ describe('App smoke test & landing page', () => {
 
   it('renders role cards linking to /hospital, /centre, /desk and /join', async () => {
     const { container } = render(<App />)
+    await screen.findByRole('heading', { name: /Uyir2Uyir/i, level: 1 })
     expect(container.querySelector('a[href="/hospital"]')).toBeInTheDocument()
     expect(container.querySelector('a[href="/centre"]')).toBeInTheDocument()
     expect(container.querySelector('a[href="/desk"]')).toBeInTheDocument()
@@ -31,7 +32,7 @@ describe('App smoke test & landing page', () => {
 
   it('renders the 4-step How It Works strip', async () => {
     render(<App />)
-    expect(screen.getByRole('heading', { name: /How It Works/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /How It Works/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /Hospital raises/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /U2U calls 5 donors/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /Donors press 1/i })).toBeInTheDocument()

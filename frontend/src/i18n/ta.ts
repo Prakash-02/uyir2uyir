@@ -28,7 +28,10 @@ export const ta: TranslationKeys = {
     resetDemo: 'டெமோவை மீட்டமைக்க', // REVIEW
   },
 
-  // Three Promises
+  // Offline banner
+  offline: {
+    message: 'நீங்கள் தற்போது ஆஃப்லைனில் உள்ளீர்கள். இணைய இணைப்பு கிடைத்ததும் நிகழ்நேர கோரிக்கைகள் தானாகவே புதுப்பிக்கப்படும்.', // REVIEW
+  },
   promises: {
     sectionTitle: 'எங்களின் மூன்று உறுதிமொழிகள்', // REVIEW
     freely: {
@@ -40,17 +43,20 @@ export const ta: TranslationKeys = {
       title: 'பாதுகாப்பாக', // REVIEW
       tagline: 'உண்மையான தேவைகள் மட்டுமே, மருத்துவர்கள் முடிவெடுப்பர்', // REVIEW
       desc: 'உண்மையான தேவைகள் மட்டுமே, மருத்துவர்கள் முடிவெடுப்பர். சரிபார்க்கப்பட்ட மருத்துவமனை தேவைகள், தொலைபேசி எண்கள் மறைக்கப்படும்.', // REVIEW
+      footer: 'மருத்துவ ரீதியான அதிகாரம் பதிவுசெய்யப்பட்ட மருத்துவ ஊழியர்களிடமே இருக்கும்.', // REVIEW
     },
     inTime: {
       title: 'நேரத்தில்', // REVIEW
       tagline: 'அதிகாலை 2 மணிக்கு எந்தக் குடும்பமும் தனிமையில் தேடவேண்டாம்', // REVIEW
       desc: 'அதிகாலை 2 மணிக்கு எந்தக் குடும்பமும் தனிமையில் தேடவேண்டாம். ஒரே நேரத்தில் 5 கொடையாளர்களை அழைக்கும்; தேவையானவர்கள் கிடைத்ததும் அழைப்பு நிற்கும்.', // REVIEW
+      footer: 'தேவைக்கு அதிகமாக கொடையாளர்களை அழைக்காமல் N+1-ல் தானாகவே நிற்கும்.', // REVIEW
     },
   },
 
   // Role Cards
   roles: {
     sectionTitle: 'உங்கள் பங்கைத் தேர்ந்தெடுக்கவும்', // REVIEW
+    sectionSubtitle: 'இரத்தப் பகிர்வு, சரிபார்ப்பு மற்றும் கொடைக்கான உங்கள் பணியைத் தேர்ந்தெடுக்கவும்.', // REVIEW
     hospital: {
       title: 'மருத்துவமனை பணியாளர்', // REVIEW
       desc: 'அவசர இரத்தத் தேவையை பதிவு செய்து கொடையாளர் வருகையை நேரலையில் கண்காணிக்கவும்.', // REVIEW
@@ -76,6 +82,7 @@ export const ta: TranslationKeys = {
   // How it works
   howItWorks: {
     sectionTitle: 'இது எவ்வாறு செயல்படுகிறது', // REVIEW
+    sectionSubtitle: 'சரிபார்க்கப்பட்ட அவசரத் தேவை முதல் இரத்த அலகுகள் ஏற்பு வரை நான்கு எளிய படிகள்.', // REVIEW
     step1: {
       number: '1', // REVIEW
       title: 'மருத்துவமனை பதிவு', // REVIEW
@@ -119,6 +126,7 @@ export const ta: TranslationKeys = {
     title: 'மருத்துவமனை இரத்தத் தேவை மையம்', // REVIEW
     subtitle: 'சரிபார்க்கப்பட்ட நோயாளியின் மருத்துவத் தேவைக்கு அவசர கோரிக்கை வைக்கவும்.', // REVIEW
     formTitle: 'அவசர கோரிக்கையை பதிவு செய்', // REVIEW
+    formSubtitle: 'சம்மதம் தெரிவித்த அருகிலுள்ள கொடையாளர்களுக்கு தானியங்கி அழைப்பைத் தொடங்கவும்.', // REVIEW
     bloodGroupLabel: 'இரத்த வகை', // REVIEW
     bloodGroupPlaceholder: 'இரத்த வகையைத் தேர்ந்தெடுக்கவும்', // REVIEW
     componentLabel: 'இரத்தப் பிரிவு', // REVIEW
@@ -158,6 +166,11 @@ export const ta: TranslationKeys = {
     myRequestsTitle: 'எனது கோரிக்கைகள்', // REVIEW
     myRequestsEmpty: 'இந்த மருத்துவமனையால் இதுவரை எந்த கோரிக்கையும் பதிவு செய்யப்படவில்லை.', // REVIEW
     liveTimelineTitle: 'நேரலை நிகழ்வு காலவரிசை', // REVIEW
+    liveStream: 'நேரலை ஓட்டம்', // REVIEW
+    noActiveSelectedTitle: 'செயலில் உள்ள கோரிக்கை எதுவும் தேர்ந்தெடுக்கப்படவில்லை', // REVIEW
+    noActiveSelectedDesc: 'அவசர இரத்தக் கோரிக்கையை விடுக்க இடதுபுறத்தில் உள்ள படிவத்தைப் பூர்த்தி செய்யவும்.', // REVIEW
+    requestOnRecord: 'கோரிக்கை பதிவில் உள்ளது', // REVIEW
+    requestsOnRecord: 'கோரிக்கைகள் பதிவில் உள்ளன', // REVIEW
   },
   // Blood centre screen
   centre: {

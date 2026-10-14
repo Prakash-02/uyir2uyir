@@ -108,7 +108,7 @@ export function LandingPage() {
               </p>
             </div>
             <div className="pt-2 border-t border-[var(--border)]/60 text-xs text-[var(--muted)]">
-              Clinical authority stays with registered medical staff.
+              {t.promises.safely.footer}
             </div>
           </div>
 
@@ -129,7 +129,7 @@ export function LandingPage() {
               </p>
             </div>
             <div className="pt-2 border-t border-[var(--border)]/60 text-xs text-[var(--muted)]">
-              Outreach pauses at N+1 to prevent donor surplus.
+              {t.promises.inTime.footer}
             </div>
           </div>
         </div>
@@ -148,7 +148,7 @@ export function LandingPage() {
             {t.roles.sectionTitle}
           </h2>
           <p className="text-sm text-[var(--muted)] max-w-xl mx-auto">
-            Choose your workflow to explore real-time blood dispatching, verification, and donation.
+            {t.roles.sectionSubtitle}
           </p>
         </div>
 
@@ -257,7 +257,7 @@ export function LandingPage() {
               {t.howItWorks.sectionTitle}
             </h2>
             <p className="text-xs sm:text-sm text-[var(--muted)]">
-              From verified clinical emergency to accepted blood units in four deterministic steps.
+              {t.howItWorks.sectionSubtitle}
             </p>
           </div>
 

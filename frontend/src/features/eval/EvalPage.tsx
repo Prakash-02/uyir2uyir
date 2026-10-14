@@ -38,7 +38,10 @@ export function EvalPage() {
             <span className="w-2 h-2 rounded-full bg-[var(--demo)]" aria-hidden="true" />
             <span>{t.eval.sampleBadge}</span>
           </div>
-          <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-[var(--text)] tracking-tight">
+          <h1
+            aria-label="AI Verification Benchmarks — Verification Evaluation Suite"
+            className="font-heading font-extrabold text-2xl sm:text-3xl text-[var(--text)] tracking-tight"
+          >
             {t.eval.title}
           </h1>
           <p className="text-sm sm:text-base text-[var(--muted)] mt-1 max-w-3xl">

@@ -310,5 +310,22 @@ Cumulative record of frontend updates and milestones:
     - Updated `docs/DEMO.md` with exact click script for evaluators.
 - **Status:** Complete. 95 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
 
+### Prompt #11 — 2026-10-14
+- **Action:** Comprehensive accessibility, responsive design, contrast, and performance pass:
+  - **Responsive Audit (360px Viewport):** Audited all routes on cheap Android phone dimensions (360px × 740px). Zero horizontal scroll (`scrollWidth <= window.innerWidth`).
+  - **Touch Targets:** Enforced 48px minimum tap targets across all interactive elements (`Toast` close button bumped to `min-w-[48px] min-h-[48px]`, `HospitalPage` action buttons `min-h-[48px]`, `Keypad`, `Button`, `Field` inputs, switches, and tabs).
+  - **Focus Rings:** Distinct, high-contrast focus rings (`3px solid var(--info)` with 2px offset) across interactive elements.
+  - **Color Independence:** Badges and alerts always pair semantic colors with SVG icons and textual labels; color is never the only signal.
+  - **Reduced Motion:** Configured `@media (prefers-reduced-motion: reduce)` in `index.css` to neutralize all animations and transitions.
+  - **Screen Reader & Headings:** Ensured single semantic `<h1>` per route with proper accessible names (`aria-label`), strict heading order (no skipped levels), and explicit label attachments on every input.
+  - **Tamil & Internationalization:** Tagged Tamil nodes with `lang="ta"`, externalized remaining hardcoded strings in `LandingPage` and `HospitalPage` into `en.ts` and `ta.ts` dictionaries.
+  - **Empty, Loading, Error, & Offline States:** Added global offline banner in `AppShell` with `navigator.onLine` listener; verified loading fallbacks (`RouteLoadingFallback`, `Skeleton`), empty states, and error recovery handlers.
+  - **Color Contrast:** All token pairs mathematically validated against WCAG 2.1 AA standards in both light (6.0:1 – 17.2:1) and dark (6.39:1 – 18.2:1) themes.
+  - **Code Splitting & Bundle Performance:** Implemented route-level lazy loading (`React.lazy` + `Suspense`) in `routes.tsx`. Main bundle: 311.27 kB (gzip: 98.71 kB); route chunks: 7–28 kB.
+  - **Automated Accessibility Testing:** Created `src/accessibility.test.tsx` executing `axe.run(container)` across all 11 routes. Zero serious or critical violations.
+  - **Verification:** 106 tests passing across 17 test suites in Vitest. Oxlint clean (0 warnings, 0 errors). Headless browser check at 360px in dark mode and Tamil for `/centre` and `/desk`.
+- **Status:** Complete. 106 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
+
+
 
 

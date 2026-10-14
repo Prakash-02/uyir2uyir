@@ -26,7 +26,10 @@ export const en = {
     resetDemo: 'Reset demo',
   },
 
-  // Three Promises
+  // Offline banner
+  offline: {
+    message: 'You are currently offline. Live requests and call updates will resume when your connection is restored.',
+  },
   promises: {
     sectionTitle: 'Our Three Promises',
     freely: {
@@ -38,17 +41,20 @@ export const en = {
       title: 'Safely',
       tagline: 'Only real requests, only staff decide',
       desc: 'Only real requests, only staff decide. Verified hospital requests, centre approved rules, only staff accept, phone numbers hidden.',
+      footer: 'Clinical authority stays with registered medical staff.',
     },
     inTime: {
       title: 'In time',
       tagline: 'No family searching alone at 2 a.m.',
       desc: 'No family searching alone at 2 a.m. Calls 5 donors at a time, pauses when covered, reopens if someone drops out.',
+      footer: 'Outreach pauses at N+1 to prevent donor surplus.',
     },
   },
 
   // Role Cards
   roles: {
     sectionTitle: 'Choose a Role',
+    sectionSubtitle: 'Choose your workflow to explore real-time blood dispatching, verification, and donation.',
     hospital: {
       title: 'Hospital Staff',
       desc: 'Raise urgent blood requests and track donor arrival progress in real time.',
@@ -74,6 +80,7 @@ export const en = {
   // How it works
   howItWorks: {
     sectionTitle: 'How It Works',
+    sectionSubtitle: 'From verified clinical emergency to accepted blood units in four deterministic steps.',
     step1: {
       number: '1',
       title: 'Hospital raises',
@@ -117,6 +124,7 @@ export const en = {
     title: 'Hospital Blood Request Desk',
     subtitle: 'Raise an urgent request for verified clinical patient needs.',
     formTitle: 'Raise Urgent Request',
+    formSubtitle: 'Initiate automated outreach to nearby consented donors.',
     bloodGroupLabel: 'Blood group',
     bloodGroupPlaceholder: 'Select blood group',
     componentLabel: 'Component',
@@ -156,6 +164,11 @@ export const en = {
     myRequestsTitle: 'My Requests',
     myRequestsEmpty: 'No requests raised yet by this hospital.',
     liveTimelineTitle: 'Live Dispatch Timeline',
+    liveStream: 'Real-time stream',
+    noActiveSelectedTitle: 'No Active Request Selected',
+    noActiveSelectedDesc: 'Fill the form on the left to raise an emergency blood request.',
+    requestOnRecord: 'request on record',
+    requestsOnRecord: 'requests on record',
   },
   // Blood centre screen
   centre: {
