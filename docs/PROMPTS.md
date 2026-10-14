@@ -270,7 +270,7 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/features/hospital/HospitalPage.test.tsx`
   - `frontend/src/i18n/en.ts`
   - `frontend/src/i18n/ta.ts`
-- **Commit Hash:** pending
+- **Commit Hash:** 16de2a5
 - **Human Review:** Hospital blood request desk, live coverage progress banner, cancellation dialog, and Uyir chain message verified cleanly.
 
 ---
