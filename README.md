@@ -76,8 +76,6 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (Status: planned) for full syst
 
 ## Run Locally
 
-*(Status: planned — repository skeleton phase)*
-
 ### Frontend
 ```bash
 cd frontend
@@ -85,13 +83,26 @@ npm install
 npm run dev
 ```
 
-### Backend
+### Run the backend locally
 ```bash
 cd backend
+
+# 1. Create and activate Python 3.12 virtual environment
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+source .venv/bin/activate       # On Windows: .venv\Scripts\Activate.ps1
+
+# 2. Install dependencies
+pip install -r requirements-dev.txt
+
+# 3. Configure local environment
+cp .env.example .env
+
+# 4. Run development server (on port 8080)
+make dev                        # Runs uvicorn app.main:app --reload --port 8080
+
+# 5. Run tests and linting
+make test                       # Runs pytest
+make lint                       # Runs ruff check . && ruff format --check .
 ```
 
 ---

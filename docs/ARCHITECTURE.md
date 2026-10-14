@@ -99,6 +99,38 @@ The backend (`backend/app/`) is architected as an internal modular monolith wher
 | `ai` | Model interface | Vertex AI Gemini Flash client, temperature 0 prompt execution, structured JSON schema validation, and payment phrase detection. |
 | `clock` | Scheduled reconciliation | Cloud Scheduler 1-minute ticker handling round timeouts, expiration sweeps, and call reminders. |
 
+### 2.1 Backend Layout
+
+The physical codebase layout under `backend/` strictly reflects these modular boundaries:
+
+```
+backend/
+├── app/
+│   ├── main.py                  # App factory create_app(), CORS, /healthz, /config
+│   ├── core/
+│   │   ├── config.py            # pydantic-settings Settings, env validation
+│   │   ├── mode_guard.py        # ModeGuard refusing DATA_MODE / FIRESTORE_DB mismatch
+│   │   ├── models.py            # CamelModel base with to_camel alias generator
+│   │   └── logging.py           # Structured JSON logger, phone redactor, 422 sanitizer
+│   ├── auth/                    # Firebase Auth JWT, claims extraction, RBAC
+│   ├── requests/                # Blood request state transitions and cancellation
+│   ├── rules/                   # Deterministic N+1 rule engine and stand-down logic
+│   ├── matching/                # Donor compatibility and 5-donor batching
+│   ├── outreach/                # Twilio voice client, IVR simulator bridge, TTS
+│   ├── screening/               # Donor triage: accept, defer, and return dates
+│   ├── desk/                    # WhatsApp message check, quote verifier, confirm tokens
+│   ├── ai/                      # Vertex AI Gemini Flash client (temperature 0)
+│   ├── clock/                   # Cloud Scheduler 1-min reconciliation sweeps
+│   └── admin/                   # Demo scenario runner and operational resets
+├── tests/                       # Pytest test suites
+├── Dockerfile                   # python:3.12-slim non-root Cloud Run container
+├── pyproject.toml               # Poetry/pip project definition, ruff, and pytest configs
+├── requirements.txt             # Pinned production dependencies
+├── requirements-dev.txt         # Dev, test, and lint dependencies
+├── Makefile                     # make dev, make test, make lint
+└── .env.example                 # Placeholder environment settings
+```
+
 ---
 
 ## 3. Data Modes & Persistence

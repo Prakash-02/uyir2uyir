@@ -1,0 +1,42 @@
+[project]
+name = "u2u-backend"
+version = "0.1.0"
+description = "U2U (Uyir2Uyir) FastAPI modular monolith backend"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115.0,<1.0.0",
+    "uvicorn[standard]>=0.32.0,<1.0.0",
+    "pydantic>=2.9.0,<3.0.0",
+    "pydantic-settings>=2.6.0,<3.0.0",
+    "google-cloud-firestore>=2.19.0,<3.0.0",
+    "google-genai>=0.1.1,<1.0.0",
+    "google-cloud-texttospeech>=2.17.0,<3.0.0",
+    "firebase-admin>=6.6.0,<7.0.0",
+    "httpx>=0.28.0,<1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0,<9.0.0",
+    "pytest-asyncio>=0.24.0,<1.0.0",
+    "hypothesis>=6.115.0,<7.0.0",
+    "ruff>=0.7.0,<1.0.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = [
+    "ignore::DeprecationWarning:starlette.*",
+]
+

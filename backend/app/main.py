@@ -1,0 +1,82 @@
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.core.config import Settings, get_settings
+from app.core.logging import setup_logging, validation_exception_handler
+from app.core.mode_guard import verify_mode_guard
+from app.core.models import CamelModel
+
+
+class AppConfigResponse(CamelModel):
+    """Configuration shape conforming to docs/API_CONTRACT.md."""
+
+    data_mode: str
+    banner_text: str | None
+    weather_alert: bool = False
+
+
+def create_app(settings: Settings | None = None) -> FastAPI:
+    """Application factory for U2U FastAPI backend."""
+    current_settings = settings or get_settings()
+
+    # Verify mode safety before starting
+    verify_mode_guard(current_settings)
+
+    # Configure structured JSON logging
+    setup_logging()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Additional async initialization (e.g. clients) can be added here
+        yield
+
+    app = FastAPI(
+        title="U2U (Uyir2Uyir) API",
+        description="Backend API relaying urgent blood requests to nearby donors via automated calls.",
+        version="0.1.0",
+        lifespan=lifespan,
+    )
+
+    # Attach custom exception handler to avoid leaking raw input bodies
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+
+    # Configure CORS middleware
+    origins = current_settings.allowed_origins_list
+    if "http://localhost:5173" not in origins:
+        origins.append("http://localhost:5173")
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Health endpoint
+    @app.get("/healthz", tags=["Health"])
+    async def healthz():
+        return {"status": "ok"}
+
+    # Public config endpoint
+    @app.get("/config", response_model=AppConfigResponse, tags=["Configuration"])
+    async def get_config():
+        banner = (
+            "SIMULATED DATA · Demo mode · No real donors or patients"
+            if current_settings.DATA_MODE == "demo"
+            else None
+        )
+        return AppConfigResponse(
+            data_mode=current_settings.DATA_MODE,
+            banner_text=banner,
+            weather_alert=False,
+        )
+
+    return app
+
+
+# Root ASGI application instance for Uvicorn
+app = create_app()

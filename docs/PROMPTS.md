@@ -518,6 +518,48 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** 236ac34
 - **Human Review:** Full accessibility, responsive design, contrast, and internationalization pass verified.
 
+### Entry #B0
+- **Date:** 2026-10-15
+- **Goal:** Scaffold the FastAPI backend in `backend/` with settings, health and config endpoints, lint, tests and a Dockerfile. No business logic yet.
+- **Prompt Summary:**
+  1. Configured Python 3.12 dependency specifications in `backend/pyproject.toml`, `backend/requirements.txt`, and `backend/requirements-dev.txt` with pinned major versions of allowed libraries (`fastapi`, `uvicorn[standard]`, `pydantic`, `pydantic-settings`, `google-cloud-firestore`, `google-genai`, `google-cloud-texttospeech`, `firebase-admin`, `httpx`, `pytest`, `pytest-asyncio`, `hypothesis`, `ruff`). Created `backend/.venv` and installed all dependencies.
+  2. Built `backend/app/main.py` with application factory `create_app()`, CORS middleware allowing `http://localhost:5173` and `ALLOWED_ORIGINS` values, `GET /healthz` health endpoint returning `{"status": "ok"}`, and `GET /config` endpoint returning `AppConfig` (`dataMode`, `bannerText`, `weatherAlert`).
+  3. Implemented `backend/app/core/config.py` using `pydantic-settings` `Settings`, parsing `CALL_ALLOWLIST` and `ALLOWED_ORIGINS` as plain strings with helper split properties, and reading `GEMINI_MODEL` without hardcoded default.
+  4. Implemented `backend/app/core/mode_guard.py` verifying that `DATA_MODE=live` connects to `FIRESTORE_DB=u2u-live` and `DATA_MODE=demo` connects to `FIRESTORE_DB=u2u-demo`, raising `ModeGuardError` on any mismatch.
+  5. Created `backend/app/core/models.py` with `CamelModel` base model configured with `alias_generator=to_camel` and `populate_by_name=True` to guarantee strict camelCase parity across all JSON outputs and Firestore records.
+  6. Built `backend/app/core/logging.py` featuring structured JSON logging, an automated phone number redaction filter (`redact_phone_numbers`), and a custom 422 `RequestValidationError` handler that strips raw request body input to prevent PII/health leaks in error responses.
+  7. Authored `backend/Dockerfile` based on `python:3.12-slim` with non-root user `appuser`, Cloud Run proxy headers, and created `backend/.dockerignore`.
+  8. Created `backend/.env.example` with safe placeholder environment values.
+  9. Authored `backend/AGENTS.md` (3.4k chars) codifying backend rules: public module encapsulation, requests module status authority, no network calls in Firestore transactions, camelCase JSON, phone redaction, Gemini isolation, and demo endpoint guards.
+  10. Authored `backend/Makefile` with `dev`, `test`, and `lint` targets.
+  11. Wrote 13 unit tests in `backend/tests/` verifying `/healthz`, `/config` in demo and live modes, `ModeGuardError` refusal on mismatches, phone redaction, and 422 input stripping. All 13 tests pass in 0.27s. Ruff lint and format checks pass with 0 errors.
+  12. Documented backend layout in `docs/ARCHITECTURE.md` and added "Run the backend locally" in `README.md`.
+- **Files Changed:**
+  - `README.md`
+  - `backend/.dockerignore`
+  - `backend/.env.example`
+  - `backend/AGENTS.md`
+  - `backend/Dockerfile`
+  - `backend/Makefile`
+  - `backend/README.md`
+  - `backend/app/core/config.py`
+  - `backend/app/core/logging.py`
+  - `backend/app/core/mode_guard.py`
+  - `backend/app/core/models.py`
+  - `backend/app/main.py`
+  - `backend/pyproject.toml`
+  - `backend/requirements.txt`
+  - `backend/requirements-dev.txt`
+  - `backend/tests/conftest.py`
+  - `backend/tests/test_health_and_config.py`
+  - `backend/tests/test_logging_and_models.py`
+  - `backend/tests/test_mode_guard.py`
+  - `docs/ARCHITECTURE.md`
+  - `docs/BACKEND.md`
+  - `docs/PROMPTS.md`
+- **Commit Hash:** 0e902d6
+- **Human Review:** Backend scaffold, settings, mode guard, logging, and test suite verified.
+
 ---
 
 ## Human Decisions
