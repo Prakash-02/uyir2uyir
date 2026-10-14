@@ -112,8 +112,50 @@ export const ta: TranslationKeys = {
     langToggle: 'Switch language to English', // REVIEW
     langName: 'தமிழ்', // REVIEW
   },
-  common: {
-    loading: 'ஏற்றுகிறது...', // REVIEW
-    simulatedBadge: 'மாதிரி', // REVIEW
+  // Hospital screen
+  hospital: {
+    roleNote: 'உள்நுழைந்துள்ளீர்கள்: மாதிரி பொது மருத்துவமனை (டெமோ)', // REVIEW
+    title: 'மருத்துவமனை இரத்தத் தேவை மையம்', // REVIEW
+    subtitle: 'சரிபார்க்கப்பட்ட நோயாளியின் மருத்துவத் தேவைக்கு அவசர கோரிக்கை வைக்கவும்.', // REVIEW
+    formTitle: 'அவசர கோரிக்கையை பதிவு செய்', // REVIEW
+    bloodGroupLabel: 'இரத்த வகை', // REVIEW
+    bloodGroupPlaceholder: 'இரத்த வகையைத் தேர்ந்தெடுக்கவும்', // REVIEW
+    componentLabel: 'இரத்தப் பிரிவு', // REVIEW
+    componentPlaceholder: 'இரத்தப் பிரிவைத் தேர்ந்தெடுக்கவும்', // REVIEW
+    components: {
+      RED_CELLS: 'சிவப்பணுக்கள் (PRBC)', // REVIEW
+      PLATELETS_SDP: 'தட்டணுக்கள், ஒற்றைக் கொடையாளர் (SDP)', // REVIEW
+      PLATELETS_RDP: 'தட்டணுக்கள், பல கொடையாளர் (RDP)', // REVIEW
+      WHOLE_BLOOD: 'முழு இரத்தம் (Whole blood)', // REVIEW
+      PLASMA: 'பிளாஸ்மா (FFP)', // REVIEW
+      UNSPECIFIED: 'குறிப்பிடப்படாதது', // REVIEW
+    },
+    unitsLabel: 'தேவைப்படும் அலகுகள் (1 முதல் 6)', // REVIEW
+    patientRefLabel: 'நோயாளி குறிப்பு எண்', // REVIEW
+    patientRefPlaceholder: 'எ.கா. IP-101', // REVIEW
+    patientRefHint: 'உங்கள் மருத்துவமனை மற்றும் இரத்த வங்கி மட்டுமே இதைக் காண முடியும்', // REVIEW
+    submitButton: 'கோரிக்கையை பதிவு செய்', // REVIEW
+    submitting: 'பதிவாகிறது...', // REVIEW
+    errors: {
+      bloodGroupRequired: 'தயவுசெய்து இரத்த வகையைத் தேர்ந்தெடுக்கவும்', // REVIEW
+      componentRequired: 'தயவுசெய்து இரத்தப் பிரிவைத் தேர்ந்தெடுக்கவும்', // REVIEW
+      unitsInvalid: 'அலகுகள் 1 முதல் 6 வரை இருக்க வேண்டும்', // REVIEW
+      patientRefRequired: 'நோயாளி குறிப்பு எண் தேவை', // REVIEW
+    },
+    activeTitle: 'நேரலை கோரிக்கை கண்காணிப்பு', // REVIEW
+    cancelButton: 'கோரிக்கையை ரத்து செய்', // REVIEW
+    cancelDialogTitle: 'இரத்தக் கோரிக்கையை ரத்து செய்யவா?', // REVIEW
+    cancelDialogDesc:
+      'இது தானியங்கி அழைப்புகளை உடனடியாக நிறுத்தி, இந்த நோயாளிக்கான அழைப்புகளை ரத்து செய்யும்.', // REVIEW
+    cancelKeep: 'கோரிக்கையை வைத்திரு', // REVIEW
+    cancelConfirm: 'ரத்து செய்வதை உறுதிசெய்', // REVIEW
+    fulfilledTitle: 'இரத்த வங்கியால் பூர்த்தி செய்யப்பட்டது.', // REVIEW
+    fulfilledDesc: 'கோரப்பட்ட அனைத்து அலகுகளும் இரத்த வங்கியால் மருத்துவ ரீதியாக ஏற்றுக்கொள்ளப்பட்டன.', // REVIEW
+    sendChainMessage: 'உயிர் சங்கிலி செய்தியை அனுப்பு', // REVIEW
+    chainPrivacyHint:
+      'வாட்ஸ்அப் முன்னரே தயாரிக்கப்பட்ட செய்தியுடன் திறக்கும். U2U குடும்பத்தின் தொலைபேசி எண்ணை சேமிக்காது.', // REVIEW
+    myRequestsTitle: 'எனது கோரிக்கைகள்', // REVIEW
+    myRequestsEmpty: 'இந்த மருத்துவமனையால் இதுவரை எந்த கோரிக்கையும் பதிவு செய்யப்படவில்லை.', // REVIEW
+    liveTimelineTitle: 'நேரலை நிகழ்வு காலவரிசை', // REVIEW
   },
 }

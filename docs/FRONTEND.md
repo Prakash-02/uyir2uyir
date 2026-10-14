@@ -181,3 +181,16 @@ Cumulative record of frontend updates and milestones:
   - Verified responsive visual layout in browser at 1280px and 360px viewport widths and saved screenshot to `docs/images/landing.png`.
 - **Status:** Complete. All 56 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
 
+### Prompt #5 — 2026-10-14
+- **Action:** Built the Hospital screen (`/hospital`) for raising blood requests and tracking live progress:
+  - Added demo role indicator at top: "Signed in as: Sample General Hospital (demo)".
+  - Built typed accessible form with `Field`, `Input`, and `Select`: blood group selection, plain-language components ("Red cells (PRBC)", "Platelets, single donor (SDP)", etc.), units needed (1 to 6), and patient reference with privacy hint ("Only your hospital and the blood centre see this").
+  - Form validation for all fields and primary button "Raise request" calling `createRequest`.
+  - Active request tracking card with `StatusBadge`, `ProgressBanner` displaying live coverage ("{onTheWay} on the way · {accepted} accepted · need {unitsNeeded}"), compact live `Timeline` (`subscribeEvents`), and ghost Cancel button with confirmation modal (`@radix-ui/react-dialog`).
+  - "My requests" list below, reactive via `subscribeRequests({ hospitalId })`, sorted newest first, with instant selection.
+  - Fulfilled state success card: "Fulfilled by the blood centre." with "Send Uyir chain message" opening prefilled `wa.me` link without storing the family's phone number.
+  - Added comprehensive test suite in `HospitalPage.test.tsx` verifying validation, raising a 2-unit request with "need 2", cancellation modal, and fulfilled Uyir chain action. All 61 unit tests pass.
+  - Verified responsive visual layout in browser subagent at 1280px and 360px viewport widths and saved screenshot to `docs/images/hospital.png`.
+- **Status:** Complete. 61 tests pass, lint clean (0 warnings, 0 errors), production build clean.
+
+

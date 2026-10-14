@@ -251,8 +251,27 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/lib/themeContext.ts`
   - `frontend/src/lib/ThemeProvider.tsx`
   - `frontend/src/lib/theme.ts`
-- **Commit Hash:** e8620a8
-- **Human Review:** AppShell, DemoBanner, EN/TA i18n, ThemeToggle, and responsive landing page verified cleanly.
+### Entry #5
+- **Date:** 2026-10-14
+- **Goal:** Build /hospital: raise a request and watch it get covered live.
+- **Prompt Summary:**
+  1. Built the Hospital screen in `frontend/src/features/hospital/HospitalPage.tsx` with top role banner: "Signed in as: Sample General Hospital (demo)".
+  2. Implemented typed request creation form using `Field`, `Input`, and `Select`: blood group selector, plain-language components ("Red cells (PRBC)", "Platelets, single donor (SDP)", "Platelets, pooled (RDP)", "Whole blood", "Fresh frozen plasma (FFP)"), units (1 to 6), and patient reference with privacy hint ("Only your hospital and the blood centre see this").
+  3. Integrated active request live tracking: `StatusBadge`, `ProgressBanner` displaying live coverage ("{onTheWay} on the way · {accepted} accepted · need {unitsNeeded}"), compact live `Timeline` (`subscribeEvents`), and ghost Cancel button with `@radix-ui/react-dialog` confirm modal.
+  4. Built "My requests" list below, reactive via `subscribeRequests({ hospitalId })`, sorted newest first, with instant selection.
+  5. Implemented fulfilled state success card: "Fulfilled by the blood centre." with "Send Uyir chain message" opening prefilled `wa.me` link without storing the family's phone number.
+  6. Added comprehensive test suite in `frontend/src/features/hospital/HospitalPage.test.tsx` verifying validation, raising a 2-unit request with "need 2", cancellation modal, and fulfilled Uyir chain action. All 61 unit tests pass.
+  7. Verified visual layout in browser subagent at 1280px desktop and 360px mobile viewports, saving screenshot to `docs/images/hospital.png`. All 61 unit tests pass, lint clean, production build clean.
+- **Files Changed:**
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `docs/images/hospital.png`
+  - `frontend/src/features/hospital/HospitalPage.tsx`
+  - `frontend/src/features/hospital/HospitalPage.test.tsx`
+  - `frontend/src/i18n/en.ts`
+  - `frontend/src/i18n/ta.ts`
+- **Commit Hash:** pending
+- **Human Review:** Hospital blood request desk, live coverage progress banner, cancellation dialog, and Uyir chain message verified cleanly.
 
 ---
 
