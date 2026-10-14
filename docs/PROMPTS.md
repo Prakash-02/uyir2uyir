@@ -251,7 +251,7 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/lib/themeContext.ts`
   - `frontend/src/lib/ThemeProvider.tsx`
   - `frontend/src/lib/theme.ts`
-- **Commit Hash:** pending
+- **Commit Hash:** e8620a8
 - **Human Review:** AppShell, DemoBanner, EN/TA i18n, ThemeToggle, and responsive landing page verified cleanly.
 
 ---
