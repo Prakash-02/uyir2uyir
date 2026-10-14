@@ -257,5 +257,31 @@ Cumulative record of frontend updates and milestones:
   - Verified in browser subagent at `http://localhost:5173/desk`, tested sample message, confirmed answer card and trace panel, and saved screenshot to `docs/images/desk.png`.
 - **Status:** Complete. 84 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
 
+### Prompt #9 — 2026-10-14
+- **Action:** Built `/confirm/:token` for hospital blood banks and `/join` for donor signup with consent:
+  - `/confirm/:token` (Hospital Blood Bank Confirmation):
+    - Request preview card: displaying destination hospital name, blood group, requested component, units needed, masked patient reference (`patientRefMasked`), and token expiration status.
+    - Two clear actions: Primary button "Raise this request" (`api.confirmRequest(token, 'RAISE')`) and ghost button "Not our patient" (`api.confirmRequest(token, 'NOT_OUR_PATIENT')`).
+    - Explicit result states: `raised` (with a status link to `/hospital`), `rejected` ("Not our patient"), and `expired or used link` ("This confirmation link has expired, was already used, or is invalid.").
+    - Integrated with `/desk`: When a desk answer is `SENT_TO_HOSPITAL` and includes `demoConfirmToken`, displays a link to `/confirm/{demoConfirmToken}` in demo mode labelled "Demo: open the hospital's confirm link".
+  - `/join` (Donor Signup with Granular Consent):
+    - `LangToggle` at top right with persistent language synchronisation.
+    - Upfront data minimization notice: detailing what is collected (name, phone, blood group, area), why (emergency blood relay), how to withdraw (press 9 on any automated call or visit `/join`), and grievance officer contact (`grievance@uyir2uyir.org`).
+    - Form fields: Full name, phone number, blood group select, area / PIN code, preferred outreach language (`en` / `ta`), and optional last donation date.
+    - Two separate `ConsentCheckbox`es, unticked by default:
+      1. Mandatory urgent contact: "U2U may call me when someone near me needs my blood group."
+      2. Optional donation history: "U2U may keep my donation history so I'm not called too early."
+    - Mandatory 18+ attestation checkbox: "I confirm that I am 18 years of age or older."
+    - "Join" button strictly disabled until both urgent-contact consent and 18+ attestation are checked and all required fields are valid.
+    - Phone number validation strictly enforces 10-digit Indian mobile numbers (starting with 6, 7, 8, or 9, with optional +91/0 prefix).
+    - Phone privacy enforcement: Phone number is **never displayed back** on the success screen or in any public or staff view.
+    - Success screen displaying assigned anonymous alias: "You're in. Your donor name is {donorAlias}. You'll only be called when you match and it's safe for you to donate."
+    - Prominent demo notice on confirmation: "Demo: nothing is sent and no call will be made."
+  - Verification & Testing:
+    - Added comprehensive unit tests in `src/features/confirm/ConfirmPage.test.tsx` (4 tests) and `src/features/join/JoinPage.test.tsx` (4 tests, verifying disabled state without consent, phone validation, and phone number suppression).
+    - Vitest: 92 passing tests across 14 test suites.
+    - Browser check: `/join` verified in Tamil using browser agent, with full-page screenshot captured at `docs/images/join.png`.
+- **Status:** Complete. 92 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
+
 
 

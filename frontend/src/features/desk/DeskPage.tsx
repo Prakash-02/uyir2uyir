@@ -325,7 +325,7 @@ export function DeskPage() {
                     to={`/confirm/${result.demoConfirmToken}`}
                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--warning-tint)] text-[var(--warning)] border border-[var(--warning)]/30 font-semibold text-xs sm:text-sm hover:bg-[var(--warning-tint)]/80 transition-colors shadow-2xs focus-visible:outline-3 focus-visible:outline-[var(--info)]"
                   >
-                    <span>Staff review link (demo)</span>
+                    <span>Demo: open the hospital's confirm link</span>
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                   </Link>
                 </div>

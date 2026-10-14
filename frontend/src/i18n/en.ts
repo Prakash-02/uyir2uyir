@@ -226,6 +226,42 @@ export const en = {
     mandatoryFooterTa: 'இரத்த தானத்திற்கு யாரும் உங்களிடம் கட்டணம் வசூலிக்கக் கூடாது.',
     reviewLink: 'Review at blood bank (demo)',
   },
+  // Donor join & consent screen
+  join: {
+    title: 'Join as a Consented Donor',
+    subtitle:
+      'Register your voluntary consent to receive automated phone calls when someone near you has an emergency need for your blood group.',
+    privacyNoticeTitle: 'What we collect and why',
+    privacyNoticeWhat:
+      'What we collect: Your name, mobile number, blood group, area/pincode, and optional last donation date.',
+    privacyNoticeWhy:
+      'Why: Exclusively to place automated outreach calls during urgent clinical shortages matching your group and locality.',
+    privacyNoticeWithdraw:
+      'How to withdraw: Press 9 on any automated phone call to opt out instantly, or contact us.',
+    grievanceContact: 'Grievance Officer: grievance@uyir2uyir.org',
+    nameLabel: 'Full name',
+    namePlaceholder: 'e.g. Ramesh Kumar',
+    phoneLabel: 'Mobile number (10-digit Indian mobile)',
+    phonePlaceholder: 'e.g. 98765 43210',
+    bloodGroupLabel: 'Blood group',
+    bloodGroupPlaceholder: 'Select your blood group',
+    areaLabel: 'Area / Locality / PIN',
+    areaPlaceholder: 'e.g. T. Nagar, Chennai',
+    langLabel: 'Preferred call language',
+    lastDonationLabel: 'Last donation date (optional)',
+    consentUrgentLabel: 'U2U may call me when someone near me needs my blood group.',
+    consentHistoryLabel: "U2U may keep my donation history so I'm not called too early.",
+    consentAdultLabel: 'I confirm that I am 18 years of age or older.',
+    joinButton: 'Join',
+    joining: 'Joining…',
+    successTitle:
+      "You're in. Your donor name is {donorAlias}. You'll only be called when you match and it's safe for you to donate.",
+    demoDisclaimer: 'Demo: nothing is sent and no call will be made.',
+    phoneError: 'Please enter a valid 10-digit Indian mobile number.',
+    nameError: 'Please enter your name.',
+    areaError: 'Please enter your area or pin code.',
+    bloodGroupError: 'Please select your blood group.',
+  },
 }
 
 export type TranslationKeys = typeof en

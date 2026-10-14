@@ -228,4 +228,40 @@ export const ta: TranslationKeys = {
     mandatoryFooterTa: 'இரத்த தானத்திற்கு யாரும் உங்களிடம் கட்டணம் வசூலிக்கக் கூடாது.',
     reviewLink: 'இரத்த வங்கியில் பார்க்கவும் (டெமோ)', // REVIEW: Native speaker verify
   },
+  // Donor join & consent screen
+  join: {
+    title: 'இரத்தக் கொடையாளராக இணையுங்கள்', // REVIEW: Native speaker verify
+    subtitle:
+      'உங்கள் பகுதியில் அவசர இரத்தத் தேவை ஏற்படும் போது தானியங்கி அழைப்புகளைப் பெற உங்கள் தன்னார்வ ஒப்புதலைப் பதிவு செய்யுங்கள்.', // REVIEW: Native speaker verify
+    privacyNoticeTitle: 'நாங்கள் சேகரிக்கும் தகவல்களும் அதன் காரணமும்', // REVIEW: Native speaker verify
+    privacyNoticeWhat:
+      'சேகரிப்பவை: உங்கள் பெயர், அலைபேசி எண், இரத்த வகை, பகுதி மற்றும் விருப்பத்தேர்வான முந்தைய தான தேதி.', // REVIEW: Native speaker verify
+    privacyNoticeWhy:
+      'காரணம்: உங்கள் பகுதி மற்றும் இரத்த வகைக்கு அவசரத் தேவை ஏற்படும் போது தானியங்கி அழைப்பு விடுக்க மட்டுமே.', // REVIEW: Native speaker verify
+    privacyNoticeWithdraw:
+      'விலகுவது எப்படி: எந்தவொரு அழைப்பிலும் 9-ஐ அழுத்துவதன் மூலம் உடனடியாக விலகலாம்.', // REVIEW: Native speaker verify
+    grievanceContact: 'புகார் தொடர்பு: grievance@uyir2uyir.org', // REVIEW: Native speaker verify
+    nameLabel: 'முழுப் பெயர்', // REVIEW: Native speaker verify
+    namePlaceholder: 'எ.கா. ரமேஷ் குமார்', // REVIEW: Native speaker verify
+    phoneLabel: 'அலைபேசி எண் (10 இலக்க இந்திய எண்)', // REVIEW: Native speaker verify
+    phonePlaceholder: 'எ.கா. 98765 43210', // REVIEW: Native speaker verify
+    bloodGroupLabel: 'இரத்த வகை', // REVIEW: Native speaker verify
+    bloodGroupPlaceholder: 'உங்கள் இரத்த வகையைத் தேர்ந்தெடுக்கவும்', // REVIEW: Native speaker verify
+    areaLabel: 'பகுதி / அஞ்சல் குறியீடு', // REVIEW: Native speaker verify
+    areaPlaceholder: 'எ.கா. தியாகராய நகர், சென்னை', // REVIEW: Native speaker verify
+    langLabel: 'விருப்பமான அழைப்பு மொழி', // REVIEW: Native speaker verify
+    lastDonationLabel: 'கடைசி தான தேதி (விருப்பத்தேர்வு)', // REVIEW: Native speaker verify
+    consentUrgentLabel: 'U2U may call me when someone near me needs my blood group.', // REVIEW
+    consentHistoryLabel: "U2U may keep my donation history so I'm not called too early.", // REVIEW
+    consentAdultLabel: 'I confirm that I am 18 years of age or older.', // REVIEW
+    joinButton: 'இணையுங்கள்', // REVIEW: Native speaker verify
+    joining: 'இணைகிறது…', // REVIEW: Native speaker verify
+    successTitle:
+      "You're in. Your donor name is {donorAlias}. You'll only be called when you match and it's safe for you to donate.",
+    demoDisclaimer: 'Demo: nothing is sent and no call will be made.',
+    phoneError: 'சரியான 10 இலக்க இந்திய அலைபேசி எண்ணை உள்ளிடவும்.', // REVIEW: Native speaker verify
+    nameError: 'உங்கள் பெயரை உள்ளிடவும்.', // REVIEW: Native speaker verify
+    areaError: 'உங்கள் பகுதியை உள்ளிடவும்.', // REVIEW: Native speaker verify
+    bloodGroupError: 'உங்கள் இரத்த வகையைத் தேர்ந்தெடுக்கவும்.', // REVIEW: Native speaker verify
+  },
 }

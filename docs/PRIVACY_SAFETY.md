@@ -38,15 +38,23 @@ U2U adheres to rigorous data minimization principles:
 
 ---
 
-## 4. Purpose-Specific Consent (`/join`)
+## 4. Purpose-Specific Consent & Consent Screen (`/join`)
+
+### Consent Screen
+
+![U2U Donor Consent Screen](images/join.png)
 
 Voluntary blood donor registration requires explicit, granular, purpose-specific consent:
 
-- **Two Unticked Checkboxes:** On the donor onboarding screen (`/join`), checkboxes are unselected by default. Pre-ticked consent boxes are strictly prohibited.
-  1. *Consent for Urgent Contact:* Consent to receive automated telephone calls in the event of an urgent blood shortage in the registered area.
-  2. *Consent for Donation History:* Consent to store anonymized donation timestamps to enforce healthy donation intervals (e.g. 90-day whole blood interval).
-- **Adult Attestation:** Mandatory affirmation that the donor is at least 18 years of age.
-- **Bi-lingual Interface:** Every consent clause is rendered clearly with equal prominence in English and Tamil (`lang="ta"`).
+- **Bilingual Interface:** Full support for Tamil (`ta`) and English (`en`) via `LangToggle` at the top right, ensuring donors comprehend all terms in their preferred language.
+- **Data Collection & Withdrawal Notice:** A clear, upfront summary informing donors what data is collected (name, phone, blood group, area), why (relaying urgent blood requests), how to withdraw at any time (press 9 on any automated call, or through the web page), and grievance officer contact (`grievance@uyir2uyir.org`).
+- **Two Unticked Checkboxes:** On the donor onboarding screen (`/join`), consent checkboxes are strictly unselected by default. Pre-ticked consent boxes are prohibited under privacy regulations:
+  1. *Urgent Contact Consent (Mandatory to join):* `"U2U may call me when someone near me needs my blood group."`
+  2. *Donation History Consent (Optional):* `"U2U may keep my donation history so I'm not called too early."`
+- **Adult Attestation (Mandatory to join):* Mandatory affirmation: `"I confirm that I am 18 years of age or older."`
+- **Disabled Join Action:** The `"Join"` button remains completely disabled until both the urgent-contact consent and 18+ attestation checkboxes are explicitly ticked and required fields are valid.
+- **Strict Phone Privacy on Confirmation:** Validated as an Indian mobile number, but upon successful submission the phone number is **never displayed back** on the screen. The user receives only their anonymous alias (e.g., `"Donor A7"`) and confirmation that they will only be contacted when matched and eligible.
+- **Simulated Demo Notice:** In demo mode, clearly declares: `"Demo: nothing is sent and no call will be made."`
 
 ---
 

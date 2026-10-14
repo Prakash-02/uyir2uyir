@@ -371,6 +371,49 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** 4c55760
 - **Human Review:** Request Desk verified with three deterministic answers, payment protection warning, bilingual footer, and transparent Gemini trace panel.
 
+### Entry #9
+- **Date:** 2026-10-14
+- **Goal:** Build /confirm/:token for hospital blood banks and /join for donor signup with consent.
+- **Prompt Summary:**
+  1. Built `/confirm/:token` in `frontend/src/features/confirm/ConfirmPage.tsx`:
+     - Displays request preview: destination hospital name, blood group, component, units needed, masked patient reference (`patientRefMasked`), and token expiration status.
+     - Actions: Primary button "Raise this request" (`api.confirmRequest(token, 'RAISE')`) and ghost button "Not our patient" (`api.confirmRequest(token, 'NOT_OUR_PATIENT')`).
+     - Result states: `raised` (with a status link to `/hospital`), `rejected` ("Not our patient"), and `expired or used link` ("This confirmation link has expired, was already used, or is invalid.").
+     - In `/desk`, updated `SENT_TO_HOSPITAL` demo review link to "Demo: open the hospital's confirm link" in demo mode.
+  2. Built `/join` in `frontend/src/features/join/JoinPage.tsx`:
+     - `LangToggle` at top right for seamless switching between English and Tamil.
+     - Upfront data collection & privacy notice: what is collected, why, how to withdraw (press 9 on any automated call or visit `/join`), and grievance officer placeholder (`grievance@uyir2uyir.org`).
+     - Form fields: Name, phone number, blood group select, area / PIN code, outreach language, and optional last donation date.
+     - Two separate unticked `ConsentCheckbox`es:
+       - Urgent contact consent: "U2U may call me when someone near me needs my blood group." (mandatory to join)
+       - Donation history consent: "U2U may keep my donation history so I'm not called too early." (optional)
+     - 18+ attestation checkbox: "I confirm that I am 18 years of age or older." (mandatory to join).
+     - "Join" button strictly disabled until urgent-contact consent and 18+ attestation are checked and all required fields are valid.
+     - Phone number validation strictly enforces 10-digit Indian mobile numbers.
+     - Privacy guarantee: Phone number is **never displayed back** on the success screen or in any public/staff view.
+     - Success screen: "You're in. Your donor name is {donorAlias}. You'll only be called when you match and it's safe for you to donate."
+     - Demo mode disclaimer: "Demo: nothing is sent and no call will be made."
+  3. Documentation & Verification:
+     - Documented consent architecture and updated `docs/PRIVACY_SAFETY.md` with a "Consent screen" section and screenshot.
+     - Captured browser screenshot of `/join` in Tamil and saved to `docs/images/join.png`.
+     - Authored unit test suites in `ConfirmPage.test.tsx` (4 tests) and `JoinPage.test.tsx` (4 tests, verifying Join disabled without consent, phone validation, and phone number suppression).
+     - All 92 unit tests pass across 14 test files, lint clean with 0 warnings, and production build clean.
+- **Files Changed:**
+  - `docs/PRIVACY_SAFETY.md`
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `docs/images/join.png`
+  - `frontend/src/features/confirm/ConfirmPage.tsx`
+  - `frontend/src/features/confirm/ConfirmPage.test.tsx`
+  - `frontend/src/features/join/JoinPage.tsx`
+  - `frontend/src/features/join/JoinPage.test.tsx`
+  - `frontend/src/features/desk/DeskPage.tsx`
+  - `frontend/src/features/desk/DeskPage.test.tsx`
+  - `frontend/src/i18n/en.ts`
+  - `frontend/src/i18n/ta.ts`
+- **Commit Hash:** e948f92
+- **Human Review:** Hospital blood bank confirmation flow and voluntary donor signup with purpose-specific consent verified.
+
 ---
 
 ## Human Decisions

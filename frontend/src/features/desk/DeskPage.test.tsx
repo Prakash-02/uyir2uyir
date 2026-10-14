@@ -122,7 +122,7 @@ describe('DeskPage (/desk)', () => {
     ).toBeInTheDocument()
 
     // Demo review link
-    expect(screen.getByRole('link', { name: /Staff review link \(demo\)/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Demo: open the hospital's confirm link/i })).toBeInTheDocument()
 
     // 4. Fixed footer stripe
     expect(screen.getByText('Nobody may charge you for a donor.')).toBeInTheDocument()
