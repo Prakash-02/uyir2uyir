@@ -221,7 +221,7 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/api/mock/story.test.ts`
   - `frontend/src/api/mock/index.ts`
   - `frontend/src/api/http/index.ts`
-- **Commit Hash:** 9b265fd
+- **Commit Hash:** 642737d
 - **Human Review:** Typed API layer, mock engine, counting rule, fixtures, and story runner verified cleanly.
 
 ---

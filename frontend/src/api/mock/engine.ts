@@ -668,6 +668,10 @@ export class MockEngine {
     return this.requests.get(id)
   }
 
+  public getAllRequests(): BloodRequest[] {
+    return Array.from(this.requests.values())
+  }
+
   public getCall(callId: string): Call | undefined {
     return this.calls.get(callId)
   }

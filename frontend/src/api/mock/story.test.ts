@@ -9,9 +9,9 @@ describe('Demo Story Scenario Runner (runStory)', () => {
 
     const onStep = vi.fn((stepNumber: number, label: string) => {
       // Find current request status for the demo story request at this step
-      const req = Array.from((engine as any).requests.values()).find(
-        (r: any) => r.patientRef === 'IP-DEMO-STORY',
-      ) as any
+      const req = engine.getAllRequests().find(
+        (r) => r.patientRef === 'IP-DEMO-STORY',
+      )
       observedSteps.push({
         step: stepNumber,
         label,
