@@ -207,4 +207,25 @@ export const ta: TranslationKeys = {
     openHospital: 'மருத்துவமனைப் பக்கத்தைத் திறக்கவும்', // REVIEW
     runStory: 'செயல்முறை ஓட்டத்தை இயக்கவும்', // REVIEW
   },
+  // Request Desk screen
+  desk: {
+    title: 'பொதுக் கோரிக்கை மையம்', // REVIEW: Native speaker verify
+    subtitle: 'பகிரப்பட்ட இரத்தக் கோரிக்கையை ஜெமினி ஃப்ளாஷ் மூலம் சரிபார்க்கவும்.', // REVIEW: Native speaker verify
+    textareaLabel: 'நீங்கள் பெற்ற செய்தியை இங்கே ஒட்டவும்', // REVIEW: Native speaker verify
+    textareaPlaceholder: 'வாட்ஸ்அப் அல்லது எஸ்எம்எஸ் செய்தியை முழுமையாக இங்கே ஒட்டவும்...', // REVIEW: Native speaker verify
+    charCounter: 'எழுத்துக்கள்', // REVIEW: Native speaker verify
+    privacyNote: 'உங்கள் செய்தியை நாங்கள் சேமிப்பதில்லை. பிரித்தெடுக்கப்பட்ட விவரங்கள் மட்டுமே சரிபார்க்கப்படுகின்றன.', // REVIEW: Native speaker verify
+    checkButton: 'செய்தியைச் சரிபார்க்கவும்', // REVIEW: Native speaker verify
+    checking: 'சரிபார்க்கிறது…', // REVIEW: Native speaker verify
+    trySampleTitle: 'மாதிரி செய்தியை முயற்சிக்கவும்', // REVIEW: Native speaker verify
+    verifiedMatch: 'இந்தக் கோரிக்கை சரிபார்க்கப்பட்டது. தானம் செய்வோருக்கு ஏற்கனவே அழைப்புகள் செல்கின்றன.', // REVIEW: Native speaker verify
+    statusLink: 'நேரலை நிலையைச் சரிபார்க்கவும்', // REVIEW: Native speaker verify
+    sentToHospital: '{hospitalName} இரத்த வங்கியிடம் உறுதி செய்யக் கேட்டுள்ளோம். தயவுசெய்து அவர்களையும் அழைக்கவும்.', // REVIEW: Native speaker verify
+    notVerified: 'சரிபார்க்க இயலவில்லை. தயவுசெய்து மருத்துவமனையை நேரடியாகத் தொடர்பு கொள்ளவும்.', // REVIEW: Native speaker verify
+    paymentWarning: 'இந்தச் செய்தியில் பணம் பற்றிய குறிப்பு உள்ளது. இந்தியாவில் இரத்த தானம் முற்றிலும் தன்னார்வமானது மற்றும் கட்டணமற்றது.', // REVIEW: Native speaker verify
+    errorGeneric: 'தற்போது சரிபார்க்க இயலவில்லை. தயவுசெய்து மருத்துவமனையை அழைக்கவும்.', // REVIEW: Native speaker verify
+    mandatoryFooterEn: 'Nobody may charge you for a donor.',
+    mandatoryFooterTa: 'இரத்த தானத்திற்கு யாரும் உங்களிடம் கட்டணம் வசூலிக்கக் கூடாது.',
+    reviewLink: 'இரத்த வங்கியில் பார்க்கவும் (டெமோ)', // REVIEW: Native speaker verify
+  },
 }

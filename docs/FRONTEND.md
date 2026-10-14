@@ -232,9 +232,30 @@ Cumulative record of frontend updates and milestones:
     - Press 9: "You won't be called again."
     - LATE_ACCEPT: "Thank you, we already have enough donors."
     - Reset action: "Answer another ringing call" button to return to incoming calls.
-  - Added comprehensive Vitest suite in `src/features/sim/SimPage.test.tsx` verifying empty state, ringing calls list, handset script rendering in English & Tamil, weather rain advisory line, keypress responses (1, 2, 9, LATE_ACCEPT), and reset trigger. All 79 unit tests pass across the suite.
-  - Verified in browser subagent at `http://localhost:5173/sim`, simulated key 1 press, verified response screen and map link, and saved screenshot to `docs/images/sim.png`.
-- **Status:** Complete. 79 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
+### Prompt #8 — 2026-10-14
+- **Action:** Built the Request Desk screen (`/desk`) for pasting forwarded blood requests and verifying with Gemini Flash and deterministic code rules:
+  - Big textarea labelled "Paste the message you received" with live 2,000 character counter.
+  - Privacy note under input box: "We don't keep your message. Only the extracted details are checked."
+  - "Try a sample" chips filling in the 6 mock sample messages across English, Tamil, and Tanglish.
+  - Primary button "Check message" calling `api.checkDesk(text)`, with "Checking…" loading spinner state.
+  - Answer card with `aria-live="assertive"`:
+    - `VERIFIED_MATCH` (ShieldCheck icon in success green): "This request is verified. Donors are already being called." with "Check live request status" link to `/hospital`.
+    - `SENT_TO_HOSPITAL` (Send icon in warning orange): "We've asked {hospitalName}'s blood bank to confirm. Please also call them." with demo review link `/confirm/:token`.
+    - `NOT_VERIFIED` (ShieldAlert icon in danger red): "Couldn't verify. Please call the hospital directly."
+    - Remuneration / payment detection warning alert: "This message mentions payment. Blood donation in India is voluntary and unpaid."
+  - Fixed footer stripe on every answer in both languages:
+    - English: "Nobody may charge you for a donor."
+    - Tamil: "இரத்த தானத்திற்கு யாரும் உங்களிடம் கட்டணம் வசூலிக்கக் கூடாது."
+  - Upgraded collapsible `TracePanel` component titled "How U2U checked this":
+    - Highlights kept quotes in green `<mark>` tags inside user's raw message.
+    - Dropped quotes rendered struck through with "not found in the message".
+    - Matrix of extracted entities (Hospital Name, Patient Number, Blood Group, Component, Units Needed) showing value, quote, and Kept/Dropped badges.
+    - "Gemini chose: {geminiChoice}" and "Code decided: {codeDecision}" with high-contrast "Mock" tag when running simulated extractor.
+    - Explainer callout: "Gemini reads. Code checks every word. Only the hospital and blood centre decide."
+  - Error state handling: "Couldn't check right now. Please call the hospital."
+  - Unit test suite: `DeskPage.test.tsx` verifying all 3 answer types, payment warning, bilingual footer stripe, TracePanel details, loading and error states. 84 unit tests passing across 12 suites.
+  - Verified in browser subagent at `http://localhost:5173/desk`, tested sample message, confirmed answer card and trace panel, and saved screenshot to `docs/images/desk.png`.
+- **Status:** Complete. 84 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
 
 
 

@@ -205,6 +205,27 @@ export const en = {
     openHospital: 'Open Hospital screen',
     runStory: 'Run the story',
   },
+  // Request Desk screen
+  desk: {
+    title: 'Public Request Desk',
+    subtitle: 'Paste a forwarded blood request to verify with Gemini Flash and deterministic code checks.',
+    textareaLabel: 'Paste the message you received',
+    textareaPlaceholder: 'Paste the full WhatsApp or SMS blood request here...',
+    charCounter: 'characters',
+    privacyNote: "We don't keep your message. Only the extracted details are checked.",
+    checkButton: 'Check message',
+    checking: 'Checking…',
+    trySampleTitle: 'Try a sample message',
+    verifiedMatch: 'This request is verified. Donors are already being called.',
+    statusLink: 'Check live request status',
+    sentToHospital: "We've asked {hospitalName}'s blood bank to confirm. Please also call them.",
+    notVerified: "Couldn't verify. Please call the hospital directly.",
+    paymentWarning: 'This message mentions payment. Blood donation in India is voluntary and unpaid.',
+    errorGeneric: "Couldn't check right now. Please call the hospital.",
+    mandatoryFooterEn: 'Nobody may charge you for a donor.',
+    mandatoryFooterTa: 'இரத்த தானத்திற்கு யாரும் உங்களிடம் கட்டணம் வசூலிக்கக் கூடாது.',
+    reviewLink: 'Review at blood bank (demo)',
+  },
 }
 
 export type TranslationKeys = typeof en

@@ -335,6 +335,42 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** cdd689b
 - **Human Review:** Donor call simulator verified with live ringing calls, phone handset card, dynamic IVR script, keypad actions, and response states.
 
+### Entry #8
+- **Date:** 2026-10-14
+- **Goal:** Build /desk: paste a forwarded blood request, get one of three answers, and see exactly what Gemini read and what code decided.
+- **Prompt Summary:**
+  1. Built the Request Desk screen in `frontend/src/features/desk/DeskPage.tsx` with a big textarea labelled "Paste the message you received" and a live 2,000 character counter.
+  2. Added privacy note right under the box: "We don't keep your message. Only the extracted details are checked."
+  3. Integrated "Try a sample" chips loading all 6 mock sample messages across English, Tamil, and Tanglish.
+  4. Primary button "Check message" dispatches `api.checkDesk(text)` with "Checking…" loading spinner state.
+  5. Implemented assertive answer card (`aria-live="assertive"`) rendering one of three deterministic answers with big icons:
+     - `VERIFIED_MATCH` (`ShieldCheck`): "This request is verified. Donors are already being called." with "Check live request status" link to `/hospital`.
+     - `SENT_TO_HOSPITAL` (`Send`): "We've asked {hospitalName}'s blood bank to confirm. Please also call them." with demo review link to `/confirm/:token`.
+     - `NOT_VERIFIED` (`ShieldAlert`): "Couldn't verify. Please call the hospital directly."
+     - Remuneration alert when payment words are detected: "This message mentions payment. Blood donation in India is voluntary and unpaid."
+  6. Pinned fixed footer stripe on every answer in both English and Tamil:
+     "Nobody may charge you for a donor." / "இரத்த தானத்திற்கு யாரும் உங்களிடம் கட்டணம் வசூலிக்கக் கூடாது."
+  7. Upgraded collapsible `TracePanel` titled "How U2U checked this":
+     - Highlights kept quotes in green `<mark>` tags inside user's raw message.
+     - Renders dropped quotes struck through with "not found in the message".
+     - Extracted entity matrix with value, quote, and Kept/Dropped badges.
+     - "Gemini chose: {geminiChoice}" and "Code decided: {codeDecision}" with high-contrast "Mock" badge when running mock extractor.
+     - Explainer callout: "Gemini reads. Code checks every word. Only the hospital and blood centre decide."
+  8. Authored unit test suite in `frontend/src/features/desk/DeskPage.test.tsx` testing all 3 sample types, payment warning, bilingual footer stripe, TracePanel, and loading/error states. All 84 unit tests pass.
+  9. Verified browser flow: visited `/desk`, clicked "Verified Match (English)", pressed "Check message", confirmed answer card and trace panel, and saved screenshot to `docs/images/desk.png`.
+- **Files Changed:**
+  - `docs/AI_DESIGN.md`
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `docs/images/desk.png`
+  - `frontend/src/features/desk/DeskPage.tsx`
+  - `frontend/src/features/desk/DeskPage.test.tsx`
+  - `frontend/src/components/TracePanel.tsx`
+  - `frontend/src/i18n/en.ts`
+  - `frontend/src/i18n/ta.ts`
+- **Commit Hash:** 4c55760
+- **Human Review:** Request Desk verified with three deterministic answers, payment protection warning, bilingual footer, and transparent Gemini trace panel.
+
 ---
 
 ## Human Decisions

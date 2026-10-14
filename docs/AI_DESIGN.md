@@ -116,7 +116,35 @@ Under no circumstances does an AI failure block clinical hospital workflows or e
 
 ---
 
-## 5. Evaluation & Continuous Testing (`/eval`)
+## 5. How the Trace is Shown to Users
+
+At the Request Desk (`/desk`), complete algorithmic transparency is rendered through the collapsible `TracePanel` titled **"How U2U checked this"**:
+
+1. **One-Line Core Explainer:**
+   > *"Gemini reads. Code checks every word. Only the hospital and blood centre decide."*
+   Prominently placed at the top of the trace drawer to reinforce AI authority limits to all users and evaluators.
+
+2. **Dual Decision Attribution:**
+   - **Gemini Extraction:** Displayed as `"Gemini chose: {geminiChoice}"`.
+   - **Deterministic Code Decision:** Displayed as `"Code decided: {codeDecision}"`.
+   - **Mock Honesty:** Whenever running simulated handlers (where `geminiChoice` starts with `"Mock extractor"`), a high-contrast `"Mock"` tag is rendered so evaluators and judges never mistake demo simulation for live Gemini Flash.
+
+3. **Verbatim Quote Highlighting in Input Text:**
+   The user's original message is displayed with kept quotes highlighted in green (`<mark>` with `bg-[var(--success-tint)]`), demonstrating exactly which words grounded the extraction.
+
+4. **Dropped Hallucination Strikethrough:**
+   Any quote extracted by the model that does not match the original message character-for-character is displayed struck through with the explicit label:
+   `"{quote}" — not found in the message`.
+
+5. **Extracted Fields Matrix:**
+   Each entity (Hospital Name, Patient Number, Blood Group, Component, Units Needed) is itemized showing both its canonical value and its source quote, tagged with `Kept` (green) or `Dropped` (red).
+
+6. **Payment & Scam Protection Callout:**
+   If remuneration keywords are identified (e.g., *"paid donor"*, *"conveyance cash"*, *"₹3,000"*), the detected phrases are flagged in a high-contrast alert box, explaining why the message was barred from hospital routing.
+
+---
+
+## 6. Evaluation & Continuous Testing (`/eval`)
 
 The Request Desk pipeline is benchmarked against a curated, labelled evaluation suite stored in `backend/eval/`:
 
