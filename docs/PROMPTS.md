@@ -305,6 +305,36 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** 916ea9e
 - **Human Review:** Blood centre staff triage screen verified with live rounds, accept/defer actions, timeline, and weather alert.
 
+### Entry #7
+- **Date:** 2026-10-14
+- **Goal:** Build /sim: a phone-style simulator so judges can act as a donor.
+- **Prompt Summary:**
+  1. Built the phone handset simulator screen in `frontend/src/features/sim/SimPage.tsx` with top note: "Demo simulator. In the live system this is a real phone call."
+  2. Implemented live ringing calls list subscribed via `api.subscribeSimCalls`. Displays active ringing calls with donor alias, language chip ("EN" / "தமிழ்"), distance, and call state badge. When empty, displays hint: "Raise a request on the Hospital screen, or press Run the story." with quick navigation buttons.
+  3. Built phone handset frame card featuring speaker notch, dispatch indicator, donor alias, and the IVR call script in a large font in the donor's language:
+     "A patient at {hospitalName} needs {bloodGroup} {component}. Press 1 if you can come in the next few hours. Press 2 if you can't. Press 9 to stop these calls."
+  4. Dynamically appends rain advisory line when `weatherAlert` is active: "If roads near you are unsafe because of rain, please press 2."
+  5. Implemented interactive `Keypad` with 1 "I'm coming" (வருகிறேன்), 2 "I can't" (இயலாது), and 9 "Stop calling me" (விலகுகிறேன்), calling `api.simPressKey(callId, key)`.
+  6. Implemented verbatim post-interaction response screen:
+     - Press 1: "Thank you. Please go to {centreName}." and Google Maps directions link placeholder.
+     - Press 2: "Thank you for telling us."
+     - Press 9: "You won't be called again."
+     - LATE_ACCEPT: "Thank you, we already have enough donors."
+     - "Answer another ringing call" reset trigger.
+  7. Authored comprehensive test suite in `frontend/src/features/sim/SimPage.test.tsx` verifying empty state, ringing calls list, script rendering in English & Tamil, rain line, keypress responses (1, 2, 9, LATE_ACCEPT), and reset. All 79 unit tests pass.
+  8. Verified browser flow: visited `/sim`, pressed key 1, verified response screen and Google Maps link, and captured screenshot to `docs/images/sim.png`.
+- **Files Changed:**
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `docs/images/sim.png`
+  - `frontend/src/features/sim/SimPage.tsx`
+  - `frontend/src/features/sim/SimPage.test.tsx`
+  - `frontend/src/components/Keypad.tsx`
+  - `frontend/src/i18n/en.ts`
+  - `frontend/src/i18n/ta.ts`
+- **Commit Hash:** cdd689b
+- **Human Review:** Donor call simulator verified with live ringing calls, phone handset card, dynamic IVR script, keypad actions, and response states.
+
 ---
 
 ## Human Decisions

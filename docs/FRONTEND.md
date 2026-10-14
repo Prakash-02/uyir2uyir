@@ -212,5 +212,29 @@ Cumulative record of frontend updates and milestones:
   - Verified in browser subagent by triggering "Run the story" in the banner, watching all 5 steps complete, and confirming `/centre` ends with Fulfilled. Saved screenshot to `docs/images/centre.png`.
 - **Status:** Complete. 70 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
 
+### Prompt #7 — 2026-10-14
+- **Action:** Built the donor phone-style call simulator screen (`/sim`) for judges and evaluators to act as a consented donor receiving emergency voice outreach:
+  - Top persistent note: "Demo simulator. In the live system this is a real phone call."
+  - Ringing calls list: Subscribed live via `api.subscribeSimCalls`. Displays active ringing calls with blood group, donor alias, language badge ("EN" / "தமிழ்"), distance in km, and call state badge. When no ringing calls exist, displays empty state hint: "Raise a request on the Hospital screen, or press Run the story." with quick navigation buttons.
+  - Phone handset frame card:
+    - Speaker notch, pulsating call dispatch indicator, donor alias, and language badge.
+    - Call script in large font rendered dynamically in the donor's language (`lang="ta"` for Tamil with 17px base size, 1.6 line height):
+      "A patient at {hospitalName} needs {bloodGroup} {component}. Press 1 if you can come in the next few hours. Press 2 if you can't. Press 9 to stop these calls."
+    - Dynamic weather alert integration: When `weatherAlert` is active in `AppConfig`, appends the rain line: "If roads near you are unsafe because of rain, please press 2."
+  - Accessible `Keypad` component with large tabular digits and multi-lingual labels:
+    - Key 1: "I'm coming" (வருகிறேன்)
+    - Key 2: "I can't" (இயலாது)
+    - Key 9: "Stop calling me" (விலகுகிறேன்)
+    - Handles simulated DTMF key presses by calling `api.simPressKey(callId, key)`.
+  - Verbatim response screen after key press:
+    - Press 1: "Thank you. Please go to {centreName}." and a map link placeholder (`https://www.google.com/maps/...`).
+    - Press 2: "Thank you for telling us."
+    - Press 9: "You won't be called again."
+    - LATE_ACCEPT: "Thank you, we already have enough donors."
+    - Reset action: "Answer another ringing call" button to return to incoming calls.
+  - Added comprehensive Vitest suite in `src/features/sim/SimPage.test.tsx` verifying empty state, ringing calls list, handset script rendering in English & Tamil, weather rain advisory line, keypress responses (1, 2, 9, LATE_ACCEPT), and reset trigger. All 79 unit tests pass across the suite.
+  - Verified in browser subagent at `http://localhost:5173/sim`, simulated key 1 press, verified response screen and map link, and saved screenshot to `docs/images/sim.png`.
+- **Status:** Complete. 79 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
+
 
 

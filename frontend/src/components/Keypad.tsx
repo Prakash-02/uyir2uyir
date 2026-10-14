@@ -19,21 +19,21 @@ interface KeyConfig {
 const keyConfigs: KeyConfig[] = [
   {
     key: '1',
-    labelEn: 'Coming',
+    labelEn: "I'm coming",
     labelTa: 'வருகிறேன்',
     meaning: 'Accept & on the way',
     colorVariant: 'success',
   },
   {
     key: '2',
-    labelEn: "Can't",
+    labelEn: "I can't",
     labelTa: 'இயலாது',
     meaning: 'Decline for now',
     colorVariant: 'muted',
   },
   {
     key: '9',
-    labelEn: 'Opt out',
+    labelEn: 'Stop calling me',
     labelTa: 'விலகுகிறேன்',
     meaning: 'Remove from pool',
     colorVariant: 'danger',

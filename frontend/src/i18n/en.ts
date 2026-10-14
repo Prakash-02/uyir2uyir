@@ -185,6 +185,26 @@ export const en = {
     noCalls: 'No donor calls active for this request.',
     callsLabel: 'Donor Calls',
   },
+  // Donor call simulator screen
+  sim: {
+    title: 'Donor Call Simulator',
+    subtitle: 'Simulate automated emergency voice calls to consented donors.',
+    demoNote: 'Demo simulator. In the live system this is a real phone call.',
+    ringingCallsTitle: 'Incoming Calls (Ringing)',
+    noRingingCalls: 'Raise a request on the Hospital screen, or press Run the story.',
+    donorAliasLabel: 'Donor',
+    langLabel: 'Language',
+    callIncoming: 'Incoming emergency outreach call',
+    connected: 'Call connected',
+    mapLink: 'Open directions in Google Maps',
+    answerAnother: 'Answer another ringing call',
+    responsePress1: 'Thank you. Please go to',
+    responsePress2: 'Thank you for telling us.',
+    responsePress9: "You won't be called again.",
+    responseLateAccept: 'Thank you, we already have enough donors.',
+    openHospital: 'Open Hospital screen',
+    runStory: 'Run the story',
+  },
 }
 
 export type TranslationKeys = typeof en

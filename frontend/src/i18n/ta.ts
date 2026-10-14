@@ -187,4 +187,24 @@ export const ta: TranslationKeys = {
     noCalls: 'இந்தக் கோரிக்கைக்கு செயலில் உள்ள கொடையாளர் அழைப்புகள் இல்லை.', // REVIEW
     callsLabel: 'கொடையாளர் அழைப்புகள்', // REVIEW
   },
+  // Donor call simulator screen
+  sim: {
+    title: 'கொடையாளர் அழைப்பு மாதிரி', // REVIEW
+    subtitle: 'ஒப்புதல் அளித்த கொடையாளர்களுக்கான தானியங்கி அவசர குரல் அழைப்புகளை மாதிரி செய்து பார்க்கவும்.', // REVIEW
+    demoNote: 'Demo simulator. In the live system this is a real phone call.', // REVIEW
+    ringingCallsTitle: 'உள்வரும் அழைப்புகள் (ஒலிக்கிறது)', // REVIEW
+    noRingingCalls: 'Raise a request on the Hospital screen, or press Run the story.', // REVIEW
+    donorAliasLabel: 'கொடையாளர்', // REVIEW
+    langLabel: 'மொழி', // REVIEW
+    callIncoming: 'உள்வரும் அவசர இரத்த தான அழைப்பு', // REVIEW
+    connected: 'அழைப்பு இணைக்கப்பட்டது', // REVIEW
+    mapLink: 'கூகிள் வரைபடத்தில் வழியைக் காண்க', // REVIEW
+    answerAnother: 'மற்றொரு அழைப்பை ஏற்கவும்', // REVIEW
+    responsePress1: 'நன்றி. தயவுசெய்து செல்ல வேண்டிய இடம்:', // REVIEW
+    responsePress2: 'தகவல் தெரிவித்தமைக்கு நன்றி.', // REVIEW
+    responsePress9: 'உங்களுக்கு இனி அழைப்பு வராது.', // REVIEW
+    responseLateAccept: 'நன்றி, எங்களிடம் ஏற்கனவே போதுமான கொடையாளர்கள் உள்ளனர்.', // REVIEW
+    openHospital: 'மருத்துவமனைப் பக்கத்தைத் திறக்கவும்', // REVIEW
+    runStory: 'செயல்முறை ஓட்டத்தை இயக்கவும்', // REVIEW
+  },
 }
