@@ -157,12 +157,28 @@ Every design system token pair was verified mathematically against WCAG 2.1 AA c
 | Mobile 360px Viewport | 0px horizontal scroll, 48px touch targets | **PASS (verified on /centre & /desk)** |
 | WCAG AA Contrast | All token pairs >= 4.5:1 | **PASS (all tokens 6.0:1 – 18.2:1)** |
 | Code Splitting & Performance | Lazy-loaded routes, main < 350 kB | **PASS (Main: 311 kB, Gzip: 98.7 kB)** |
-| Backend Rule Engine Tests | 100% pass rate | **Status: pending** |
-| Backend API Integration | 100% pass rate | **Status: pending** |
+| Backend Domain & Rule Engine | 100% pass rate (Hypothesis >= 200 runs) | **PASS (55 / 55 domain, 68 / 68 backend total)** |
+| Backend API Integration | 100% pass rate | **PASS (13 / 13 integration tests passed)** |
 | Request Desk Zero-Payment Rule | `paymentToHospital == 0` | **Status: pending** |
 | Request Desk Hospital Enum Match | `wrongHospitalIds == 0` | **Status: pending** |
 | Request Desk P95 Latency | < 2,500 ms | **Status: pending** |
 | E2E 6-Step Scenario Runner | Successful pass through steps 1–5 | **Status: pending** |
+
+---
+
+### 3.3 Backend Domain Logic & Property-Based Test Suite
+
+The pure domain logic layer (`backend/app/requests/` and `backend/app/rules/`) was verified across five dedicated test suites:
+
+| Test File | Test Category | Pass Count | Details |
+|---|---|---|---|
+| `tests/domain/test_counting.py` | Counting Rule Table Test | **40 / 40 passed** | Exhaustive coverage of pause at $N+1$, reopen below $N$, fulfil at accepted $\ge N$, gap zone stability, and terminal state immutability across $N \in \{1, 2, 4\}$. |
+| `tests/domain/test_models.py` | Contract Parity | **4 / 4 passed** | Verifies field-for-field parity of Pydantic models against `docs/API_CONTRACT.md` JSON fixtures (`BloodRequest`, `Call`, `TimelineEvent`, enums). |
+| `tests/domain/test_story.py` | Section 7 Demo Story Replay | **1 / 1 passed** | Step-by-step transition replay of $N=2$ O+ red cell request: OPEN $\to$ PAUSED (C presses 1) $\to$ D & E LATE_ACCEPT $\to$ Staff accept A & defer B $\to$ C cancels $\to$ REOPENS to OPEN $\to$ Staff accept F $\to$ FULFILLED with accepted 2. |
+| `tests/domain/test_rules.py` | Compatibility & Contact Rules | **8 / 8 passed** | Validates ABO/Rh red cell compatibility matrix (O- universal donor, AB+ universal recipient), plasma inverse rules, 90-day donation intervals, and Press 9 opt-out suppression. |
+| `tests/domain/test_property.py` | Hypothesis State Machine & Invariants | **2 / 2 passed** | **200 stateful examples** (up to 50 steps each) evaluating 5 domain invariants: (1) accepted $\le$ staff accepted, (2) counts non-negative, (3) status matches counting rule unless terminal, (4) no donor in two states, (5) opted-out donors never called again; plus illegal transition rejection tests. |
+| **Total Domain Tests** | Pure Domain Logic | **55 / 55 passed** | All tests pass in < 3.2s with zero network or database dependencies. |
+
 
 ---
 

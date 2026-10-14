@@ -101,7 +101,7 @@ backend/
 
 ### 3.1 The $N+1$ Counting Rule
 
-The counting rule is implemented as a **pure function** in `app/rules/engine.py` with zero side effects.
+The counting rule is implemented as a **pure function** in `backend/app/requests/counting.py` with zero side effects.
 
 ```python
 def evaluate_request_state(

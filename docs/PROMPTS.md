@@ -560,6 +560,38 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** 0e902d6
 - **Human Review:** Backend scaffold, settings, mode guard, logging, and test suite verified.
 
+### Entry #B1
+- **Date:** 2026-10-15
+- **Goal:** Write the pure domain logic (no database, no network): the models, the counting rule, and the request and call state machines, proven with property-based tests.
+- **Prompt Summary:**
+  1. Built Pydantic models in `backend/app/requests/models.py` (`BloodRequest`, `Call`, `TimelineEvent`, and enums `BloodGroup`, `Component`, `RequestStatus`, `CallState`, `Lang`), matching `docs/API_CONTRACT.md` field for field with `CamelModel` alias generation.
+  2. Implemented pure counting functions in `backend/app/requests/counting.py`: `covered(accepted, on_the_way)` and `next_status(status, units_needed, accepted, on_the_way)`, enforcing: pause when covered >= N + 1, reopen when covered < N, fulfil when accepted >= N, gap-zone stability, and immutable terminal states. Provided a worked example for N = 2 in the docstring.
+  3. Implemented pure transition functions and side effect intents in `backend/app/requests/transitions.py`: `apply_press_1`, `apply_press_2`, `apply_press_9`, `apply_staff_accept`, `apply_staff_defer`, `apply_call_no_answer`, `apply_reminder_press_2`, `apply_hospital_cancel`, `apply_expire`. Handled LATE_ACCEPT on PAUSED/FULFILLED, WITHDRAW_CONSENT on Press 9, round-two reopening, and cancellation of ringing calls with donor thank-yous upon fulfillment. Raised `IllegalTransition` for invalid operations.
+  4. Implemented clinical compatibility and contact rules in `backend/app/rules/`: `compatibility.py` (ABO/Rh matrix per component) and `contact.py` (90-day minimum donation interval and opt-out suppression), both marked `STATUS = "DEMO_UNAPPROVED"` with the replacement disclaimer comment.
+  5. Implemented comprehensive test suites in `backend/tests/domain/`:
+     - `test_models.py`: JSON field name and enum parity against API contract fixtures (4 tests).
+     - `test_counting.py`: 40 table tests covering every counting transition and terminal state immutability.
+     - `test_story.py`: Exact replay of U2U_BRIEF.md Section 7 demo story (OPEN -> PAUSED -> OPEN -> FULFILLED with D and E as LATE_ACCEPT).
+     - `test_rules.py`: Universal donor/recipient and contact date tests (8 tests).
+     - `test_property.py`: Hypothesis `RuleBasedStateMachine` running 200 stateful examples across 5 domain invariants plus illegal transition rejection tests (2 tests).
+  6. Linked state machine diagrams in `docs/ARCHITECTURE.md` to `transitions.py` and updated `docs/TESTING.md` with benchmark pass counts.
+- **Files Changed:**
+  - `backend/app/requests/counting.py`
+  - `backend/app/requests/models.py`
+  - `backend/app/requests/transitions.py`
+  - `backend/app/rules/compatibility.py`
+  - `backend/app/rules/contact.py`
+  - `backend/tests/domain/test_counting.py`
+  - `backend/tests/domain/test_models.py`
+  - `backend/tests/domain/test_property.py`
+  - `backend/tests/domain/test_rules.py`
+  - `backend/tests/domain/test_story.py`
+  - `docs/ARCHITECTURE.md`
+  - `docs/TESTING.md`
+  - `docs/PROMPTS.md`
+- **Commit Hash:** [pending]
+- **Human Review:** [Pending line-by-line review of counting.py by human]
+
 ---
 
 ## Human Decisions

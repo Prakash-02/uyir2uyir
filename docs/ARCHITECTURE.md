@@ -151,6 +151,8 @@ U2U separates demonstration and live operational environments using separate Clo
 
 ## 4. State Machines
 
+The deterministic state transitions for both requests and outreach calls are implemented as pure functions in [`backend/app/requests/transitions.py`](../backend/app/requests/transitions.py), with counting and pause/reopen/fulfillment rules governed by [`backend/app/requests/counting.py`](../backend/app/requests/counting.py).
+
 ### 4.1 Request State Machine
 
 A blood request transitions deterministically based on hospital actions, time expiration, and the $N+1$ donor rule:
