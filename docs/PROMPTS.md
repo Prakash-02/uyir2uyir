@@ -302,6 +302,8 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/i18n/en.ts`
   - `frontend/src/i18n/ta.ts`
   - `frontend/src/styles/tokens.css`
+- **Commit Hash:** 916ea9e
+- **Human Review:** Blood centre staff triage screen verified with live rounds, accept/defer actions, timeline, and weather alert.
 
 ---
 
