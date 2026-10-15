@@ -622,7 +622,7 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `docs/ARCHITECTURE.md`
   - `docs/TESTING.md`
   - `docs/PROMPTS.md`
-- **Commit Hash:** [pending]
+- **Commit Hash:** e1ba5e2
 - **Human Review:** Storage interface, memory/firestore stores, seed script, security rules, and tests verified.
 
 ---
