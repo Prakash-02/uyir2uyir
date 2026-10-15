@@ -103,6 +103,11 @@ make dev                        # Runs uvicorn app.main:app --reload --port 8080
 # 5. Run tests and linting
 make test                       # Runs pytest
 make lint                       # Runs ruff check . && ruff format --check .
+
+# 6. Seed simulated database fixtures (hospitals, centres, donors, config)
+DATA_MODE=demo STORE=firestore .venv/bin/python scripts/seed.py
+# On Windows PowerShell:
+# $env:DATA_MODE="demo"; $env:STORE="firestore"; .\.venv\Scripts\python.exe scripts/seed.py
 ```
 
 ---

@@ -39,4 +39,7 @@ pythonpath = ["."]
 filterwarnings = [
     "ignore::DeprecationWarning:starlette.*",
 ]
+markers = [
+    "emulator: tests requiring Firestore emulator (skipped unless FIRESTORE_EMULATOR_HOST is set)",
+]
 

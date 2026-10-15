@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: client must be authenticated with env == 'demo' token claim
+    function isDemoUser() {
+      return request.auth != null && request.auth.token.env == 'demo';
+    }
+
+    // Helper: read parent request document
+    function getRequestData(requestId) {
+      return get(/databases/$(database)/documents/requests/$(requestId)).data;
+    }
+
+    // Requests: hospital staff read their own hospital's requests; centre staff read their centre's requests
+    match /requests/{requestId} {
+      allow read: if isDemoUser() && (
+        (request.auth.token.hospitalId != null && resource.data.hospitalId == request.auth.token.hospitalId) ||
+        (request.auth.token.centreId != null && resource.data.centreId == request.auth.token.centreId)
+      );
+      allow write: if false;
+
+      // Calls subcollection under requests
+      match /calls/{callId} {
+        allow read: if isDemoUser() && (
+          (request.auth.token.hospitalId != null && getRequestData(requestId).hospitalId == request.auth.token.hospitalId) ||
+          (request.auth.token.centreId != null && getRequestData(requestId).centreId == request.auth.token.centreId)
+        );
+        allow write: if false;
+      }
+
+      // Events subcollection under requests
+      match /events/{eventId} {
+        allow read: if isDemoUser() && (
+          (request.auth.token.hospitalId != null && getRequestData(requestId).hospitalId == request.auth.token.hospitalId) ||
+          (request.auth.token.centreId != null && getRequestData(requestId).centreId == request.auth.token.centreId)
+        );
+        allow write: if false;
+      }
+    }
+
+    // Collection group queries on calls: any demo user can read RINGING calls (simulator)
+    match /{path=**}/calls/{callId} {
+      allow read: if isDemoUser() && resource.data.state == 'RINGING';
+      allow write: if false;
+    }
+
+    // Metadata collections: hospitals, centres, and public app config
+    match /hospitals/{hospitalId} {
+      allow read: if isDemoUser();
+      allow write: if false;
+    }
+
+    match /centres/{centreId} {
+      allow read: if isDemoUser();
+      allow write: if false;
+    }
+
+    match /config/app {
+      allow read: if isDemoUser();
+      allow write: if false;
+    }
+
+    // Deny-all collections: donors, contacts, consents, pastes, tokens, webhooks, locks, audit, clock
+    match /donors/{donorId} {
+      allow read, write: if false;
+    }
+
+    match /donorContacts/{id} {
+      allow read, write: if false;
+    }
+
+    match /consents/{id} {
+      allow read, write: if false;
+    }
+
+    match /pastes/{id} {
+      allow read, write: if false;
+    }
+
+    match /confirmLinks/{id} {
+      allow read, write: if false;
+    }
+
+    match /webhookEvents/{id} {
+      allow read, write: if false;
+    }
+
+    match /locks/{id} {
+      allow read, write: if false;
+    }
+
+    match /audit/{id} {
+      allow read, write: if false;
+    }
+
+    match /config/clock {
+      allow read, write: if false;
+    }
+
+    // Explicit fallback: reject any unhandled read or write
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

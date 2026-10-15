@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     # Operational mode & Database
     DATA_MODE: str = Field(default="demo", description="Operational mode: demo or live")
+    STORE: str = Field(default="memory", description="Storage backend: memory or firestore")
     GOOGLE_CLOUD_PROJECT: str | None = Field(default=None, description="GCP project ID")
     FIRESTORE_DB: str = Field(default="u2u-demo", description="Firestore database name")
 

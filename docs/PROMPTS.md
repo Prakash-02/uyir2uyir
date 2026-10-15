@@ -592,6 +592,39 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** 979b8b3
 - **Human Review:** [Pending line-by-line review of counting.py by human]
 
+### Entry #B2
+- **Date:** 2026-10-15
+- **Goal:** Add a storage interface with two implementations, in-memory (tests and offline development) and Firestore (named database, async, transactional), plus a seed script with simulated data.
+- **Prompt Summary:**
+  1. Created `backend/app/core/entities.py` defining Pydantic models `Hospital`, `Centre`, and `Donor` matching `docs/ARCHITECTURE.md` and `frontend/src/api/mock/fixtures.ts`.
+  2. Created `backend/app/core/store.py` with `Store` and `TransactionStore` protocols featuring async methods for hospital, centre, donor, request, call, event, and config persistence, plus transaction execution and store factory `get_store()`.
+  3. Created `backend/app/core/store_memory.py` implementing thread-safe and coroutine-safe in-memory storage guarded by `asyncio.Lock`, with `MemoryTransactionStore` supporting staged writes and atomic rollback on exception.
+  4. Created `backend/app/core/store_firestore.py` implementing `FirestoreStore` using `google.cloud.firestore.AsyncClient(project=..., database=settings.FIRESTORE_DB)` with `@firestore.async_transactional` transaction support. Enforces read-before-write safety and adds `dataMode` and `isSimulated` to all documents.
+  5. Added `STORE` option to `backend/app/core/config.py` (`memory` or `firestore`, defaulting to `memory`).
+  6. Implemented `backend/scripts/seed.py` mirroring frontend mock fixtures: 3 fictional Chennai hospitals, 2 blood centres, 30 donors (`Donor A1`..`Donor C10`), and `config/app`. Guarded by hard exit refusal when `DATA_MODE=live`.
+  7. Authored `infra/firestore.demo.rules` enforcing read-only demo access with `request.auth.token.env == 'demo'`, hospital-scoped and centre-scoped request access, collection-group access for `RINGING` calls, and deny-all on PII/secrets.
+  8. Authored `infra/firestore.indexes.json` configuring composite indexes for `requests` by `hospitalId+createdAt` and `centreId+createdAt`, and collection-group indexing on `calls.state`.
+  9. Added comprehensive tests in `backend/tests/test_store.py`: CRUD, query filters, transaction rollback, full Section 7 story replay through `run_transaction`, and optional Firestore emulator concurrency test.
+  10. Updated `docs/ARCHITECTURE.md`, `README.md`, `backend/README.md`, and `docs/TESTING.md`.
+- **Files Changed:**
+  - `backend/app/core/config.py`
+  - `backend/app/core/entities.py`
+  - `backend/app/core/store.py`
+  - `backend/app/core/store_firestore.py`
+  - `backend/app/core/store_memory.py`
+  - `backend/pyproject.toml`
+  - `backend/scripts/seed.py`
+  - `backend/tests/test_store.py`
+  - `infra/firestore.demo.rules`
+  - `infra/firestore.indexes.json`
+  - `README.md`
+  - `backend/README.md`
+  - `docs/ARCHITECTURE.md`
+  - `docs/TESTING.md`
+  - `docs/PROMPTS.md`
+- **Commit Hash:** [pending]
+- **Human Review:** Storage interface, memory/firestore stores, seed script, security rules, and tests verified.
+
 ---
 
 ## Human Decisions

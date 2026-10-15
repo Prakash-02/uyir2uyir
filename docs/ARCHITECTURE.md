@@ -108,13 +108,17 @@ backend/
 ├── app/
 │   ├── main.py                  # App factory create_app(), CORS, /healthz, /config
 │   ├── core/
-│   │   ├── config.py            # pydantic-settings Settings, env validation
+│   │   ├── config.py            # pydantic-settings Settings, STORE selection, env validation
 │   │   ├── mode_guard.py        # ModeGuard refusing DATA_MODE / FIRESTORE_DB mismatch
 │   │   ├── models.py            # CamelModel base with to_camel alias generator
+│   │   ├── entities.py          # Hospital, Centre, and Donor domain models
+│   │   ├── store.py             # Store and TransactionStore protocols
+│   │   ├── store_memory.py      # Thread-safe in-memory store for unit tests and local dev
+│   │   ├── store_firestore.py   # Async transactional Firestore store
 │   │   └── logging.py           # Structured JSON logger, phone redactor, 422 sanitizer
 │   ├── auth/                    # Firebase Auth JWT, claims extraction, RBAC
-│   ├── requests/                # Blood request state transitions and cancellation
-│   ├── rules/                   # Deterministic N+1 rule engine and stand-down logic
+│   ├── requests/                # Blood request models, counting rules, and transitions
+│   ├── rules/                   # Deterministic blood compatibility and contact rules
 │   ├── matching/                # Donor compatibility and 5-donor batching
 │   ├── outreach/                # Twilio voice client, IVR simulator bridge, TTS
 │   ├── screening/               # Donor triage: accept, defer, and return dates
@@ -122,7 +126,9 @@ backend/
 │   ├── ai/                      # Vertex AI Gemini Flash client (temperature 0)
 │   ├── clock/                   # Cloud Scheduler 1-min reconciliation sweeps
 │   └── admin/                   # Demo scenario runner and operational resets
-├── tests/                       # Pytest test suites
+├── scripts/
+│   └── seed.py                  # Database seed script for hospitals, centres, donors, and config
+├── tests/                       # Pytest test suites (domain, store, health, logging, mode guard)
 ├── Dockerfile                   # python:3.12-slim non-root Cloud Run container
 ├── pyproject.toml               # Poetry/pip project definition, ruff, and pytest configs
 ├── requirements.txt             # Pinned production dependencies
@@ -288,6 +294,20 @@ stateDiagram-v2
   ├── area: string
   └── active: boolean
 ```
+
+### 5.1 Data Model Mapping & Storage Implementations
+
+| Entity / Collection | Firestore Path | Model Class | Source File | Storage Implementation |
+|---|---|---|---|---|
+| **Blood Request** | `/requests/{id}` | `BloodRequest` | [`backend/app/requests/models.py`](../backend/app/requests/models.py) | [`backend/app/core/store_memory.py`](../backend/app/core/store_memory.py) / [`backend/app/core/store_firestore.py`](../backend/app/core/store_firestore.py) |
+| **Outbound Call** | `/requests/{id}/calls/{callId}` | `Call` | [`backend/app/requests/models.py`](../backend/app/requests/models.py) | [`backend/app/core/store_memory.py`](../backend/app/core/store_memory.py) / [`backend/app/core/store_firestore.py`](../backend/app/core/store_firestore.py) |
+| **Timeline Event** | `/requests/{id}/events/{id}` | `TimelineEvent` | [`backend/app/requests/models.py`](../backend/app/requests/models.py) | [`backend/app/core/store_memory.py`](../backend/app/core/store_memory.py) / [`backend/app/core/store_firestore.py`](../backend/app/core/store_firestore.py) |
+| **Hospital** | `/hospitals/{id}` | `Hospital` | [`backend/app/core/entities.py`](../backend/app/core/entities.py) | Seeded by [`backend/scripts/seed.py`](../backend/scripts/seed.py) |
+| **Blood Centre** | `/centres/{id}` | `Centre` | [`backend/app/core/entities.py`](../backend/app/core/entities.py) | Seeded by [`backend/scripts/seed.py`](../backend/scripts/seed.py) |
+| **Donor Profile** | `/donors/{id}` | `Donor` | [`backend/app/core/entities.py`](../backend/app/core/entities.py) | Seeded by [`backend/scripts/seed.py`](../backend/scripts/seed.py) |
+| **App Config** | `/config/app` | `dict[str, Any]` | `dict` / `AppConfig` | Initialized by [`backend/scripts/seed.py`](../backend/scripts/seed.py) |
+| **Security Rules** | Firestore Security Rules | — | [`infra/firestore.demo.rules`](../infra/firestore.demo.rules) | Enforces read-only demo access, deny-all on PII |
+| **Indexes** | Composite & Collection Group | — | [`infra/firestore.indexes.json`](../infra/firestore.indexes.json) | Indexes for `hospitalId+createdAt`, `centreId+createdAt`, and `calls.state` |
 
 ---
 
