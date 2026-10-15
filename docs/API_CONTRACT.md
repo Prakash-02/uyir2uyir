@@ -83,9 +83,9 @@ interface EvalResult {
 | `POST /requests` | Hospital | `{bloodGroup, component, unitsNeeded, patientRef}` | `BloodRequest` | Built (`backend/app/requests/router.py`) |
 | `POST /requests/{id}/cancel` | Hospital | none | `BloodRequest` | Built (`backend/app/requests/router.py`) |
 | `GET /requests/{id}/status` | Public | none | `PublicStatus` | Built (`backend/app/requests/router.py`) |
-| `POST /desk/check` | Public | `{text}` (max 2,000 chars) | `DeskResult` | Planned |
-| `GET /confirm/{token}` | Hospital blood bank | none | `RequestPreview` | Planned |
-| `POST /confirm` | Hospital blood bank | `{token, action: ConfirmAction}` | `BloodRequest` or `{status:'REJECTED'}` | Planned |
+| `POST /desk/check` | Public | `{text}` (max 2,000 chars) | `DeskResult` | Built (`backend/app/desk/router.py`) |
+| `GET /confirm/{token}` | Hospital blood bank | none | `RequestPreview` | Built (`backend/app/desk/router.py`) |
+| `POST /confirm` | Hospital blood bank | `{token, action: ConfirmAction}` | `BloodRequest` | Built (`backend/app/desk/router.py`) |
 | `POST /sim/calls/{callId}/press` | Simulator (demo) | `{key: SimKey}` | `Call` | Built (`backend/app/outreach/router.py`) |
 | `POST /calls/{callId}/accept` | Staff | none | `Call` | Built (`backend/app/screening/router.py`) |
 | `POST /calls/{callId}/defer` | Staff | `{returnDate?}` | `Call` | Built (`backend/app/screening/router.py`) |

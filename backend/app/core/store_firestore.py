@@ -93,6 +93,14 @@ class FirestoreTransactionStore(TransactionStore):
             return snap.to_dict()
         return None
 
+    async def get_confirm_link(self, token_hash: str) -> dict[str, Any] | None:
+        self._assert_can_read()
+        ref = self.client.collection("confirmLinks").document(token_hash)
+        snap = await _get_one_doc(self.transaction, ref)
+        if snap and snap.exists:
+            return snap.to_dict()
+        return None
+
     # --- WRITES ---
 
     async def save_request(self, request: BloodRequest) -> None:
@@ -148,6 +156,14 @@ class FirestoreTransactionStore(TransactionStore):
     async def set_lock(self, lock_id: str, data: dict[str, Any]) -> None:
         self._has_written = True
         ref = self.client.collection("locks").document(lock_id)
+        payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        self.transaction.set(ref, payload)
+
+    async def save_confirm_link(self, token_hash: str, data: dict[str, Any]) -> None:
+        self._has_written = True
+        ref = self.client.collection("confirmLinks").document(token_hash)
         payload = dict(data)
         payload["dataMode"] = self.data_mode
         payload["isSimulated"] = self.data_mode == "demo"
@@ -346,6 +362,41 @@ class FirestoreStore(Store):
         payload["dataMode"] = self.data_mode
         payload["isSimulated"] = self.data_mode == "demo"
         await ref.set(payload)
+
+    # Pastes
+    async def get_paste(self, fingerprint: str) -> dict[str, Any] | None:
+        ref = self.client.collection("pastes").document(fingerprint)
+        doc = await ref.get()
+        return doc.to_dict() if doc.exists else None
+
+    async def save_paste(self, fingerprint: str, data: dict[str, Any]) -> None:
+        ref = self.client.collection("pastes").document(fingerprint)
+        payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        await ref.set(payload)
+
+    # Confirm Links
+    async def get_confirm_link(self, token_hash: str) -> dict[str, Any] | None:
+        ref = self.client.collection("confirmLinks").document(token_hash)
+        doc = await ref.get()
+        return doc.to_dict() if doc.exists else None
+
+    async def save_confirm_link(self, token_hash: str, data: dict[str, Any]) -> None:
+        ref = self.client.collection("confirmLinks").document(token_hash)
+        payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        await ref.set(payload)
+
+    async def list_confirm_links_by_hospital(self, hospital_id: str) -> list[dict[str, Any]]:
+        query = self.client.collection("confirmLinks").where(
+            filter=FieldFilter("hospitalId", "==", hospital_id)
+        )
+        docs = []
+        async for doc in query.stream():
+            docs.append(doc.to_dict())
+        return docs
 
     # Transactions
     async def run_transaction(self, fn: Callable[[TransactionStore], Awaitable[T]]) -> T:

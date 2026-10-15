@@ -20,6 +20,7 @@ class MemoryTransactionStore(TransactionStore):
         self._pending_donors: dict[str, Donor] = {}
         self._pending_configs: dict[str, dict[str, Any]] = {}
         self._pending_locks: dict[str, dict[str, Any]] = {}
+        self._pending_confirm_links: dict[str, dict[str, Any]] = {}
 
     async def get_request(self, request_id: str) -> BloodRequest | None:
         if request_id in self._pending_requests:
@@ -79,6 +80,15 @@ class MemoryTransactionStore(TransactionStore):
     async def set_lock(self, lock_id: str, data: dict[str, Any]) -> None:
         self._pending_locks[lock_id] = dict(data)
 
+    async def get_confirm_link(self, token_hash: str) -> dict[str, Any] | None:
+        if token_hash in self._pending_confirm_links:
+            return dict(self._pending_confirm_links[token_hash])
+        link = self._store._confirm_links.get(token_hash)
+        return dict(link) if link is not None else None
+
+    async def save_confirm_link(self, token_hash: str, data: dict[str, Any]) -> None:
+        self._pending_confirm_links[token_hash] = dict(data)
+
     def apply(self) -> None:
         """Applies all staged updates into the backing MemoryStore."""
         for req in self._pending_requests.values():
@@ -103,6 +113,9 @@ class MemoryTransactionStore(TransactionStore):
         for lock_id, lock_data in self._pending_locks.items():
             self._store._locks[lock_id] = lock_data
 
+        for token_hash, link_data in self._pending_confirm_links.items():
+            self._store._confirm_links[token_hash] = link_data
+
 
 class MemoryStore(Store):
     """Thread-safe, coroutine-safe in-memory store for offline development and testing."""
@@ -120,6 +133,8 @@ class MemoryStore(Store):
         self._events: dict[str, list[TimelineEvent]] = {}
         self._configs: dict[str, dict[str, Any]] = {}
         self._locks: dict[str, dict[str, Any]] = {}
+        self._pastes: dict[str, dict[str, Any]] = {}
+        self._confirm_links: dict[str, dict[str, Any]] = {}
 
     @classmethod
     def get_instance(cls) -> "MemoryStore":
@@ -141,6 +156,8 @@ class MemoryStore(Store):
         self._events.clear()
         self._configs.clear()
         self._locks.clear()
+        self._pastes.clear()
+        self._confirm_links.clear()
 
     # Hospitals
     async def get_hospital(self, hospital_id: str) -> Hospital | None:
@@ -279,6 +296,34 @@ class MemoryStore(Store):
     async def set_lock(self, lock_id: str, data: dict[str, Any]) -> None:
         async with self._lock:
             self._locks[lock_id] = dict(data)
+
+    # Pastes
+    async def get_paste(self, fingerprint: str) -> dict[str, Any] | None:
+        async with self._lock:
+            paste = self._pastes.get(fingerprint)
+            return dict(paste) if paste is not None else None
+
+    async def save_paste(self, fingerprint: str, data: dict[str, Any]) -> None:
+        async with self._lock:
+            self._pastes[fingerprint] = dict(data)
+
+    # Confirm Links
+    async def get_confirm_link(self, token_hash: str) -> dict[str, Any] | None:
+        async with self._lock:
+            link = self._confirm_links.get(token_hash)
+            return dict(link) if link is not None else None
+
+    async def save_confirm_link(self, token_hash: str, data: dict[str, Any]) -> None:
+        async with self._lock:
+            self._confirm_links[token_hash] = dict(data)
+
+    async def list_confirm_links_by_hospital(self, hospital_id: str) -> list[dict[str, Any]]:
+        async with self._lock:
+            return [
+                dict(link)
+                for link in self._confirm_links.values()
+                if link.get("hospitalId") == hospital_id or link.get("hospital_id") == hospital_id
+            ]
 
     # Transactions
     async def run_transaction(self, fn: Callable[[TransactionStore], Awaitable[T]]) -> T:

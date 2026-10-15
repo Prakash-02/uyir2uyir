@@ -1,6 +1,6 @@
 # U2U AI Pipeline Design: Gemini Flash at the Request Desk
 
-> **Status:** planned (Implementation planned for Milestone 4)
+> **Status:** Built (Implemented in `backend/app/ai/gemini.py` and `backend/app/desk/pipeline.py`)
 
 This document specifies the architecture, safety constraints, quote validation algorithm, and evaluation protocol for the Gemini Flash integration at the U2U Request Desk.
 
@@ -17,7 +17,30 @@ At U2U, the boundary is absolute:
 
 ---
 
-## 2. The Request Desk Pipeline
+## 2. The Request Desk Pipeline Implementation
+
+| Pipeline Step | Source File | Key Rule & Operation |
+|---|---|---|
+| **1. Ingestion & Guardrails** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | Capped at 2,000 characters. In-memory IP rate limiter (10 per minute per IP). |
+| **2. Deduplication & Caching** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | SHA-256 fingerprint of normalized text. Deduplicates repeats within 24h. Raw text discarded. |
+| **3. Model Extraction** | [`backend/app/ai/gemini.py`](../backend/app/ai/gemini.py) | One call to Gemini Flash (`temperature: 0.0`, strict JSON schema, 8s timeout). Prompt: [`desk_extract_v1.md`](../backend/prompts/desk_extract_v1.md). |
+| **4. Quote Check** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | Verbatim character-for-character check against original text. Unmatched quotes dropped (`kept=False`, `value=None`). |
+| **5. Canonical Dictionaries** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | PRBC/PCV $\to$ `RED_CELLS`, SDP/apheresis $\to$ `PLATELETS_SDP`, RDP $\to$ `PLATELETS_RDP`, pints $\to$ `UNSPECIFIED`. Blood group normalisation (EN & TA). |
+| **6. Hospital & Alias Check** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | Exact registered hospital catalog match. Generic acronyms (e.g. "GH") trigger: `"Please paste again with the full hospital name."` |
+| **7. Remuneration Blocker** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | Remuneration words (pay, rupees, ₹, cash, fee, பணம்) block hospital routing $\to$ `NOT_VERIFIED`. "processing charge" alone is allowed. |
+| **8. Deterministic Decision** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | Open request match $\to$ `VERIFIED_MATCH`. Registered hospital $\to$ `SENT_TO_HOSPITAL`. Otherwise $\to$ `NOT_VERIFIED`. |
+| **9. Confirm Links** | [`backend/app/desk/links.py`](../backend/app/desk/links.py) | HMAC-signed token, SHA-256 hash stored. 6h expiry, single-use. Capped at 6/hour and 40/day per hospital. |
+| **10. Privacy & Trace** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | Discards raw text! Pastes store only extracted fields + fingerprint (30-day expiry). Footer: `"Nobody may charge you for a donor."` |
+
+### Vertex AI Model Availability & Region Disclosure
+
+- **Default Region:** `asia-south1` (Mumbai).
+- **Supported Models in `asia-south1`:** `gemini-1.5-flash` is fully available in `asia-south1`.
+- **Region Fallback for `gemini-2.0-flash`:** If deploying with `GEMINI_MODEL=gemini-2.0-flash`, use `VERTEX_LOCATION=us-central1` (or `asia-southeast1`) where Vertex AI 2.0 Flash is generally available.
+- **Client Timeout:** `types.HttpOptions(timeout=8000)` enforces an 8,000-millisecond hard ceiling.
+- **Quota Tracking:** Tracked in `config/app` (`geminiCallsToday`, `geminiCallsDate`). Capped by `DAILY_GEMINI_CAP` (default 2,000/day).
+- **Graceful Fallback:** If Vertex AI times out or is unreachable, the pipeline catches `AIUnavailable` and immediately returns:
+  `{"answer": "NOT_VERIFIED", "message": "Couldn't check right now. Please call the hospital."}` without crashing or making speculative guesses.
 
 ```mermaid
 flowchart TD

@@ -83,9 +83,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             weather_alert=weather_alert,
         )
 
-    # Attach domain routers
     from app.admin.router import router as admin_router
     from app.clock.router import router as clock_router
+    from app.desk.router import desk_router
     from app.outreach.router import router as outreach_router
     from app.requests.router import router as requests_router
     from app.screening.metrics import router as metrics_router
@@ -94,6 +94,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(requests_router)
     app.include_router(outreach_router)
     app.include_router(screening_router)
+    app.include_router(desk_router)
     app.include_router(metrics_router)
     app.include_router(clock_router)
     app.include_router(admin_router)

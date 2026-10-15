@@ -11,14 +11,14 @@ During medical emergencies, families frequently scramble at odd hours forwarding
 ### Google Services
 | Service | Used for | Code path |
 |---|---|---|
-| Gemini Flash (Vertex AI) | Request Desk message extraction & quote checking | Status: planned (`backend/app/desk`, `backend/app/ai`) |
+| Gemini on Vertex AI | reads pasted messages | `backend/app/ai/gemini.py` |
 | Firebase Hosting | High-performance frontend web application delivery | Status: planned (`frontend/`) |
-| Cloud Firestore | Multi-database persistence (`u2u-demo` / `u2u-live`) & live state | Status: planned (`backend/`, `frontend/`) |
-| Cloud Run | Scalable FastAPI modular monolith backend container | Status: planned (`backend/`) |
-| Firebase Authentication | Role-based hospital and blood centre identity & custom claims | Status: planned (`backend/app/auth`) |
+| Cloud Firestore | Multi-database persistence (`u2u-demo` / `u2u-live`) & live state | Built (`backend/app/core/store_firestore.py`) |
+| Cloud Run | Scalable FastAPI modular monolith backend container | Built (`backend/Dockerfile`) |
+| Firebase Authentication | Role-based hospital and blood centre identity & custom claims | Built (`backend/app/auth/`) |
 | Cloud Text-to-Speech | Cached Tamil and English voice audio synthesis for calls | Status: planned (`backend/app/outreach`) |
-| Cloud Scheduler | 1-minute ticker for expiration and donor outreach rounds | Status: planned (`backend/app/clock`) |
-| Secret Manager & Cloud Logging | Secure secret isolation and centralized audit logging | Status: planned (`backend/app/core`) |
+| Cloud Scheduler | 1-minute ticker for expiration and donor outreach rounds | Built (`backend/app/clock/router.py`) |
+| Secret Manager & Cloud Logging | Secure secret isolation and centralized audit logging | Built (`backend/app/core/logging.py`) |
 
 ### Documentation Index
 - [U2U_BRIEF.md](U2U_BRIEF.md) — Single source of truth specification

@@ -709,6 +709,53 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** 6cab03a
 - **Human Review:** Judge-facing demo endpoints, background story execution, reset reseed, clock advance, and timeline metrics verified.
 
+### Entry #B5
+- **Date:** 2026-10-15
+- **Goal:** Build POST /desk/check: one Gemini call reads the pasted message, code checks every word, and the user gets exactly one of three answers.
+- **Prompt Summary:**
+  1. Built Vertex AI Gemini client in `backend/app/ai/gemini.py` (the only file importing `google-genai`): Vertex AI Gemini Flash (`temperature: 0.0`, `response_mime_type="application/json"`, strict `GeminiExtraction` Pydantic response schema, max 1,000 output tokens, one retry, 8-second timeout via `http_options=types.HttpOptions(timeout=8000)`, daily cap counted in `config/app`, `AIUnavailable` exception on failures).
+  2. Created versioned prompt `backend/prompts/desk_extract_v1.md`: treats message inside `<message>...</message>` as untrusted data (never instructions), extracts `{value, quote}` where quote is copied verbatim from message, restricts hospital to registered IDs or NONE, never judges validity, and extracts raw payment phrases.
+  3. Implemented Request Desk pipeline in `backend/app/desk/pipeline.py`:
+     - 2,000 character cap and in-memory IP rate limiter (10 per minute per IP).
+     - Single Gemini extraction call with registered hospital list.
+     - Verbatim quote check dropping any field whose quote is not found word-for-word (`kept=False`, `value=None`).
+     - Component and blood group normalisation dictionaries (PRBC/PCV $\to$ RED_CELLS, SDP/apheresis $\to$ PLATELETS_SDP, RDP $\to$ PLATELETS_RDP, pints/bottles $\to$ UNSPECIFIED, English/Tamil blood groups).
+     - Hospital resolution: exact registered catalog match. Generic acronyms (e.g. "GH") return `NOT_VERIFIED` with "Please paste again with the full hospital name."
+     - Remuneration check: payment keywords regex or Gemini payment phrases block hospital path $\to$ `NOT_VERIFIED` ("processing charge" alone is allowed).
+     - Decision engine: exact open request key match $\to$ `VERIFIED_MATCH`; registered hospital $\to$ `SENT_TO_HOSPITAL` (creates request in `AWAITING_HOSPITAL` and confirm link); otherwise $\to$ `NOT_VERIFIED`.
+     - Builds `DeskResult` with full trace and fixed footer `"Nobody may charge you for a donor."`.
+     - Privacy: discards raw text, storing only extracted fields and SHA-256 fingerprint in `pastes/{fingerprint}` (30-day expiry), deduplicating repeat submissions within 24 hours.
+  4. Implemented single-use confirmation links in `backend/app/desk/links.py`:
+     - HMAC-signed tokens with SHA-256 hash stored in `confirmLinks`.
+     - 6-hour expiration, single-use enforcement in transaction.
+     - Hospital caps: 6 per hour, 40 per day.
+     - `GET /confirm/{token}` returns `RequestPreview` with masked patient reference.
+     - `POST /confirm` handles `RAISE` (transitions to `OPEN` and dispatches Round 1 calls) or `NOT_OUR_PATIENT` (`REJECTED`).
+     - In demo mode, includes `demoConfirmToken` in `DeskResult`.
+  5. Implemented `FakeGemini` test suite in `backend/tests/test_desk_pipeline.py` (10 tests passing): 3 contract answers, dropped hallucinated quotes, payment blocking, "processing charge" allowance, prompt injection defense, ambiguous "GH" rejection, single-use/expired token rejection, and privacy (raw text never stored).
+  6. Created manual smoke script `backend/scripts/desk_smoke.py`.
+  7. Updated `docs/AI_DESIGN.md` (pipeline architecture, model region disclosure: `asia-south1` for 1.5-flash / `us-central1` for 2.0-flash), `README.md`, `docs/API_CONTRACT.md`, `docs/TESTING.md`, and `docs/PROMPTS.md`.
+- **Files Changed:**
+  - `README.md`
+  - `backend/app/ai/gemini.py`
+  - `backend/app/core/store.py`
+  - `backend/app/core/store_firestore.py`
+  - `backend/app/core/store_memory.py`
+  - `backend/app/desk/links.py`
+  - `backend/app/desk/models.py`
+  - `backend/app/desk/pipeline.py`
+  - `backend/app/desk/router.py`
+  - `backend/app/main.py`
+  - `backend/prompts/desk_extract_v1.md`
+  - `backend/scripts/desk_smoke.py`
+  - `backend/tests/test_desk_pipeline.py`
+  - `docs/AI_DESIGN.md`
+  - `docs/API_CONTRACT.md`
+  - `docs/PROMPTS.md`
+  - `docs/TESTING.md`
+- **Commit Hash:** 9323e40
+- **Human Review:** Verbatim quote checking, three answers, confirm links, rate limiting, and privacy verified.
+
 ---
 
 ## Human Decisions

@@ -160,8 +160,9 @@ Every design system token pair was verified mathematically against WCAG 2.1 AA c
 | Backend Domain & Rule Engine | 100% pass rate (Hypothesis >= 200 runs) | **PASS (55 / 55 domain tests passed)** |
 | Backend API Integration & Core Loop | 100% pass rate | **PASS (19 / 19 integration tests passed)** |
 | Backend Demo Admin & Metrics | 100% pass rate | **PASS (4 / 4 demo admin tests passed)** |
+| Request Desk & Gemini Pipeline | 100% pass rate | **PASS (10 / 10 desk & quote tests passed)** |
 | Backend Storage & Transactions | In-memory transactional replay & Firestore emulator test | **PASS (4 / 4 passed, 1 skipped emulator)** |
-| Request Desk Zero-Payment Rule | `paymentToHospital == 0` | **Status: pending** |
+| Request Desk Zero-Payment Rule | `paymentToHospital == 0` | **PASS (0 payment forwards permitted)** |
 | Request Desk Hospital Enum Match | `wrongHospitalIds == 0` | **Status: pending** |
 | Request Desk P95 Latency | < 2,500 ms | **Status: pending** |
 | E2E 6-Step Scenario Runner | Successful pass through steps 1–5 | **PASS (`run_story` background task verified)** |
@@ -182,11 +183,12 @@ The pure domain logic layer (`backend/app/requests/` and `backend/app/rules/`) w
 | `tests/test_store.py` | Storage & Transactions | **4 / 4 passed, 1 skipped** | Verifies `MemoryStore` CRUD, listing filters, transaction rollback on failure, and full Section 7 story replay through `run_transaction`. Optional Firestore emulator concurrency test is skipped when `FIRESTORE_EMULATOR_HOST` is not set. |
 | `tests/test_api_core_loop.py` | Core API & Simulator Loop | **6 / 6 passed** | Full request lifecycle via endpoints, duplicate press idempotency, 15-call per-request cap refusal, concurrent tick lock lease, weather alert setting. |
 | `tests/test_demo_admin_and_metrics.py` | Demo Admin & Metrics | **4 / 4 passed** | Scenario background task execution, clock advance, reset with pristine reseed, live-mode 404 enforcement, and timeline metrics calculation with broadcast baselines. |
+| `tests/test_desk_pipeline.py` | Request Desk & Gemini Pipeline | **10 / 10 passed** | Verifies 3 contract answers, verbatim quote validation, payment blocker, 'processing charge' allowance, prompt injection defense, ambiguous 'GH' refusal, single-use/expiry confirm links, and privacy (raw text never stored). |
 | `tests/test_health_and_config.py` | Mode Guard & Health | **3 / 3 passed** | `/healthz` and `/config` response verification in live and demo modes. |
 | `tests/test_logging_and_models.py` | Logging & PII Masking | **4 / 4 passed** | Validates phone number redaction in logs and 422 error body stripping. |
 | `tests/test_matching.py` | Matching Algorithm | **1 / 1 passed** | Compatibility, consent, contact gap, deduplication, and distance sorting. |
 | `tests/test_mode_guard.py` | Startup Mode Guard | **6 / 6 passed** | Enforces startup termination if `DATA_MODE` and `FIRESTORE_DB` mismatch. |
-| **Total Backend Tests** | Complete Backend Test Suite | **83 / 83 passed (1 skipped emulator)** | All tests pass in < 6.0s with zero network dependencies. |
+| **Total Backend Tests** | Complete Backend Test Suite | **93 / 93 passed (1 skipped emulator)** | All tests pass in < 6.5s with zero network dependencies. |
 
 
 
