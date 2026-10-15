@@ -204,6 +204,19 @@ class FirestoreTransactionStore(TransactionStore):
         payload["isSimulated"] = self.data_mode == "demo"
         self.transaction.set(ref, payload)
 
+    async def create_webhook_event(self, event_id: str, data: dict[str, Any]) -> bool:
+        self._assert_can_read()
+        ref = self.client.collection("webhookEvents").document(event_id)
+        snap = await _get_one_doc(self.transaction, ref)
+        if snap and snap.exists:
+            return False
+        self._has_written = True
+        payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        self.transaction.set(ref, payload)
+        return True
+
 
 class FirestoreStore(Store):
     """Google Cloud Firestore storage implementation with transactional guarantees."""
@@ -487,6 +500,18 @@ class FirestoreStore(Store):
         async for doc in query.stream():
             docs.append(doc.to_dict())
         return docs
+
+    # Webhook Deduplication
+    async def create_webhook_event(self, event_id: str, data: dict[str, Any]) -> bool:
+        ref = self.client.collection("webhookEvents").document(event_id)
+        payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        try:
+            await ref.create(payload)
+            return True
+        except Exception:
+            return False
 
     # Transactions
     async def run_transaction(self, fn: Callable[[TransactionStore], Awaitable[T]]) -> T:

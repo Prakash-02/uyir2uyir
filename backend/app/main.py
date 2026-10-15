@@ -85,12 +85,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
 
     from app.admin.router import router as admin_router
+    from app.ai.tts import router as tts_router
     from app.auth.router import router as auth_router
     from app.clock.router import router as clock_router
     from app.desk.router import desk_router
     from app.donors.router import router as donors_router
     from app.eval.router import router as eval_router
     from app.outreach.router import router as outreach_router
+    from app.outreach.twilio_router import router as twilio_router
     from app.requests.router import router as requests_router
     from app.screening.metrics import router as metrics_router
     from app.screening.router import router as screening_router
@@ -99,6 +101,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(donors_router)
     app.include_router(requests_router)
     app.include_router(outreach_router)
+    app.include_router(twilio_router)
+    app.include_router(tts_router)
     app.include_router(screening_router)
     app.include_router(desk_router)
     app.include_router(eval_router)

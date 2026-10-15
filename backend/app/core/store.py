@@ -49,6 +49,9 @@ class TransactionStore(Protocol):
     # Audit
     async def append_audit_entry(self, entry: dict[str, Any]) -> None: ...
 
+    # Webhook Deduplication
+    async def create_webhook_event(self, event_id: str, data: dict[str, Any]) -> bool: ...
+
 
 class Store(Protocol):
     """Abstract storage interface for U2U database operations."""
@@ -133,6 +136,9 @@ class Store(Protocol):
     async def append_audit_entry(self, entry: dict[str, Any]) -> None: ...
 
     async def list_audit_entries(self, limit: int = 100) -> list[dict[str, Any]]: ...
+
+    # Webhook Deduplication
+    async def create_webhook_event(self, event_id: str, data: dict[str, Any]) -> bool: ...
 
     # Transaction execution
     async def run_transaction(self, fn: Callable[[TransactionStore], Awaitable[T]]) -> T: ...

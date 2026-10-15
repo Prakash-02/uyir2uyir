@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import Field
@@ -135,3 +135,44 @@ async def set_weather_alert(
         banner_text=banner,
         weather_alert=payload.on,
     )
+
+
+class TelephonySettingRequest(CamelModel):
+    adapter: Literal["simulator", "twilio"]
+
+
+@router.get("/settings/telephony")
+async def get_telephony_setting(
+    _actor: Annotated[Actor, Depends(require_staff_or_admin_actor)],
+) -> dict[str, Any]:
+    """Retrieves current telephony adapter configuration."""
+    store = get_store()
+    conf = await store.get_config("telephony") or {}
+    return {
+        "adapter": conf.get("adapter", "simulator"),
+        "consecutiveErrors": conf.get("consecutiveErrors", 0),
+        "lastError": conf.get("lastError"),
+        "updatedAt": conf.get("updatedAt"),
+    }
+
+
+@router.post("/settings/telephony")
+async def set_telephony_setting(
+    payload: TelephonySettingRequest,
+    _actor: Annotated[Actor, Depends(require_staff_or_admin_actor)],
+) -> dict[str, Any]:
+    """Switches telephony adapter between simulator and twilio."""
+    store = get_store()
+    clock = get_clock()
+    now_iso = clock.now_iso()
+    conf = await store.get_config("telephony") or {}
+    conf["adapter"] = payload.adapter
+    conf["consecutiveErrors"] = 0
+    conf["updatedAt"] = now_iso
+    await store.set_config("telephony", conf)
+    return {
+        "adapter": payload.adapter,
+        "consecutiveErrors": 0,
+        "updatedAt": now_iso,
+        "ok": True,
+    }

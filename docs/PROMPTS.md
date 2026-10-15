@@ -992,6 +992,46 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** Pending
 - **Human Review:** Live Cloud Run deployment serving 100% traffic; smoke test completely green.
 
+### Entry #B9
+- **Date:** 2026-10-15
+- **Goal:** Add a Twilio outbound telephony voice adapter with Cloud Text-to-Speech audio, signed webhooks, allowlist enforcement, and automatic 3-error fallback to simulator.
+- **Prompt Summary:**
+  1. Built `backend/app/ai/tts.py` implementing Google Cloud Text-to-Speech audio synthesis with voices `ta-IN-Standard-A` (Tamil) and `en-IN-Standard-A` (English) based on call script templates (blood group, component, centre name, and rain weather alert). Implemented multi-tier caching in memory and `/tmp` (`u2u_{template_id}_{lang}_{weather}.mp3`), served via `GET /audio/{template_id}/{lang}.mp3` with MPEG media type and synthetic fallback for offline/test environments.
+  2. Built `backend/app/outreach/twilio_adapter.py` implementing `TwilioAdapter(TelephonyAdapter)`:
+     - Places outbound calls via Twilio Voice API with `timeout=25`, `time_limit=90`, `record=False`.
+     - Reads and decrypts phone number from the secure vault (`app/core/phone_vault.py`) only at dial time.
+     - Refuses any phone number not present in `CALL_ALLOWLIST` before dialing.
+     - Tracks consecutive Twilio errors, automatically resetting counter on success.
+  3. Built `backend/app/outreach/twilio_router.py` with signed Twilio webhook handlers:
+     - `POST /twilio/{mode}/voice/{call_id}`: Returns TwiML with `<Play>` cached audio and `<Gather numDigits=1 timeout=8 action=...>` replayed once before `<Hangup/>`.
+     - `POST /twilio/{mode}/gather/{call_id}`: Processes DTMF keypresses 1, 2, or 9 via `transitions.py` inside Firestore transactions, withdrawing consent and deactivating donor records upon press 9.
+     - `POST /twilio/{mode}/status/{call_id}`: Maps `no-answer`, `busy`, `failed`, or `completed` without digit to `NO_ANSWER`.
+     - Proxy-Safe Signature Verification: Validates `X-Twilio-Signature` using `twilio.request_validator.RequestValidator` against `PUBLIC_BASE_URL` to support Cloud Run reverse proxying behind GFE.
+     - Mode Guard: Rejects any `{mode}` mismatching `DATA_MODE` with 403 Forbidden.
+     - Deduplication: Implemented create-only event tracking on `webhookEvents/{CallSid}_{event}` across `Store` and `FirestoreStore`.
+  4. Implemented dynamic adapter selection and 3-error fallback in `backend/app/outreach/service.py`:
+     - Reads `config/telephony.adapter` (`simulator` | `twilio`).
+     - On 3 consecutive Twilio errors, automatically switches `config/telephony.adapter` back to `simulator` and appends a `TELEPHONY_FALLBACK` timeline event to the blood request.
+     - Added admin configuration endpoints in `backend/app/admin/router.py`: `GET /admin/settings/telephony` and `POST /admin/settings/telephony`.
+  5. Implemented comprehensive test suite in `backend/tests/test_twilio_adapter.py` (10 tests) covering: bad signatures (403), mode mismatch (403), TwiML audio replay, duplicate gather idempotency (counts once), late press 1 to `LATE_ACCEPT`, allowlist refusal, valid outbound call placement parameters, status callback mapping to `NO_ANSWER`, 3-error fallback to simulator with timeline event, and Cloud TTS audio serving.
+  6. Verified `ruff check` and `ruff format` pass cleanly (0 errors), and all 125 backend tests pass.
+- **Files Changed:**
+  - `README.md`
+  - `backend/app/admin/router.py`
+  - `backend/app/ai/tts.py`
+  - `backend/app/core/store.py`
+  - `backend/app/core/store_firestore.py`
+  - `backend/app/core/store_memory.py`
+  - `backend/app/main.py`
+  - `backend/app/outreach/service.py`
+  - `backend/app/outreach/twilio_adapter.py`
+  - `backend/app/outreach/twilio_router.py`
+  - `backend/tests/test_twilio_adapter.py`
+  - `docs/ARCHITECTURE.md`
+  - `docs/PROMPTS.md`
+- **Commit Hash:** 3e146ef
+- **Human Review:** Verified test suite passes (125 passed, 1 skipped).
+
 ---
 
 ## Human Decisions

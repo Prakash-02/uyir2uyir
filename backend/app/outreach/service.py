@@ -23,11 +23,23 @@ def build_call_script(request: BloodRequest, donor: Donor, weather_alert: bool =
     )
 
 
+async def get_telephony_adapter(store: Store, clock: Clock | None = None) -> TelephonyAdapter:
+    """Returns configured TelephonyAdapter (SimulatorAdapter or TwilioAdapter)."""
+    from app.outreach.adapter import SimulatorAdapter
+    from app.outreach.twilio_adapter import TwilioAdapter
+
+    telephony_conf = await store.get_config("telephony") or {}
+    adapter_name = telephony_conf.get("adapter", "simulator")
+    if adapter_name == "twilio":
+        return TwilioAdapter(store=store, clock=clock)
+    return SimulatorAdapter(store=store, clock=clock)
+
+
 async def dispatch_round_calls(
     store: Store,
     request: BloodRequest,
     donors: list[Donor],
-    adapter: TelephonyAdapter,
+    adapter: TelephonyAdapter | None = None,
     clock: Clock | None = None,
 ) -> list[Call]:
     """Prepares and dispatches outbound calls for a round.
@@ -43,6 +55,20 @@ async def dispatch_round_calls(
     current_clock = clock or get_clock()
     now_iso = current_clock.now_iso()
     today_str = current_clock.now().date().isoformat()
+    active_adapter = adapter or await get_telephony_adapter(store, clock=current_clock)
+
+    # Register call script audio template for Cloud TTS serving
+    from app.ai.tts import register_audio_template
+
+    app_conf = await store.get_config("app") or {}
+    weather_alert = bool(app_conf.get("weatherAlert", False))
+    register_audio_template(
+        template_id=request.id,
+        blood_group=request.blood_group,
+        component=request.component,
+        centre_name=request.centre_name or request.hospital_name,
+        weather_alert=weather_alert,
+    )
 
     # Safety: Refuse calls in live mode if any donor is simulated
     if settings.DATA_MODE == "live":
@@ -129,7 +155,7 @@ async def dispatch_round_calls(
                 }
             )
             await store.save_call(request.id, dialing_call)
-            await adapter.place_call(dialing_call)
+            await active_adapter.place_call(dialing_call)
 
             # Re-read to get final state after adapter (e.g. RINGING in simulator)
             placed_call = await store.get_call(request.id, call.id)

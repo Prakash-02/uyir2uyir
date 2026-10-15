@@ -24,6 +24,7 @@ class MemoryTransactionStore(TransactionStore):
         self._pending_donor_contacts: dict[str, dict[str, Any]] = {}
         self._pending_consent_events: list[tuple[str, dict[str, Any]]] = []
         self._pending_audit_entries: list[dict[str, Any]] = []
+        self._pending_webhook_events: dict[str, dict[str, Any]] = {}
 
     async def get_request(self, request_id: str) -> BloodRequest | None:
         if request_id in self._pending_requests:
@@ -107,6 +108,12 @@ class MemoryTransactionStore(TransactionStore):
     async def append_audit_entry(self, entry: dict[str, Any]) -> None:
         self._pending_audit_entries.append(dict(entry))
 
+    async def create_webhook_event(self, event_id: str, data: dict[str, Any]) -> bool:
+        if event_id in self._pending_webhook_events or event_id in self._store._webhook_events:
+            return False
+        self._pending_webhook_events[event_id] = dict(data)
+        return True
+
     def apply(self) -> None:
         """Applies all staged updates into the backing MemoryStore."""
         for req in self._pending_requests.values():
@@ -145,6 +152,9 @@ class MemoryTransactionStore(TransactionStore):
         for entry in self._pending_audit_entries:
             self._store._audit.append(entry)
 
+        for event_id, event_data in self._pending_webhook_events.items():
+            self._store._webhook_events[event_id] = event_data
+
 
 class MemoryStore(Store):
     """Thread-safe, coroutine-safe in-memory store for offline development and testing."""
@@ -167,6 +177,7 @@ class MemoryStore(Store):
         self._donor_contacts: dict[str, dict[str, Any]] = {}
         self._consents: dict[str, list[dict[str, Any]]] = {}
         self._audit: list[dict[str, Any]] = []
+        self._webhook_events: dict[str, dict[str, Any]] = {}
 
     @classmethod
     def get_instance(cls) -> "MemoryStore":
@@ -193,6 +204,7 @@ class MemoryStore(Store):
         self._donor_contacts.clear()
         self._consents.clear()
         self._audit.clear()
+        self._webhook_events.clear()
 
     # Hospitals
     async def get_hospital(self, hospital_id: str) -> Hospital | None:
@@ -390,6 +402,14 @@ class MemoryStore(Store):
     async def list_audit_entries(self, limit: int = 100) -> list[dict[str, Any]]:
         async with self._lock:
             return [dict(e) for e in self._audit[-limit:]]
+
+    # Webhook Deduplication
+    async def create_webhook_event(self, event_id: str, data: dict[str, Any]) -> bool:
+        async with self._lock:
+            if event_id in self._webhook_events:
+                return False
+            self._webhook_events[event_id] = dict(data)
+            return True
 
     # Transactions
     async def run_transaction(self, fn: Callable[[TransactionStore], Awaitable[T]]) -> T:

@@ -422,4 +422,48 @@ Cloud Scheduler executes an automated HTTP POST request every minute (`* * * * *
 - [`infra/deploy_backend_demo.sh`](../infra/deploy_backend_demo.sh): Idempotent bash script provisioning service accounts, secrets, Cloud Build builder role, Cloud Run service, and Cloud Scheduler ticker.
 - [`infra/smoke_backend.sh`](../infra/smoke_backend.sh): Post-deployment smoke script that verifies `/healthz`, `/config`, triggers the 5-step scenario story, polls until the request is `FULFILLED`, and asserts timeline `/metrics`.
 
+---
+
+## 8. Telephony & Voice Outreach Architecture
+
+U2U implements a dual telephony dispatch architecture supporting simulated in-browser demonstration and real outbound carrier calls to allowlisted team numbers:
+
+```mermaid
+flowchart TD
+    DISPATCH["dispatch_round_calls()<br/>app/outreach/service.py"] --> SELECT{"config/telephony.adapter"}
+    
+    SELECT -->|"simulator"| SIM["SimulatorAdapter<br/>app/outreach/adapter.py"]
+    SELECT -->|"twilio"| TW["TwilioAdapter<br/>app/outreach/twilio_adapter.py"]
+    
+    TW -->|Dial-time Vault Read| VAULT["decrypt_phone()<br/>app/core/phone_vault.py"]
+    VAULT --> ALLOW{"In CALL_ALLOWLIST?"}
+    ALLOW -->|No| REFUSE["Refuse Call (ValueError)<br/>Never dials unverified phone"]
+    ALLOW -->|Yes| DIAL["Twilio REST API<br/>calls.create(to, from, url, status_callback)"]
+    
+    DIAL -->|Call Placed| PHONE["Team Phone Rings"]
+    PHONE -->|Voice Webhook| VOICE["POST /twilio/{mode}/voice/{callId}"]
+    VOICE --> PLAY["TwiML: <Play> TTS Audio<br/>GET /audio/{templateId}/{lang}.mp3"]
+    VOICE --> GATH["TwiML: <Gather numDigits=1 timeout=8>"]
+    
+    PHONE -->|Keypress 1, 2, 9| GATHER_WH["POST /twilio/{mode}/gather/{callId}"]
+    GATHER_WH --> TRANS["transitions.py<br/>apply_press_1 / 2 / 9"]
+    
+    PHONE -->|No answer / Busy / Hangup| STATUS_WH["POST /twilio/{mode}/status/{callId}"]
+    STATUS_WH --> NO_ANS["apply_call_no_answer()<br/>transitions.py"]
+    
+    TW -.->|3 Consecutive Errors| FALLBACK["Switch config/telephony.adapter -> simulator<br/>Append TELEPHONY_FALLBACK event"]
+    FALLBACK -.-> SIM
+```
+
+### 8.1 Component File Paths & Responsibilities
+
+| Component | File Path | Responsibilities |
+|---|---|---|
+| **Telephony Protocol & Simulator** | [`backend/app/outreach/adapter.py`](../backend/app/outreach/adapter.py) | Defines `TelephonyAdapter` protocol and `SimulatorAdapter` marking calls `RINGING` for UI simulator. |
+| **Twilio Adapter** | [`backend/app/outreach/twilio_adapter.py`](../backend/app/outreach/twilio_adapter.py) | Places outbound calls via Twilio Voice API (`timeout=25`, `time_limit=90`, `record=False`). Decrypts phone from vault at dial time and enforces `CALL_ALLOWLIST`. Tracks consecutive errors and switches to simulator after 3 failures. |
+| **Twilio Webhooks Router** | [`backend/app/outreach/twilio_router.py`](../backend/app/outreach/twilio_router.py) | Handles `/twilio/{mode}/voice/{callId}`, `/twilio/{mode}/gather/{callId}`, and `/twilio/{mode}/status/{callId}`. Validates `X-Twilio-Signature` using `twilio.request_validator.RequestValidator` against `PUBLIC_BASE_URL`. Enforces `mode == DATA_MODE` (403 on mismatch) and deduplicates events on `webhookEvents/{CallSid}_{event}` using create-only. |
+| **Cloud Text-to-Speech** | [`backend/app/ai/tts.py`](../backend/app/ai/tts.py) | Synthesizes bilingual audio scripts (`ta-IN-Standard-A` for Tamil, `en-IN-Standard-A` for English) once per template, language, and weather flag. Caches MP3 in memory and `/tmp`, served via `GET /audio/{templateId}/{lang}.mp3`. |
+| **Outreach Orchestrator** | [`backend/app/outreach/service.py`](../backend/app/outreach/service.py) | Dispatches round calls, dynamically chooses telephony adapter via `get_telephony_adapter()`, and registers audio templates. |
+| **Admin Controls** | [`backend/app/admin/router.py`](../backend/app/admin/router.py) | Exposes `GET /admin/settings/telephony` and `POST /admin/settings/telephony` for dynamic adapter inspection and toggling. |
+
 

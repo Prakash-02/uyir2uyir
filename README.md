@@ -16,9 +16,12 @@ During medical emergencies, families frequently scramble at odd hours forwarding
 | Cloud Firestore | Multi-database persistence (`u2u-demo` / `u2u-live`) & live state | Built (`backend/app/core/store_firestore.py`) |
 | Cloud Run | Scalable FastAPI modular monolith backend container | Built (`backend/Dockerfile`) |
 | Firebase Authentication | Role-based hospital and blood centre identity & custom claims | Built (`backend/app/auth/`) |
-| Cloud Text-to-Speech | Cached Tamil and English voice audio synthesis for calls | Status: planned (`backend/app/outreach`) |
+| Cloud Text-to-Speech | Cached Tamil and English voice audio synthesis for calls | Built (`backend/app/ai/tts.py`) |
 | Cloud Scheduler | 1-minute ticker for expiration and donor outreach rounds | Built (`backend/app/clock/router.py`) |
 | Secret Manager & Cloud Logging | Secure secret isolation and centralized audit logging | Built (`backend/app/core/logging.py`) |
+
+> [!NOTE]
+> **Telephony Boundary:** Twilio is used only for the phone call; all AI runs on Gemini.
 
 ### Documentation Index
 - [U2U_BRIEF.md](U2U_BRIEF.md) — Single source of truth specification
