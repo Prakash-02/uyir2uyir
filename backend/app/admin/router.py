@@ -3,7 +3,11 @@ from typing import Annotated
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import Field
 
-from app.auth.dependencies import Actor, get_actor
+from app.auth.dependencies import (
+    Actor,
+    require_demo_actor,
+    require_staff_or_admin_actor,
+)
 from app.clock.service import SimulationClock, get_clock
 from app.clock.story import run_story
 from app.core.config import get_settings
@@ -31,7 +35,7 @@ class AppConfigResponse(CamelModel):
 async def run_scenario(
     scenario_id: str,
     background_tasks: BackgroundTasks,
-    _actor: Annotated[Actor, Depends(get_actor)],
+    _actor: Annotated[Actor, Depends(require_demo_actor)],
 ) -> dict[str, bool]:
     """Runs a demonstration scenario (demo mode only).
 
@@ -54,7 +58,7 @@ async def run_scenario(
 
 @router.post("/reset")
 async def reset_demo(
-    _actor: Annotated[Actor, Depends(get_actor)],
+    _actor: Annotated[Actor, Depends(require_demo_actor)],
 ) -> dict[str, bool]:
     """Clears and reseeds the demo database and clock (demo mode only).
 
@@ -80,7 +84,7 @@ async def reset_demo(
 @router.post("/clock/advance")
 async def advance_clock(
     payload: ClockAdvanceRequest,
-    _actor: Annotated[Actor, Depends(get_actor)],
+    _actor: Annotated[Actor, Depends(require_demo_actor)],
 ) -> dict[str, bool]:
     """Advances simulated application clock by given minutes (demo mode only).
 
@@ -102,7 +106,10 @@ async def advance_clock(
 
 
 @router.post("/settings/weather", response_model=AppConfigResponse)
-async def set_weather_alert(payload: WeatherSettingRequest) -> AppConfigResponse:
+async def set_weather_alert(
+    payload: WeatherSettingRequest,
+    _actor: Annotated[Actor, Depends(require_staff_or_admin_actor)],
+) -> AppConfigResponse:
     """Toggles weather alert mode (heavy rain/waterlogging).
 
     When active:

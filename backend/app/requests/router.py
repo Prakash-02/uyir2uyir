@@ -7,6 +7,7 @@ from pydantic import Field
 
 from app.auth.dependencies import Actor, get_actor, require_hospital_actor
 from app.clock.service import get_clock
+from app.core.audit import record_audit
 from app.core.config import get_settings
 from app.core.models import CamelModel
 from app.core.store import TransactionStore, get_store
@@ -61,7 +62,11 @@ async def create_request(
     now_iso = now_dt.isoformat()
     expires_iso = (now_dt + timedelta(hours=24)).isoformat()
 
-    hospital_id = payload.hospital_id or actor.hospital_id or "hosp-sample-1"
+    # Hospital role sees and acts only on its own requests
+    hospital_id = actor.hospital_id or payload.hospital_id or "hosp-sample-1"
+    if actor.role == "hospital" and actor.hospital_id:
+        hospital_id = actor.hospital_id
+
     hosp = await store.get_hospital(hospital_id)
     hospital_name = payload.hospital_name or (hosp.name if hosp else "Sample General Hospital")
     centre_id = payload.centre_id or (
@@ -105,6 +110,17 @@ async def create_request(
     )
     await store.append_event(req_id, initial_event)
 
+    # Append audit entry for create
+    await record_audit(
+        store,
+        actor_uid=actor.user_id,
+        role=actor.role,
+        action="create",
+        target_id=req_id,
+        before_status=None,
+        after_status=blood_request.status.value,
+    )
+
     # Immediately open round 1 outreach
     donors = await select_donors_for_request(store, blood_request, clock=clock, limit=5)
     adapter = SimulatorAdapter(store, clock=clock)
@@ -136,6 +152,13 @@ async def cancel_request(
                 detail=f"Blood request '{request_id}' not found.",
             )
 
+        # Hospital can only cancel its own requests
+        if actor.role == "hospital" and actor.hospital_id and req.hospital_id != actor.hospital_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: Hospital cannot cancel another hospital's request.",
+            )
+
         active_calls = await tx.list_calls(request_id)
 
         try:
@@ -152,9 +175,63 @@ async def cancel_request(
         for oc in result.other_calls:
             await tx.save_call(request_id, oc)
 
+        # Append audit entry for cancel
+        await record_audit(
+            tx,
+            actor_uid=actor.user_id,
+            role=actor.role,
+            action="cancel",
+            target_id=req.id,
+            before_status=req.status.value,
+            after_status=result.request.status.value,
+        )
+
         return result.request
 
     return await store.run_transaction(_tx_cancel)
+
+
+@router.get("/{request_id}", response_model=BloodRequest)
+async def get_request_by_id(
+    request_id: str,
+    actor: Annotated[Actor, Depends(get_actor)],
+) -> BloodRequest:
+    """Authenticated request inspection with hospital and centre isolation."""
+    if actor.user_id == "anonymous":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view blood request details.",
+        )
+
+    store = get_store()
+    req = await store.get_request(request_id)
+    if not req:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blood request '{request_id}' not found.",
+        )
+
+    if actor.role == "hospital":
+        if actor.hospital_id and req.hospital_id != actor.hospital_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: Hospital cannot view another hospital's request.",
+            )
+    elif actor.role == "staff":
+        if actor.centre_id and req.centre_id and req.centre_id != actor.centre_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: Staff cannot view another centre's request.",
+            )
+    elif actor.role == "admin":
+        pass
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Authorized role required to view full request.",
+        )
+
+    return req
 
 
 @router.get("/{request_id}/status", response_model=PublicStatus)

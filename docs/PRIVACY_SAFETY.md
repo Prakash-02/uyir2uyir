@@ -69,11 +69,13 @@ Donor autonomy and protection from fatigue are core design requirements:
 
 ---
 
-## 6. Retention & Data Lifecycles
+## 6. Retention, Vault & Data Lifecycles
 
 - **Active Emergency Window:** Blood requests remain active for a maximum expiration window configured by the hospital (typically 2 to 6 hours). Once expired, no further outreach calls are placed.
 - **Demo Mode Purge:** In `DATA_MODE=demo`, test databases are ephemeral and can be wiped and re-seeded at any time via `POST /admin/reset`.
-- **System Audit Logs:** Cloud Logging preserves pseudonymized transaction traces for system health monitoring, excluding personally identifiable information (PII).
+- **Phone Vault:** Real phone numbers are encrypted with AES-256-GCM using `PHONE_KEY` (Secret Manager in cloud) and stored in `donorContacts/{id}` with an HMAC-SHA256 blind lookup hash and last 4 digits only. Handled strictly in `backend/app/core/phone_vault.py`. Full phone numbers are never returned in any API response or logged.
+- **Consent Ledger:** Onboarding writes purpose-specific consent events (`urgent_contact`, `donation_history`, notice version `"v1"`, channel `"web"`, timestamp) to `consents/{donorId}/events`. Press 9 logs an immediate `WITHDRAW` event. Handled in `backend/app/donors/router.py` and `backend/app/outreach/router.py`.
+- **System Audit Logs:** Append-only ledger in `audit/{id}` records sensitive operational actions (`create`, `cancel`, `accept`, `defer`, `confirm`, `opt-out`) with actor UID, role, data mode, action, target ID, and status diff. Handled in `backend/app/core/audit.py` and excluded from personal values / PII. Cloud Logging preserves pseudonymized transaction traces for system health monitoring.
 
 ---
 
@@ -82,4 +84,5 @@ Donor autonomy and protection from fatigue are core design requirements:
 To maintain safety and quality standards in blood transfusion services:
 - Neither the application nor the AI model can mark a donor as `ACCEPTED` or medically cleared.
 - Donors arriving at the blood bank undergo standard physical screening (hemoglobin testing, blood pressure, copper sulfate/screening assay, donor deferral questionnaire) conducted by blood centre professionals.
-- Centre staff log the physical decision (`POST /calls/{id}/accept` or `POST /calls/{id}/defer`) directly into the screening portal, guaranteeing that clinical authority remains 100% human-controlled.
+- Centre staff log the physical decision (`POST /calls/{id}/accept` or `POST /calls/{id}/defer`) directly into the screening portal (`backend/app/screening/router.py`), guaranteeing that clinical authority remains 100% human-controlled.
+

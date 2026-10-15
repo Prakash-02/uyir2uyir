@@ -802,9 +802,76 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** 12c27fc
 - **Human Review:** Pending live evaluation execution with `python eval/run_eval.py`.
 
+### Entry #B7
+- **Date:** 2026-10-15
+- **Goal:** Replace the demo header stub with Firebase Auth, add donor signup with recorded consent, and finish the privacy basics.
+- **Prompt Summary:**
+  1. `backend/app/auth/`:
+     - Configured Firebase ID token verification via `firebase-admin` with custom claims extraction (`role`, `hospitalId`, `centreId`, `env`).
+     - Added environment claim verification: rejects any request where token `env != DATA_MODE` with `403 Forbidden`.
+     - Built `POST /auth/demo-role {role}` setting custom claims on the caller's anonymous account (`role`, `env="demo"`, and fixed `DEMO_STORY_HOSPITAL_ID="hosp-sample-1"` or `DEMO_STORY_CENTRE_ID="centre-sample-1"` shared with `seed.py`). Returns 404 in live data mode.
+     - Simulator press endpoint, `/metrics`, and story/reset accept any signed-in user with `env=demo`.
+     - Restricted `X-Demo-Role` header authentication strictly behind `ALLOW_TEST_HEADER_AUTH=False` (enabled only in test environments).
+  2. Applied role checks and resource isolation:
+     - Hospital sees and acts only on its own requests (`hospitalId == actor.hospital_id`); cancels and views for other hospitals return 403.
+     - Added `GET /requests/{id}` with hospital and blood centre isolation.
+     - Blood centre staff act only on their centre's calls (`centreId == actor.centre_id`).
+     - Admin endpoints require staff or admin (or any signed-in user with `env=demo` in demo mode).
+  3. Phone Vault (`backend/app/core/phone_vault.py`):
+     - Encrypts phone numbers with AES-256-GCM using `PHONE_KEY` (Secret Manager in cloud).
+     - Computes blind HMAC-SHA256 hash for duplicate lookups and stores last 4 digits in `donorContacts/{id}`.
+     - Enforces phone number format normalization (+91 E.164).
+     - Added `cryptography` dependency to `pyproject.toml` and `requirements.txt`.
+     - Strictly guarantees no full phone number is ever logged or returned in any endpoint response.
+  4. Donor Signup (`POST /donors/signup` in `backend/app/donors/router.py`):
+     - Validates Indian mobile format (`^(?:(?:\+|00)?91|0)?[6-9]\d{9}$`).
+     - Requires `consentUrgent=true` and `adult=true`; rejects invalid submissions with 422 with no echoing of input values.
+     - Generates donor alias (`Donor D{n}`), stores contact in vault, and writes two consent events to `consents/{donorId}/events` (`urgent_contact` and `donation_history` with noticeVersion `"v1"`, language, channel `"web"`, and timestamp).
+     - Marks demo donors as `isSimulated: true`.
+     - Returns `{donorAlias}`.
+  5. Press 9 Consent Withdrawal:
+     - IVR simulator keypress 9 transitions call to `OPTED_OUT`, updates donor consent state to withdrawn (`consent_urgent=False`, `active=False`), and appends a `WITHDRAW` event to `consents/{donorId}/events`.
+  6. Audit Ledger (`backend/app/core/audit.py`):
+     - Created append-only `audit/{id}` ledger for `create`, `cancel`, `accept`, `defer`, `confirm`, and `opt-out` actions.
+     - Records actor UID, role, mode, action, target ID, before and after status, and timestamp with zero personal identifiable values (PII).
+  7. Automated Tests (`backend/tests/test_auth_privacy.py`):
+     - 13 comprehensive tests covering: wrong env claim gives 403; cross-hospital request read gives 403; cross-centre staff call action gives 403; signup without consent returns 422 with no input echo; phone vault AES-GCM encryption and blind HMAC hash; Press 9 consent withdrawal and audit record; and complete endpoint response regex scanning proving zero full phone numbers are ever leaked.
+- **Files Changed:**
+  - `backend/app/admin/router.py`
+  - `backend/app/auth/__init__.py`
+  - `backend/app/auth/constants.py`
+  - `backend/app/auth/dependencies.py`
+  - `backend/app/auth/router.py`
+  - `backend/app/core/audit.py`
+  - `backend/app/core/config.py`
+  - `backend/app/core/phone_vault.py`
+  - `backend/app/core/store.py`
+  - `backend/app/core/store_firestore.py`
+  - `backend/app/core/store_memory.py`
+  - `backend/app/desk/links.py`
+  - `backend/app/donors/__init__.py`
+  - `backend/app/donors/router.py`
+  - `backend/app/main.py`
+  - `backend/app/outreach/router.py`
+  - `backend/app/requests/router.py`
+  - `backend/app/screening/metrics.py`
+  - `backend/app/screening/router.py`
+  - `backend/pyproject.toml`
+  - `backend/requirements.txt`
+  - `backend/scripts/seed.py`
+  - `backend/tests/conftest.py`
+  - `backend/tests/test_api_core_loop.py`
+  - `backend/tests/test_auth_privacy.py`
+  - `docs/ARCHITECTURE.md`
+  - `docs/PRIVACY_SAFETY.md`
+  - `docs/PROMPTS.md`
+- **Commit Hash:** 776a4b6
+- **Human Review:** Verified via 110 passed pytest tests and clean ruff check/format.
+
 ---
 
 ## Human Decisions
+
 
 - **Hospital-first requests:** Only registered hospitals can initiate blood requests. Public message submissions at the Request Desk can at most send a one-tap "Raise this request?" alert to a registered hospital blood bank; public text never directly triggers donor calls.
 - **The counting rule $N+1$:** Outreach pauses as soon as covered ($\text{accepted} + \text{onTheWay}$) reaches $N + 1$ (providing one spare donor). Outreach reopens if covered falls below $N$. The request is fulfilled when accepted reaches $N$, standing down any donors still en route.

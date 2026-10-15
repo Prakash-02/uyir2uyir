@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth.dependencies import Actor, require_staff_actor
 from app.clock.service import get_clock
+from app.core.audit import record_audit
 from app.core.models import CamelModel
 from app.core.store import TransactionStore, get_store
 from app.requests.models import Call
@@ -52,6 +53,18 @@ async def accept_call(
                 detail=f"Blood request '{request_id}' not found.",
             )
 
+        # Staff can only act on their centre's calls
+        if (
+            actor.role == "staff"
+            and actor.centre_id
+            and req.centre_id
+            and req.centre_id != actor.centre_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: Staff can only act on calls for their own centre.",
+            )
+
         call = await tx.get_call(request_id, call_id)
         if not call:
             raise HTTPException(
@@ -85,6 +98,17 @@ async def accept_call(
         if donor:
             updated_donor = donor.model_copy(update={"last_donation_date": today_date})
             await tx.save_donor(updated_donor)
+
+        # Record audit entry for accept
+        await record_audit(
+            tx,
+            actor_uid=actor.user_id,
+            role=actor.role,
+            action="accept",
+            target_id=call.id,
+            before_status=call.state.value,
+            after_status=result.call.state.value if result.call else None,
+        )
 
         assert result.call is not None
         return result.call
@@ -124,6 +148,18 @@ async def defer_call(
                 detail=f"Blood request '{request_id}' not found.",
             )
 
+        # Staff can only act on their centre's calls
+        if (
+            actor.role == "staff"
+            and actor.centre_id
+            and req.centre_id
+            and req.centre_id != actor.centre_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: Staff can only act on calls for their own centre.",
+            )
+
         call = await tx.get_call(request_id, call_id)
         if not call:
             raise HTTPException(
@@ -145,6 +181,17 @@ async def defer_call(
 
         for event in result.timeline_events:
             await tx.append_event(request_id, event)
+
+        # Record audit entry for defer
+        await record_audit(
+            tx,
+            actor_uid=actor.user_id,
+            role=actor.role,
+            action="defer",
+            target_id=call.id,
+            before_status=call.state.value,
+            after_status=result.call.state.value if result.call else None,
+        )
 
         assert result.call is not None
         return result.call

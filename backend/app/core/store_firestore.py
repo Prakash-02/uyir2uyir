@@ -101,6 +101,14 @@ class FirestoreTransactionStore(TransactionStore):
             return snap.to_dict()
         return None
 
+    async def get_donor_contact(self, donor_id: str) -> dict[str, Any] | None:
+        self._assert_can_read()
+        ref = self.client.collection("donorContacts").document(donor_id)
+        snap = await _get_one_doc(self.transaction, ref)
+        if snap and snap.exists:
+            return snap.to_dict()
+        return None
+
     # --- WRITES ---
 
     async def save_request(self, request: BloodRequest) -> None:
@@ -165,6 +173,34 @@ class FirestoreTransactionStore(TransactionStore):
         self._has_written = True
         ref = self.client.collection("confirmLinks").document(token_hash)
         payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        self.transaction.set(ref, payload)
+
+    async def save_donor_contact(self, donor_id: str, data: dict[str, Any]) -> None:
+        self._has_written = True
+        ref = self.client.collection("donorContacts").document(donor_id)
+        payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        self.transaction.set(ref, payload)
+
+    async def append_consent_event(self, donor_id: str, event: dict[str, Any]) -> None:
+        self._has_written = True
+        event_id = event.get("id")
+        coll = self.client.collection("consents").document(donor_id).collection("events")
+        ref = coll.document(event_id) if event_id else coll.document()
+        payload = dict(event)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        self.transaction.set(ref, payload)
+
+    async def append_audit_entry(self, entry: dict[str, Any]) -> None:
+        self._has_written = True
+        entry_id = entry.get("id")
+        coll = self.client.collection("audit")
+        ref = coll.document(entry_id) if entry_id else coll.document()
+        payload = dict(entry)
         payload["dataMode"] = self.data_mode
         payload["isSimulated"] = self.data_mode == "demo"
         self.transaction.set(ref, payload)
@@ -392,6 +428,57 @@ class FirestoreStore(Store):
     async def list_confirm_links_by_hospital(self, hospital_id: str) -> list[dict[str, Any]]:
         query = self.client.collection("confirmLinks").where(
             filter=FieldFilter("hospitalId", "==", hospital_id)
+        )
+        docs = []
+        async for doc in query.stream():
+            docs.append(doc.to_dict())
+        return docs
+
+    # Donor Contacts (Vault)
+    async def get_donor_contact(self, donor_id: str) -> dict[str, Any] | None:
+        ref = self.client.collection("donorContacts").document(donor_id)
+        doc = await ref.get()
+        return doc.to_dict() if doc.exists else None
+
+    async def save_donor_contact(self, donor_id: str, data: dict[str, Any]) -> None:
+        ref = self.client.collection("donorContacts").document(donor_id)
+        payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        await ref.set(payload)
+
+    # Consents
+    async def append_consent_event(self, donor_id: str, event: dict[str, Any]) -> None:
+        coll = self.client.collection("consents").document(donor_id).collection("events")
+        event_id = event.get("id")
+        ref = coll.document(event_id) if event_id else coll.document()
+        payload = dict(event)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        await ref.set(payload)
+
+    async def list_consent_events(self, donor_id: str) -> list[dict[str, Any]]:
+        coll = self.client.collection("consents").document(donor_id).collection("events")
+        docs = []
+        async for doc in coll.stream():
+            docs.append(doc.to_dict())
+        return docs
+
+    # Audit
+    async def append_audit_entry(self, entry: dict[str, Any]) -> None:
+        coll = self.client.collection("audit")
+        entry_id = entry.get("id")
+        ref = coll.document(entry_id) if entry_id else coll.document()
+        payload = dict(entry)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        await ref.set(payload)
+
+    async def list_audit_entries(self, limit: int = 100) -> list[dict[str, Any]]:
+        query = (
+            self.client.collection("audit")
+            .order_by("at", direction=firestore.Query.DESCENDING)
+            .limit(limit)
         )
         docs = []
         async for doc in query.stream():

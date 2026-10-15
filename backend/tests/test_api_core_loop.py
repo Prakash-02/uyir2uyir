@@ -32,6 +32,7 @@ def client() -> TestClient:
         INTERNAL_TOKEN="test-internal-token",
         REQUEST_CALL_CAP=15,
         DAILY_CALL_CAP=30,
+        ALLOW_TEST_HEADER_AUTH=True,
     )
     app = create_app(settings=settings)
     return TestClient(app)

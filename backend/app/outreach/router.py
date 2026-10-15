@@ -1,8 +1,11 @@
-from typing import Literal
+import uuid
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.auth.dependencies import Actor, require_demo_actor
 from app.clock.service import get_clock
+from app.core.audit import record_audit
 from app.core.config import get_settings
 from app.core.models import CamelModel
 from app.core.store import TransactionStore, get_store
@@ -27,7 +30,11 @@ class PressKeyRequest(CamelModel):
 
 
 @router.post("/calls/{call_id}/press", response_model=Call)
-async def sim_press_key(call_id: str, payload: PressKeyRequest) -> Call:
+async def sim_press_key(
+    call_id: str,
+    payload: PressKeyRequest,
+    _actor: Annotated[Actor, Depends(require_demo_actor)],
+) -> Call:
     """Simulator DTMF keypress webhook (demo mode only).
 
     Supported keys:
@@ -93,7 +100,7 @@ async def sim_press_key(call_id: str, payload: PressKeyRequest) -> Call:
                     result = apply_press_2(req, call, timestamp=now_iso)
             elif payload.key == "9":
                 result = apply_press_9(req, call, timestamp=now_iso)
-                # Opt out donor permanently in database
+                # Opt out donor permanently in database and record consent withdrawal
                 donor_id = parts[2]
                 donor = await tx.get_donor(donor_id)
                 if donor:
@@ -101,6 +108,36 @@ async def sim_press_key(call_id: str, payload: PressKeyRequest) -> Call:
                         update={"consent_urgent": False, "active": False}
                     )
                     await tx.save_donor(updated_donor)
+
+                # Record consent withdrawal event in consents/{donorId}/events
+                await tx.append_consent_event(
+                    donor_id,
+                    {
+                        "id": f"c-evt-{uuid.uuid4().hex[:8]}",
+                        "donorId": donor_id,
+                        "purpose": "urgent_contact",
+                        "granted": False,
+                        "action": "WITHDRAW",
+                        "noticeVersion": "v1",
+                        "language": call.lang.value
+                        if hasattr(call.lang, "value")
+                        else str(call.lang),
+                        "channel": "ivr",
+                        "at": now_iso,
+                    },
+                )
+
+                # Record append-only audit entry for opt-out
+                await record_audit(
+                    tx,
+                    actor_uid=donor_id,
+                    role="donor",
+                    action="opt-out",
+                    target_id=donor_id,
+                    before_status="ACTIVE",
+                    after_status="WITHDRAWN",
+                )
+
             else:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,

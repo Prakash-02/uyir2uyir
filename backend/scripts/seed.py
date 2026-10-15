@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 os.environ.setdefault("GEMINI_MODEL", "gemini-2.0-flash")
 
+from app.auth.constants import DEMO_STORY_CENTRE_ID, DEMO_STORY_HOSPITAL_ID
 from app.core.config import get_settings
 from app.core.entities import Centre, Donor, Hospital
 from app.core.store import get_store
@@ -26,11 +27,11 @@ from app.requests.models import BloodGroup, Lang
 
 HOSPITALS_FIXTURE = [
     {
-        "id": "hosp-sample-1",
+        "id": DEMO_STORY_HOSPITAL_ID,
         "name": "Sample General Hospital, Chennai",
         "area": "Adyar",
         "city": "Chennai",
-        "centreId": "centre-sample-1",
+        "centreId": DEMO_STORY_CENTRE_ID,
     },
     {
         "id": "hosp-sample-2",
@@ -44,13 +45,13 @@ HOSPITALS_FIXTURE = [
         "name": "Coastal District Hospital, Chennai",
         "area": "Mylapore",
         "city": "Chennai",
-        "centreId": "centre-sample-1",
+        "centreId": DEMO_STORY_CENTRE_ID,
     },
 ]
 
 CENTRES_FIXTURE = [
     {
-        "id": "centre-sample-1",
+        "id": DEMO_STORY_CENTRE_ID,
         "name": "Central Blood Bank, Egmore (Simulated)",
         "area": "Egmore",
         "city": "Chennai",

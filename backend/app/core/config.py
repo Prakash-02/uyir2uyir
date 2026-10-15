@@ -44,6 +44,14 @@ class Settings(BaseSettings):
         default="http://localhost:5173",
         description="Comma-separated list of allowed CORS origins",
     )
+    PHONE_KEY: str = Field(
+        default="u2u-default-dev-phone-key-32-bytes-long",
+        description="AES-GCM key from Secret Manager for phone vault",
+    )
+    ALLOW_TEST_HEADER_AUTH: bool = Field(
+        default=False,
+        description="Allow X-Demo-Role header in tests; off by default in production",
+    )
 
     # Telephony & Safety Limits
     CALL_ALLOWLIST: str = Field(

@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 os.environ.setdefault("GEMINI_MODEL", "gemini-2.0-flash")
 os.environ.setdefault("DATA_MODE", "demo")
 os.environ.setdefault("FIRESTORE_DB", "u2u-demo")
+os.environ.setdefault("ALLOW_TEST_HEADER_AUTH", "true")
 
 from app.core.config import Settings
 from app.main import create_app
@@ -19,6 +20,7 @@ def test_settings() -> Settings:
         DATA_MODE="demo",
         FIRESTORE_DB="u2u-demo",
         GEMINI_MODEL="gemini-2.0-flash",
+        ALLOW_TEST_HEADER_AUTH=True,
     )
 
 

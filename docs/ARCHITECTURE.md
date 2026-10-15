@@ -108,27 +108,34 @@ backend/
 ├── app/
 │   ├── main.py                  # App factory create_app(), CORS, /healthz, /config
 │   ├── core/
-│   │   ├── config.py            # pydantic-settings Settings, STORE selection, env validation
+│   │   ├── config.py            # pydantic-settings Settings, STORE selection, env validation, PHONE_KEY
 │   │   ├── mode_guard.py        # ModeGuard refusing DATA_MODE / FIRESTORE_DB mismatch
 │   │   ├── models.py            # CamelModel base with to_camel alias generator
 │   │   ├── entities.py          # Hospital, Centre, and Donor domain models
+│   │   ├── phone_vault.py       # AES-256-GCM phone encryption, HMAC blind hash, last 4
+│   │   ├── audit.py             # Append-only audit logger for sensitive actions
 │   │   ├── store.py             # Store and TransactionStore protocols
 │   │   ├── store_memory.py      # Thread-safe in-memory store for unit tests and local dev
 │   │   ├── store_firestore.py   # Async transactional Firestore store
 │   │   └── logging.py           # Structured JSON logger, phone redactor, 422 sanitizer
-│   ├── auth/                    # Firebase Auth JWT, claims extraction, RBAC
-│   ├── requests/                # Blood request models, counting rules, and transitions
+│   ├── auth/                    # Firebase Auth ID tokens, custom claims, RBAC, POST /auth/demo-role
+│   │   ├── constants.py         # Fixed demo story hospital and centre IDs
+│   │   ├── dependencies.py      # get_actor, require_hospital_actor, require_staff_actor, require_demo_actor
+│   │   └── router.py            # POST /auth/demo-role (sets custom claims on anonymous accounts)
+│   ├── donors/                  # Donor onboarding, input validation, and consent logging
+│   │   └── router.py            # POST /donors/signup (validates Indian mobile, records vault & consents)
+│   ├── requests/                # Blood request models, counting rules, transitions, GET /{id} isolation
 │   ├── rules/                   # Deterministic blood compatibility and contact rules
 │   ├── matching/                # Donor compatibility and 5-donor batching
-│   ├── outreach/                # Twilio voice client, IVR simulator bridge, TTS
+│   ├── outreach/                # Twilio voice client, IVR simulator bridge, TTS, Press 9 consent withdrawal
 │   ├── screening/               # Donor triage: accept, defer, and return dates
 │   ├── desk/                    # WhatsApp message check, quote verifier, confirm tokens
 │   ├── ai/                      # Vertex AI Gemini Flash client (temperature 0)
 │   ├── clock/                   # Cloud Scheduler 1-min reconciliation sweeps
-│   └── admin/                   # Demo scenario runner and operational resets
+│   └── admin/                   # Demo scenario runner, clock advancement, and resets
 ├── scripts/
 │   └── seed.py                  # Database seed script for hospitals, centres, donors, and config
-├── tests/                       # Pytest test suites (domain, store, health, logging, mode guard)
+├── tests/                       # Pytest test suites (domain, store, auth, privacy, desk, admin, metrics)
 ├── Dockerfile                   # python:3.12-slim non-root Cloud Run container
 ├── pyproject.toml               # Poetry/pip project definition, ruff, and pytest configs
 ├── requirements.txt             # Pinned production dependencies
@@ -138,6 +145,7 @@ backend/
 ```
 
 ---
+
 
 ## 3. Data Modes & Persistence
 
@@ -293,6 +301,35 @@ stateDiagram-v2
   ├── name: string
   ├── area: string
   └── active: boolean
+
+/donorContacts/{donorId}
+  ├── donorId: string
+  ├── encryptedPhone: string (AES-256-GCM ciphertext)
+  ├── phoneHash: string (blind HMAC-SHA256 lookup hash)
+  ├── last4: string (last 4 digits for masked display)
+  └── createdAt: ISO8601 string
+
+/consents/{donorId}/events/{eventId}
+  ├── id: string
+  ├── donorId: string
+  ├── purpose: 'urgent_contact' | 'donation_history'
+  ├── granted: boolean
+  ├── action?: 'WITHDRAW'
+  ├── noticeVersion: 'v1'
+  ├── language: 'en' | 'ta'
+  ├── channel: 'web' | 'ivr'
+  └── at: ISO8601 string
+
+/audit/{auditId}
+  ├── id: string
+  ├── actorUid: string
+  ├── role: string
+  ├── mode: 'demo' | 'live'
+  ├── action: 'create' | 'cancel' | 'accept' | 'defer' | 'confirm' | 'opt-out'
+  ├── targetId: string
+  ├── beforeStatus: string | null
+  ├── afterStatus: string | null
+  └── at: ISO8601 string
 ```
 
 ### 5.1 Data Model Mapping & Storage Implementations
@@ -305,11 +342,15 @@ stateDiagram-v2
 | **Hospital** | `/hospitals/{id}` | `Hospital` | [`backend/app/core/entities.py`](../backend/app/core/entities.py) | Seeded by [`backend/scripts/seed.py`](../backend/scripts/seed.py) |
 | **Blood Centre** | `/centres/{id}` | `Centre` | [`backend/app/core/entities.py`](../backend/app/core/entities.py) | Seeded by [`backend/scripts/seed.py`](../backend/scripts/seed.py) |
 | **Donor Profile** | `/donors/{id}` | `Donor` | [`backend/app/core/entities.py`](../backend/app/core/entities.py) | Seeded by [`backend/scripts/seed.py`](../backend/scripts/seed.py) |
+| **Phone Vault** | `/donorContacts/{id}` | `dict[str, Any]` | [`backend/app/core/phone_vault.py`](../backend/app/core/phone_vault.py) | [`backend/app/core/store_memory.py`](../backend/app/core/store_memory.py) / [`backend/app/core/store_firestore.py`](../backend/app/core/store_firestore.py) |
+| **Consent Ledger** | `/consents/{donorId}/events/{id}` | `dict[str, Any]` | [`backend/app/donors/router.py`](../backend/app/donors/router.py) | [`backend/app/core/store_memory.py`](../backend/app/core/store_memory.py) / [`backend/app/core/store_firestore.py`](../backend/app/core/store_firestore.py) |
+| **Audit Ledger** | `/audit/{id}` | `AuditEntry` | [`backend/app/core/audit.py`](../backend/app/core/audit.py) | [`backend/app/core/store_memory.py`](../backend/app/core/store_memory.py) / [`backend/app/core/store_firestore.py`](../backend/app/core/store_firestore.py) |
 | **App Config** | `/config/app` | `dict[str, Any]` | `dict` / `AppConfig` | Initialized by [`backend/scripts/seed.py`](../backend/scripts/seed.py) |
 | **Security Rules** | Firestore Security Rules | — | [`infra/firestore.demo.rules`](../infra/firestore.demo.rules) | Enforces read-only demo access, deny-all on PII |
 | **Indexes** | Composite & Collection Group | — | [`infra/firestore.indexes.json`](../infra/firestore.indexes.json) | Indexes for `hospitalId+createdAt`, `centreId+createdAt`, and `calls.state` |
 
 ---
+
 
 ## 6. Reliability Rules
 

@@ -21,6 +21,9 @@ class MemoryTransactionStore(TransactionStore):
         self._pending_configs: dict[str, dict[str, Any]] = {}
         self._pending_locks: dict[str, dict[str, Any]] = {}
         self._pending_confirm_links: dict[str, dict[str, Any]] = {}
+        self._pending_donor_contacts: dict[str, dict[str, Any]] = {}
+        self._pending_consent_events: list[tuple[str, dict[str, Any]]] = []
+        self._pending_audit_entries: list[dict[str, Any]] = []
 
     async def get_request(self, request_id: str) -> BloodRequest | None:
         if request_id in self._pending_requests:
@@ -89,6 +92,21 @@ class MemoryTransactionStore(TransactionStore):
     async def save_confirm_link(self, token_hash: str, data: dict[str, Any]) -> None:
         self._pending_confirm_links[token_hash] = dict(data)
 
+    async def get_donor_contact(self, donor_id: str) -> dict[str, Any] | None:
+        if donor_id in self._pending_donor_contacts:
+            return dict(self._pending_donor_contacts[donor_id])
+        c = self._store._donor_contacts.get(donor_id)
+        return dict(c) if c is not None else None
+
+    async def save_donor_contact(self, donor_id: str, data: dict[str, Any]) -> None:
+        self._pending_donor_contacts[donor_id] = dict(data)
+
+    async def append_consent_event(self, donor_id: str, event: dict[str, Any]) -> None:
+        self._pending_consent_events.append((donor_id, dict(event)))
+
+    async def append_audit_entry(self, entry: dict[str, Any]) -> None:
+        self._pending_audit_entries.append(dict(entry))
+
     def apply(self) -> None:
         """Applies all staged updates into the backing MemoryStore."""
         for req in self._pending_requests.values():
@@ -116,6 +134,17 @@ class MemoryTransactionStore(TransactionStore):
         for token_hash, link_data in self._pending_confirm_links.items():
             self._store._confirm_links[token_hash] = link_data
 
+        for donor_id, contact in self._pending_donor_contacts.items():
+            self._store._donor_contacts[donor_id] = contact
+
+        for donor_id, event in self._pending_consent_events:
+            if donor_id not in self._store._consents:
+                self._store._consents[donor_id] = []
+            self._store._consents[donor_id].append(event)
+
+        for entry in self._pending_audit_entries:
+            self._store._audit.append(entry)
+
 
 class MemoryStore(Store):
     """Thread-safe, coroutine-safe in-memory store for offline development and testing."""
@@ -135,6 +164,9 @@ class MemoryStore(Store):
         self._locks: dict[str, dict[str, Any]] = {}
         self._pastes: dict[str, dict[str, Any]] = {}
         self._confirm_links: dict[str, dict[str, Any]] = {}
+        self._donor_contacts: dict[str, dict[str, Any]] = {}
+        self._consents: dict[str, list[dict[str, Any]]] = {}
+        self._audit: list[dict[str, Any]] = []
 
     @classmethod
     def get_instance(cls) -> "MemoryStore":
@@ -158,6 +190,9 @@ class MemoryStore(Store):
         self._locks.clear()
         self._pastes.clear()
         self._confirm_links.clear()
+        self._donor_contacts.clear()
+        self._consents.clear()
+        self._audit.clear()
 
     # Hospitals
     async def get_hospital(self, hospital_id: str) -> Hospital | None:
@@ -324,6 +359,37 @@ class MemoryStore(Store):
                 for link in self._confirm_links.values()
                 if link.get("hospitalId") == hospital_id or link.get("hospital_id") == hospital_id
             ]
+
+    # Donor Contacts (Vault)
+    async def get_donor_contact(self, donor_id: str) -> dict[str, Any] | None:
+        async with self._lock:
+            c = self._donor_contacts.get(donor_id)
+            return dict(c) if c is not None else None
+
+    async def save_donor_contact(self, donor_id: str, data: dict[str, Any]) -> None:
+        async with self._lock:
+            self._donor_contacts[donor_id] = dict(data)
+
+    # Consents
+    async def append_consent_event(self, donor_id: str, event: dict[str, Any]) -> None:
+        async with self._lock:
+            if donor_id not in self._consents:
+                self._consents[donor_id] = []
+            self._consents[donor_id].append(dict(event))
+
+    async def list_consent_events(self, donor_id: str) -> list[dict[str, Any]]:
+        async with self._lock:
+            events = self._consents.get(donor_id, [])
+            return [dict(e) for e in events]
+
+    # Audit
+    async def append_audit_entry(self, entry: dict[str, Any]) -> None:
+        async with self._lock:
+            self._audit.append(dict(entry))
+
+    async def list_audit_entries(self, limit: int = 100) -> list[dict[str, Any]]:
+        async with self._lock:
+            return [dict(e) for e in self._audit[-limit:]]
 
     # Transactions
     async def run_transaction(self, fn: Callable[[TransactionStore], Awaitable[T]]) -> T:

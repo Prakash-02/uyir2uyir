@@ -1,15 +1,16 @@
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 
-from app.auth.dependencies import Actor, get_actor
+from app.auth.dependencies import Actor, require_metrics_actor
 from app.core.config import get_settings
 from app.core.models import CamelModel
 from app.core.store import Store, get_store
 from app.requests.models import CallState, RequestStatus
 
 router = APIRouter(tags=["Metrics"])
+
 
 # Broadcast baseline comparison metrics:
 # In traditional emergency blood coordination, requests are broadcast via uncoordinated
@@ -144,7 +145,7 @@ async def calculate_metrics(store: Store, is_demo: bool) -> MetricsResponse:
 
 @router.get("/metrics", response_model=MetricsResponse)
 async def get_metrics(
-    actor: Annotated[Actor, Depends(get_actor)],
+    _actor: Annotated[Actor, Depends(require_metrics_actor)],
 ) -> MetricsResponse:
     """Computes operational performance metrics across all blood requests.
 
@@ -153,12 +154,5 @@ async def get_metrics(
     - Live mode: Blood centre staff only.
     """
     settings = get_settings()
-
-    if settings.DATA_MODE == "live" and actor.role != "staff":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden: Staff role required to view metrics in live data mode.",
-        )
-
     store = get_store()
     return await calculate_metrics(store, is_demo=(settings.DATA_MODE == "demo"))

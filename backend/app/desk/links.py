@@ -8,6 +8,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
+from app.core.audit import record_audit
 from app.core.config import Settings, get_settings
 from app.core.store import Store, TransactionStore, get_store
 from app.desk.models import ConfirmAction, RequestPreview
@@ -15,6 +16,7 @@ from app.outreach.service import dispatch_round_calls
 from app.requests.models import BloodRequest, RequestStatus, TimelineEvent
 
 logger = logging.getLogger("u2u.desk.links")
+
 
 LINK_EXPIRY_HOURS = 6
 HOURLY_HOSPITAL_CAP = 6
@@ -252,6 +254,17 @@ async def execute_confirm_action(
                 text='Hospital marked request as "Not our patient" (REJECTED).',
             )
             await tx.append_event(req.id, event)
+
+        # Record audit entry for confirm
+        await record_audit(
+            tx,
+            actor_uid=link_doc.get("hospitalId", "hospital-actor"),
+            role="hospital",
+            action="confirm",
+            target_id=req.id,
+            before_status=RequestStatus.AWAITING_HOSPITAL.value,
+            after_status=req.status.value,
+        )
 
         return req, should_dispatch
 
