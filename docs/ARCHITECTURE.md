@@ -368,3 +368,55 @@ stateDiagram-v2
    If Vertex AI is unreachable or encounters quota limits during a Request Desk submission, the pipeline fails safely to `NOT_VERIFIED` with the message: *"Couldn't verify. Please call the hospital."* It never invents an extraction or creates an unverified hospital alert.
 7. **No Secret Ingestion in Client Bundles:**
    No service account keys, Twilio auth tokens, or Vertex AI service tokens exist in the frontend application. All external integrations are isolated in backend Cloud Run micro-services accessing Secret Manager.
+
+---
+
+## 7. Cloud Run & Infrastructure Deployment
+
+The U2U backend deploys to **Google Cloud Run** in `asia-south1` as a containerized FastAPI application with Firestore, Vertex AI, Secret Manager, and Cloud Scheduler integrations.
+
+```mermaid
+graph TD
+    User["Evaluator / Public Web Client"] -->|HTTPS REST| Run["Cloud Run: u2u-api-demo<br/>(asia-south1, no-cpu-throttling)"]
+    Scheduler["Cloud Scheduler: u2u-tick-demo<br/>(* * * * *)"] -->|OIDC Bearer Token| Run
+    
+    subgraph "GCP Security & Storage (Demo Mode)"
+        Run -->|sa-api-demo| FS[("Cloud Firestore<br/>(u2u-demo multi-db)")]
+        Run -->|sa-api-demo| SM["Secret Manager<br/>(LINK_SIGNING_KEY, PHONE_KEY)"]
+        Run -->|sa-api-demo| VTX["Vertex AI Gemini 2.0 Flash<br/>(asia-south1)"]
+    end
+```
+
+### 7.1 Cloud Run Configuration Details
+
+- **Service Name:** `u2u-api-demo` (Region: `asia-south1`)
+- **Container Build:** Multi-stage container based on [`backend/Dockerfile`](../backend/Dockerfile) with non-root runtime (`appuser`) and Uvicorn proxy headers enabled.
+- **`--allow-unauthenticated`:** Allows browser clients, Twilio webhooks, and public audio endpoints to reach the service. Application-layer security (Firebase ID tokens, HMAC link signatures, Twilio request signatures, and OIDC tokens) enforces authorization on every route.
+- **`--no-cpu-throttling`:** Critical flag that keeps CPU allocated between requests, allowing background tasks (such as [`backend/app/clock/story.py`](../backend/app/clock/story.py) and delayed outreach dispatch) to execute continuously.
+- **`--env-vars-file infra/env.demo.yaml`:** Passes complex environment variables without comma splitting issues inherent to `--set-env-vars`, safely maintaining `ALLOWED_ORIGINS` and `CALL_ALLOWLIST`.
+- **`--set-secrets`:** Mounts `LINK_SIGNING_KEY` and `PHONE_KEY` directly from Google Secret Manager.
+
+### 7.2 Service Accounts & Least Privilege IAM
+
+| Service Account | Role Bindings | Purpose |
+|---|---|---|
+| `sa-api-demo` | `roles/datastore.user` | Read/write access to Firestore (`u2u-demo` database) |
+| `sa-api-demo` | `roles/aiplatform.user` | Vertex AI Gemini Flash 2.0 extraction calls |
+| `sa-api-demo` | `roles/logging.logWriter` | Structured application and audit logs |
+| `sa-api-demo` | `roles/secretmanager.secretAccessor` | Access strictly scoped to `LINK_SIGNING_KEY` and `PHONE_KEY` |
+| `sa-scheduler` | `roles/run.invoker` | Permission to invoke Cloud Run service endpoint `/internal/tick` |
+
+### 7.3 Cloud Scheduler 1-Minute Tick via Google OIDC
+
+Cloud Scheduler executes an automated HTTP POST request every minute (`* * * * *`) against `/internal/tick`:
+- **Auth Header:** `Authorization: Bearer <Google-signed OIDC ID Token>`
+- **Token Audience:** Service URL (`https://u2u-api-demo-...-as.a.run.app`)
+- **Token Subject/Email:** `sa-scheduler@${PROJECT_ID}.iam.gserviceaccount.com`
+- **Application Validation:** [`backend/app/clock/router.py`](../backend/app/clock/router.py) validates the token using `google.oauth2.id_token.verify_oauth2_token()`, verifying that the token was signed by Google, the audience matches the service URL, and the email matches the authorized scheduler service account.
+
+### 7.4 Deployment Scripts
+
+- [`infra/deploy_backend_demo.sh`](../infra/deploy_backend_demo.sh): Idempotent bash script provisioning service accounts, secrets, environment files, Cloud Run service, and Cloud Scheduler ticker.
+- [`infra/deploy_firestore_rules.sh`](../infra/deploy_firestore_rules.sh): Deploys [`infra/firestore.demo.rules`](../infra/firestore.demo.rules) and [`infra/firestore.indexes.json`](../infra/firestore.indexes.json) to the `u2u-demo` named database via Firebase CLI.
+- [`infra/smoke_backend.sh`](../infra/smoke_backend.sh): Post-deployment smoke script that verifies `/healthz`, `/config`, triggers the 5-step scenario story, polls until the request is `FULFILLED`, and asserts timeline `/metrics`.
+

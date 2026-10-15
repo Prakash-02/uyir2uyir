@@ -38,13 +38,54 @@ def _verify_internal_token(
 
     token = internal_token or x_internal_token
     if not token and authorization and authorization.startswith("Bearer "):
-        token = authorization[7:]
+        token = authorization[7:].strip()
 
-    if token != expected:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing internal token.",
-        )
+    # 1. Local or configured shared secret match (used in unit tests and local dev)
+    if token and token == expected:
+        return
+
+    # 2. Google Cloud Scheduler OIDC token verification in the cloud
+    if authorization and authorization.startswith("Bearer "):
+        bearer_token = authorization[7:].strip()
+        try:
+            from google.auth.transport import requests as google_requests
+            from google.oauth2 import id_token
+
+            expected_audience = settings.PUBLIC_BASE_URL.rstrip("/")
+            claims = id_token.verify_oauth2_token(
+                bearer_token,
+                google_requests.Request(),
+                audience=expected_audience,
+            )
+
+            expected_email = settings.SCHEDULER_SERVICE_ACCOUNT
+            if not expected_email and settings.GOOGLE_CLOUD_PROJECT:
+                expected_email = (
+                    f"sa-scheduler@{settings.GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
+                )
+
+            token_email = claims.get("email")
+            if expected_email and token_email != expected_email:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=(
+                        f"OIDC token email '{token_email}' does not match expected "
+                        f"scheduler service account '{expected_email}'."
+                    ),
+                )
+            return
+        except HTTPException:
+            raise
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid OIDC token: {exc}",
+            ) from exc
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or missing internal token or OIDC credentials.",
+    )
 
 
 async def _expire_request_if_needed(store: Store, req_id: str, now_iso: str) -> bool:

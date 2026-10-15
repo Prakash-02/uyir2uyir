@@ -1,0 +1,7 @@
+{
+  "firestore": {
+    "database": "u2u-demo",
+    "rules": "infra/firestore.demo.rules",
+    "indexes": "infra/firestore.indexes.json"
+  }
+}

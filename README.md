@@ -114,9 +114,33 @@ DATA_MODE=demo STORE=firestore .venv/bin/python scripts/seed.py
 
 ## Deploy
 
-*(Status: planned)*
-- **Frontend:** Firebase Hosting via GitHub Actions.
-- **Backend:** Google Cloud Run (asia-south1 region) connected to Secret Manager and Vertex AI.
+### 1. Backend on Cloud Run (Demo Mode)
+
+The U2U backend deploys to **Google Cloud Run** in `asia-south1` with continuous execution enabled (`--no-cpu-throttling` to sustain background simulation story runs), connected to **Secret Manager** for signing and phone encryption keys, and triggered by **Cloud Scheduler** for 1-minute expiration and round progression sweeps.
+
+```bash
+# 1. Deploy Firestore security rules and composite indexes to u2u-demo
+./infra/deploy_firestore_rules.sh <PROJECT_ID>
+
+# 2. Deploy backend service, service accounts, secrets, and Cloud Scheduler job
+./infra/deploy_backend_demo.sh <PROJECT_ID> [REGION]
+
+# 3. Run post-deploy smoke verification
+./infra/smoke_backend.sh <SERVICE_URL>
+```
+
+#### Google Services & Code Paths
+| Component | Implementation File / Config | Description |
+|---|---|---|
+| **Cloud Run Service** | [`backend/Dockerfile`](backend/Dockerfile), [`infra/deploy_backend_demo.sh`](infra/deploy_backend_demo.sh) | Containerized FastAPI runtime on port 8080 |
+| **Environment Configuration** | [`infra/env.demo.yaml`](infra/env.demo.yaml) | Safe multi-value env vars (CORS origins, allowlists) |
+| **Secret Manager** | [`infra/deploy_backend_demo.sh`](infra/deploy_backend_demo.sh) | `LINK_SIGNING_KEY` and `PHONE_KEY` (AES-GCM) |
+| **Cloud Scheduler OIDC Ticker** | [`backend/app/clock/router.py`](backend/app/clock/router.py) | 1-minute tick guarded by Google OIDC token verification |
+| **Firestore Database (`u2u-demo`)** | [`infra/firestore.demo.rules`](infra/firestore.demo.rules), [`infra/firestore.indexes.json`](infra/firestore.indexes.json) | Read-only client demo rules and composite indexes |
+| **Post-Deploy Smoke Test** | [`infra/smoke_backend.sh`](infra/smoke_backend.sh) | End-to-end verification of `/healthz`, `/config`, story run, and `/metrics` |
+| **Backend CI** | [`.github/workflows/backend.yml`](.github/workflows/backend.yml) | Automated linting and pytest suite on PR and push to main |
+
+> ⚠️ **CRITICAL BUDGET SAFETY:** Ensure a **$20 budget alert** is configured in [Google Cloud Billing](https://console.cloud.google.com/billing/budgets) before production deployment.
 
 ---
 

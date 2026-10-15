@@ -52,6 +52,10 @@ class Settings(BaseSettings):
         default=False,
         description="Allow X-Demo-Role header in tests; off by default in production",
     )
+    SCHEDULER_SERVICE_ACCOUNT: str | None = Field(
+        default=None,
+        description="Expected Cloud Scheduler service account email for OIDC verification",
+    )
 
     # Telephony & Safety Limits
     CALL_ALLOWLIST: str = Field(

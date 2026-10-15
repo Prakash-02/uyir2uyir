@@ -868,6 +868,53 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** 776a4b6
 - **Human Review:** Verified via 110 passed pytest tests and clean ruff check/format.
 
+### Entry #B8
+- **Date:** 2026-10-15
+- **Goal:** Prepare everything needed to deploy the backend to Cloud Run in demo mode, and give exact commands to run without executing cloud mutations directly.
+- **Prompt Summary:**
+  1. Infrastructure Deploy Script (`infra/deploy_backend_demo.sh`):
+     - Takes `PROJECT_ID` as argument and sets `gcloud config set project`.
+     - Enables required GCP APIs: `run`, `firestore`, `aiplatform`, `secretmanager`, `cloudscheduler`, `iam`.
+     - Creates service account `sa-api-demo` with `roles/aiplatform.user`, `roles/logging.logWriter`, `roles/datastore.user` (with condition limiting to `u2u-demo` if supported), and `roles/secretmanager.secretAccessor` scoped to `LINK_SIGNING_KEY` and `PHONE_KEY`.
+     - Creates secrets `LINK_SIGNING_KEY` and `PHONE_KEY` with random hex keys piped directly via `openssl rand -hex 32` (never printed).
+     - Generates safe multi-value `infra/env.demo.yaml` without comma splitting.
+     - Deploys Cloud Run service `u2u-api-demo` with `--allow-unauthenticated`, `--no-cpu-throttling`, `--max-instances 3`, `--min-instances 0`, `--env-vars-file`, and `--set-secrets`.
+     - Creates `sa-scheduler` service account and Cloud Scheduler job `u2u-tick-demo` calling `POST /internal/tick` every minute (`* * * * *`) with OIDC token targeting the service URL.
+     - Prints budget alert reminder for $20 limit in Google Cloud Billing.
+  2. Cloud Scheduler OIDC Verification:
+     - Updated `_verify_internal_token` in `backend/app/clock/router.py` to verify Google OIDC tokens (`google.oauth2.id_token.verify_oauth2_token`) matching service URL audience and `sa-scheduler` email. Kept `INTERNAL_TOKEN` header and Bearer token for local development and offline unit tests.
+     - Added `SCHEDULER_SERVICE_ACCOUNT` setting to `backend/app/core/config.py`.
+     - Added comprehensive unit tests in `backend/tests/test_clock_oidc.py` (5 tests passing).
+  3. Firestore Rules Deploy Script (`infra/deploy_firestore_rules.sh` & `firebase.json`):
+     - Configured `firebase.json` pointing firestore rules (`infra/firestore.demo.rules`) and indexes (`infra/firestore.indexes.json`) to database `u2u-demo`.
+     - Created `infra/deploy_firestore_rules.sh <PROJECT_ID>` deploying rules and indexes via Firebase CLI.
+  4. Backend CI Workflow (`.github/workflows/backend.yml`):
+     - Configured GitHub Actions CI on PRs and pushes to `main` touching `backend/**`.
+     - Runs on Ubuntu with Python 3.12, executes `ruff check`, `ruff format --check`, and `pytest`. Does not deploy from CI.
+  5. Post-Deploy Smoke Script (`infra/smoke_backend.sh`):
+     - Validates `GET /healthz` and `GET /config`.
+     - Triggers scenario demo story via `POST /admin/scenario/story/run`.
+     - Polls `req-sample-1` status until `FULFILLED`.
+     - Reads and displays `GET /metrics`.
+  6. Documentation:
+     - Updated `README.md` with complete Deploy section and Google services table with real code paths.
+     - Updated `docs/ARCHITECTURE.md` with section 7 on Cloud Run deployment architecture, IAM least privilege, and OIDC ticker.
+- **Files Changed:**
+  - `.github/workflows/backend.yml`
+  - `backend/app/clock/router.py`
+  - `backend/app/core/config.py`
+  - `backend/tests/test_clock_oidc.py`
+  - `docs/ARCHITECTURE.md`
+  - `docs/PROMPTS.md`
+  - `firebase.json`
+  - `infra/deploy_backend_demo.sh`
+  - `infra/deploy_firestore_rules.sh`
+  - `infra/env.demo.yaml`
+  - `infra/smoke_backend.sh`
+  - `README.md`
+- **Commit Hash:** e3758a3
+- **Human Review:** All 116 tests passing, bash syntax verified, ready for human execution of deploy scripts.
+
 ---
 
 ## Human Decisions
