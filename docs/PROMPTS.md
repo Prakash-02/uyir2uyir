@@ -1032,6 +1032,38 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** 3e146ef
 - **Human Review:** Verified test suite passes (125 passed, 1 skipped).
 
+### Entry #12
+- **Date:** 2026-10-15
+- **Goal:** Implement the HTTP API client and Firestore live listeners, add Firebase Auth demo logins, and deploy the frontend to Firebase Hosting with CI.
+- **Prompt Summary:**
+  1. Built `frontend/src/api/http/index.ts` implementing all `ApiClient` methods with `fetch` against `VITE_API_BASE_URL`. Attached Firebase ID Bearer token via `getAuthToken()`, enforced 10-second request timeouts (`AbortSignal.timeout(10000)`), and mapped non-2xx responses and timeouts to typed `ApiError` instances.
+  2. Built `frontend/src/api/http/live.ts` implementing real-time Firestore listeners with `onSnapshot` against `VITE_FIRESTORE_DB` (`requests`, `requests/{id}/calls`, `requests/{id}/events`, hospital/centre filtered queries, and collection group query on `calls` for `state == 'RINGING'`). Handled missing credentials gracefully without crashing offline test runs.
+  3. Built `frontend/src/lib/firebase.ts` initializing Firebase App, Auth, and Firestore strictly from `VITE_FIREBASE_*` environment variables with zero credentials in code or public bundles.
+  4. Built `frontend/src/components/DemoRolePicker.tsx` mounted in `frontend/src/components/AppShell.tsx` on `/` without altering any screen components in `src/features/*`. Signs in with Firebase anonymous authentication, calls backend `POST /auth/demo-role` to assign role claims (`hospital` or `staff`), force-refreshes token, and navigates directly to `/hospital` or `/centre`.
+  5. Configured `firebase.json` and `.firebaserc` in repository root for Firebase Hosting serving `frontend/dist` with SPA rewrite to `/index.html` and 1-year immutable cache headers for hashed assets.
+  6. Created `.github/workflows/frontend.yml`:
+     - On pull request: installs dependencies, runs Oxlint, executes Vitest test suite, and tests bundle compilation.
+     - On push to `main`: builds with `VITE_API_MODE=http` and deploys to Firebase Hosting using `FirebaseExtended/action-hosting-deploy@v0` with secrets from GitHub repository secrets.
+  7. Documented required GitHub repository secret names in `docs/FRONTEND.md` without printing values.
+  8. Preserved `VITE_API_MODE=mock` as default for local offline development.
+  9. Verified both `mock` and `http` build targets, tested all 19 test suites in Vitest (115 passed), and verified 0 lint errors across 73 files.
+- **Files Changed:**
+  - `.firebaserc`
+  - `.github/workflows/frontend.yml`
+  - `README.md`
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `firebase.json`
+  - `frontend/src/api/http/http.test.ts`
+  - `frontend/src/api/http/index.ts`
+  - `frontend/src/api/http/live.ts`
+  - `frontend/src/components/AppShell.tsx`
+  - `frontend/src/components/DemoRolePicker.test.tsx`
+  - `frontend/src/components/DemoRolePicker.tsx`
+  - `frontend/src/lib/firebase.ts`
+- **Commit Hash:** Pending
+- **Human Review:** Verified dual-mode builds (`mock` and `http`), 115 tests passing, accessibility clean across all routes.
+
 ---
 
 ## Human Decisions

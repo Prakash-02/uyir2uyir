@@ -2,6 +2,7 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Logo } from './Logo'
 import { DemoBanner } from './DemoBanner'
+import { DemoRolePicker } from './DemoRolePicker'
 import { LangToggle } from './LangToggle'
 import { ThemeToggle } from './ThemeToggle'
 import { useT } from '../i18n/useT'
@@ -168,6 +169,7 @@ export function AppShell({
       </header>
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <DemoRolePicker />
         {children}
       </main>
 

@@ -12,13 +12,13 @@ During medical emergencies, families frequently scramble at odd hours forwarding
 | Service | Used for | Code path |
 |---|---|---|
 | Gemini on Vertex AI | reads pasted messages | `backend/app/ai/gemini.py` |
-| Firebase Hosting | High-performance frontend web application delivery | Status: planned (`frontend/`) |
-| Cloud Firestore | Multi-database persistence (`u2u-demo` / `u2u-live`) & live state | Built (`backend/app/core/store_firestore.py`) |
-| Cloud Run | Scalable FastAPI modular monolith backend container | Built (`backend/Dockerfile`) |
-| Firebase Authentication | Role-based hospital and blood centre identity & custom claims | Built (`backend/app/auth/`) |
-| Cloud Text-to-Speech | Cached Tamil and English voice audio synthesis for calls | Built (`backend/app/ai/tts.py`) |
-| Cloud Scheduler | 1-minute ticker for expiration and donor outreach rounds | Built (`backend/app/clock/router.py`) |
-| Secret Manager & Cloud Logging | Secure secret isolation and centralized audit logging | Built (`backend/app/core/logging.py`) |
+| Firebase Hosting | High-performance frontend web application delivery with SPA rewrites & long cache | `firebase.json` |
+| Cloud Firestore | Multi-database persistence (`u2u-demo` / `u2u-live`) & live listeners | `frontend/src/api/http/live.ts` |
+| Cloud Run | Scalable FastAPI modular monolith backend container | `backend/Dockerfile` |
+| Firebase Authentication | Anonymous demo logins, role-based identity & custom claims | `frontend/src/lib/firebase.ts` |
+| Cloud Text-to-Speech | Cached Tamil and English voice audio synthesis for calls | `backend/app/ai/tts.py` |
+| Cloud Scheduler | 1-minute ticker for expiration and donor outreach rounds | `backend/app/clock/router.py` |
+| Secret Manager & Cloud Logging | Secure secret isolation and centralized audit logging | `backend/app/core/logging.py` |
 
 > [!NOTE]
 > **Telephony Boundary:** Twilio is used only for the phone call; all AI runs on Gemini.
@@ -80,9 +80,40 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (Status: planned) for full syst
 ## Run Locally
 
 ### Frontend
+
+#### Option A: Offline / Mock Mode (Default)
+Runs entirely in browser memory with zero backend dependencies. Ideal for quick UI iterations and offline evaluation:
 ```bash
 cd frontend
 npm install
+npm run dev
+# App opens at http://localhost:5173 with simulated data and instant in-memory rules
+```
+
+#### Option B: Live HTTP Mode (Cloud Run & Firestore)
+Connects to the deployed FastAPI Cloud Run service and real-time Firestore listeners:
+```bash
+cd frontend
+npm install
+
+# Configure environment variables (or supply in terminal session):
+# On Linux / macOS / Git Bash:
+export VITE_API_MODE=http
+export VITE_API_BASE_URL="https://u2u-api-demo-77691642972.asia-south1.run.app"
+export VITE_FIRESTORE_DB="u2u-demo"
+export VITE_FIREBASE_API_KEY="<YOUR_FIREBASE_WEB_API_KEY>"
+export VITE_FIREBASE_AUTH_DOMAIN="uyir2uyir-53929.firebaseapp.com"
+export VITE_FIREBASE_PROJECT_ID="uyir2uyir-53929"
+export VITE_FIREBASE_STORAGE_BUCKET="uyir2uyir-53929.firebasestorage.app"
+export VITE_FIREBASE_MESSAGING_SENDER_ID="77691642972"
+export VITE_FIREBASE_APP_ID="<YOUR_FIREBASE_APP_ID>"
+
+# On Windows PowerShell:
+# $env:VITE_API_MODE="http"; $env:VITE_API_BASE_URL="https://u2u-api-demo-77691642972.asia-south1.run.app"; $env:VITE_FIRESTORE_DB="u2u-demo"
+# $env:VITE_FIREBASE_API_KEY="<YOUR_API_KEY>"; $env:VITE_FIREBASE_AUTH_DOMAIN="uyir2uyir-53929.firebaseapp.com"
+# $env:VITE_FIREBASE_PROJECT_ID="uyir2uyir-53929"; $env:VITE_FIREBASE_STORAGE_BUCKET="uyir2uyir-53929.firebasestorage.app"
+# $env:VITE_FIREBASE_MESSAGING_SENDER_ID="77691642972"; $env:VITE_FIREBASE_APP_ID="<YOUR_APP_ID>"
+
 npm run dev
 ```
 
@@ -146,9 +177,42 @@ cd ..
 ./infra/smoke_backend.sh <SERVICE_URL>
 ```
 
+### 2. Frontend on Firebase Hosting
+
+The U2U frontend deploys to **Firebase Hosting** with automatic SPA rewrites (`/index.html`) and long immutable cache headers for hashed bundle assets.
+
+#### Manual Build & Deploy:
+```bash
+# 1. Build production bundle with HTTP mode
+cd frontend
+VITE_API_MODE=http \
+VITE_API_BASE_URL="https://u2u-api-demo-77691642972.asia-south1.run.app" \
+VITE_FIRESTORE_DB="u2u-demo" \
+VITE_FIREBASE_API_KEY="<WEB_API_KEY>" \
+VITE_FIREBASE_AUTH_DOMAIN="uyir2uyir-53929.firebaseapp.com" \
+VITE_FIREBASE_PROJECT_ID="uyir2uyir-53929" \
+VITE_FIREBASE_STORAGE_BUCKET="uyir2uyir-53929.firebasestorage.app" \
+VITE_FIREBASE_MESSAGING_SENDER_ID="77691642972" \
+VITE_FIREBASE_APP_ID="<WEB_APP_ID>" \
+npm run build
+cd ..
+
+# 2. Deploy to Firebase Hosting
+firebase deploy --only hosting
+```
+
+#### Automated GitHub Actions CI/CD:
+Configured in [`.github/workflows/frontend.yml`](.github/workflows/frontend.yml):
+- **On Pull Request:** Installs dependencies, runs Oxlint, executes Vitest unit/component tests, and verifies mock mode bundle compilation.
+- **On Push to `main`:** Compiles the bundle in `VITE_API_MODE=http` with credentials pulled from GitHub repository secrets and deploys to Firebase Hosting via `FirebaseExtended/action-hosting-deploy@v0`.
+
 #### Google Services & Code Paths
 | Component | Implementation File / Config | Description |
 |---|---|---|
+| **Firebase Hosting** | [`firebase.json`](firebase.json), [`.firebaserc`](.firebaserc) | SPA rewrite to `/index.html`, immutable asset cache |
+| **Frontend CI/CD** | [`.github/workflows/frontend.yml`](.github/workflows/frontend.yml) | Automated build, test, and Hosting deployment |
+| **Firestore Listeners** | [`frontend/src/api/http/live.ts`](frontend/src/api/http/live.ts) | Reactive `onSnapshot` real-time subscriptions against `VITE_FIRESTORE_DB` |
+| **Firebase Auth Client** | [`frontend/src/lib/firebase.ts`](frontend/src/lib/firebase.ts) | Anonymous demo login and backend custom claim assignment |
 | **Cloud Run Service** | [`backend/Dockerfile`](backend/Dockerfile), [`infra/deploy_backend_demo.sh`](infra/deploy_backend_demo.sh) | Containerized FastAPI runtime on port 8080 |
 | **Environment Configuration** | [`infra/env.demo.yaml`](infra/env.demo.yaml) | Safe multi-value env vars (CORS origins, allowlists) |
 | **Secret Manager** | [`infra/deploy_backend_demo.sh`](infra/deploy_backend_demo.sh) | `LINK_SIGNING_KEY`, `PHONE_KEY`, and `INTERNAL_TOKEN` |

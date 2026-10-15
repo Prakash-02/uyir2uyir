@@ -119,8 +119,38 @@ flowchart LR
 - **Honesty Rule:** Mock handlers never attribute simulated responses to live Gemini or Twilio APIs (`geminiChoice` is explicitly tagged `"Mock extractor (not Gemini)"`).
 
 ### 3.2 HTTP / Live Mode
-- **Mutations via REST:** All user actions (creating requests, accepting donors, submitting desk text) invoke authenticated backend endpoints on Cloud Run.
-- **Snapshot Streaming:** High-frequency UI updates (`/hospital`, `/centre`, `/sim`) listen directly to Cloud Firestore collection snapshots for sub-second reactive updates.
+- **Mutations via REST:** All user actions (creating requests, accepting donors, submitting desk text) invoke authenticated backend endpoints on Cloud Run (`frontend/src/api/http/index.ts`).
+- **Snapshot Streaming:** High-frequency UI updates (`/hospital`, `/centre`, `/sim`) listen directly to Cloud Firestore collection snapshots for sub-second reactive updates (`frontend/src/api/http/live.ts`).
+
+### 3.3 Firestore Real-Time Listeners (`frontend/src/api/http/live.ts`)
+The client establishes read-only Firestore snapshots against the named database configured in `VITE_FIRESTORE_DB` (`u2u-demo` or `u2u-live`):
+- `subscribeRequest(id, cb)`: Listens to document `requests/{id}`.
+- `subscribeCalls(requestId, cb)`: Listens to subcollection `requests/{requestId}/calls`.
+- `subscribeEvents(requestId, cb)`: Listens to subcollection `requests/{requestId}/events` ordered by timestamp.
+- `subscribeRequests(filter, cb)`: Queries collection `requests` filtered by `hospitalId` or `centreId`.
+- `subscribeSimCalls(cb)`: Performs `collectionGroup(db, 'calls')` query filtered by `state == 'RINGING'` for the donor simulator.
+
+### 3.4 Firebase Authentication & Demo Role Assignment (`frontend/src/lib/firebase.ts`)
+- **Anonymous Authentication:** Evaluators and staff sign in anonymously with one click via `signInAnonymously(auth)`.
+- **Backend Custom Claim Assignment:** In demo data mode, the frontend calls `POST /auth/demo-role` with `{ role: 'hospital' | 'staff' }` passing the Bearer ID token. The backend sets custom user claims (`role`, `env: 'demo'`, `hospitalId`, `centreId`) and the client force-refreshes the token so claims take effect immediately.
+- **Zero Credentials in Code or Public Bundle:** The client initialises solely from `VITE_FIREBASE_*` environment variables. No passwords or service account secrets exist in any frontend code or public bundles.
+
+### 3.5 CI/CD & Required GitHub Repository Secret Names
+Automated build and deployment is configured in `.github/workflows/frontend.yml`. The following repository secrets must be configured in GitHub (Repository Settings -> Secrets and variables -> Actions) for production deployment to Firebase Hosting:
+
+| Secret Name | Description | Example Target |
+|---|---|---|
+| `FIREBASE_SERVICE_ACCOUNT_UYIR2UYIR_53929` | Service account JSON key with Firebase Hosting Admin permissions | GCP IAM / Firebase Console |
+| `VITE_API_BASE_URL` | Cloud Run backend service URL | `https://u2u-api-demo-77691642972.asia-south1.run.app` |
+| `VITE_FIRESTORE_DB` | Target Firestore database name | `u2u-demo` |
+| `VITE_FIREBASE_API_KEY` | Firebase Web API key | Firebase Project Settings |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth domain | `uyir2uyir-53929.firebaseapp.com` |
+| `VITE_FIREBASE_PROJECT_ID` | GCP / Firebase project ID | `uyir2uyir-53929` |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Default storage bucket | `uyir2uyir-53929.firebasestorage.app` |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Cloud Messaging Sender ID | `77691642972` |
+| `VITE_FIREBASE_APP_ID` | Firebase Web App ID | `1:77691642972:web:...` |
+
+*Security Rule: Never print or hardcode secret values into the codebase, documentation, or commit history.*
 
 ---
 
@@ -324,8 +354,13 @@ Cumulative record of frontend updates and milestones:
   - **Code Splitting & Bundle Performance:** Implemented route-level lazy loading (`React.lazy` + `Suspense`) in `routes.tsx`. Main bundle: 311.27 kB (gzip: 98.71 kB); route chunks: 7–28 kB.
   - **Automated Accessibility Testing:** Created `src/accessibility.test.tsx` executing `axe.run(container)` across all 11 routes. Zero serious or critical violations.
   - **Verification:** 106 tests passing across 17 test suites in Vitest. Oxlint clean (0 warnings, 0 errors). Headless browser check at 360px in dark mode and Tamil for `/centre` and `/desk`.
-- **Status:** Complete. 106 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
-
-
-
-
+### Prompt #12 — 2026-10-15
+- **Action:** Implemented production HTTP client, real-time Firestore listeners, Firebase Auth anonymous demo logins, and Firebase Hosting CI/CD:
+  - **HTTP API Client (`frontend/src/api/http/index.ts`):** Implemented all `ApiClient` methods communicating with FastAPI endpoints against `VITE_API_BASE_URL`. Enforced 10-second request timeout (`AbortSignal.timeout(10000)`), attached Firebase ID Bearer token, and wrapped all HTTP failures in typed `ApiError` instances containing HTTP status and backend error details.
+  - **Firestore Real-time Subscriptions (`frontend/src/api/http/live.ts`):** Implemented real-time `onSnapshot` listeners against the named Firestore database in `VITE_FIRESTORE_DB` (`requests`, `requests/{id}/calls`, `requests/{id}/events`, filtered queries by hospital/centre, and collection group query on `calls` for `state == 'RINGING'`). Provided safe unsubscribe callbacks and graceful fallbacks when credentials are unconfigured.
+  - **Firebase Initialization & Auth Wiring (`frontend/src/lib/firebase.ts`):** Initialised Firebase app, Auth, and Firestore strictly from `VITE_FIREBASE_*` environment variables with zero credentials in code or public bundles.
+  - **Demo Logins & Role Picker (`frontend/src/components/DemoRolePicker.tsx`):** Mounted accessible role selector on `/` without altering any screen components in `src/features/*`. Allows one-click anonymous sign-in, calls backend `POST /auth/demo-role` to assign role claims (`hospital` or `staff`), force-refreshes token, and navigates directly to `/hospital` or `/centre`.
+  - **Firebase Hosting Configuration:** Configured `firebase.json` and `.firebaserc` serving `frontend/dist` with SPA rewrite to `/index.html` and 1-year immutable cache headers for hashed bundle assets.
+  - **GitHub Actions CI/CD (`.github/workflows/frontend.yml`):** Configured automated lint, test, and build workflow on PRs, and automated HTTP mode build and deployment to Firebase Hosting via `FirebaseExtended/action-hosting-deploy@v0` on push to `main`.
+  - **Testing & Verification:** Added `http.test.ts` and `DemoRolePicker.test.tsx`. 115 tests passing cleanly across 19 suites in Vitest. Oxlint clean (0 warnings, 0 errors). Production bundles compile cleanly in both `VITE_API_MODE=mock` and `VITE_API_MODE=http`.
+- **Status:** Complete. 115 unit tests pass, lint clean (0 warnings, 0 errors), both modes build successfully.
