@@ -121,6 +121,14 @@ done
 
 # Step 6: Deploy Cloud Run service
 echo "==> [6/7] Deploying Cloud Run service ${SERVICE_NAME}..."
+
+SECRETS_LIST="LINK_SIGNING_KEY=LINK_SIGNING_KEY:latest,PHONE_KEY=PHONE_KEY:latest,INTERNAL_TOKEN=INTERNAL_TOKEN:latest"
+for OPT_SEC in TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_FROM_NUMBER; do
+  if gcloud secrets describe "${OPT_SEC}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+    SECRETS_LIST="${SECRETS_LIST},${OPT_SEC}=${OPT_SEC}:latest"
+  fi
+done
+
 gcloud run deploy "${SERVICE_NAME}" \
   --source backend \
   --region "${REGION}" \
@@ -130,7 +138,7 @@ gcloud run deploy "${SERVICE_NAME}" \
   --max-instances 3 \
   --min-instances 0 \
   --env-vars-file infra/env.demo.yaml \
-  "--set-secrets=LINK_SIGNING_KEY=LINK_SIGNING_KEY:latest,PHONE_KEY=PHONE_KEY:latest,INTERNAL_TOKEN=INTERNAL_TOKEN:latest" \
+  "--set-secrets=${SECRETS_LIST}" \
   --quiet
 
 SERVICE_URL=$(gcloud run services describe "${SERVICE_NAME}" --region "${REGION}" --format 'value(status.url)')

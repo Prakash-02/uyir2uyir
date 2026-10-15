@@ -133,6 +133,22 @@ foreach ($sec in $secretNames) {
 
 # Step 6: Deploy Cloud Run service
 Write-Host "==> [6/7] Deploying Cloud Run service $ServiceName..." -ForegroundColor Cyan
+
+$secretsList = [System.Collections.Generic.List[string]]@("LINK_SIGNING_KEY=LINK_SIGNING_KEY:latest", "PHONE_KEY=PHONE_KEY:latest", "INTERNAL_TOKEN=INTERNAL_TOKEN:latest")
+foreach ($optSec in @("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER")) {
+    $secExists = $false
+    try {
+        $null = & gcloud secrets describe $optSec --project=$ProjectId 2>&1
+        if ($LASTEXITCODE -eq 0) { $secExists = $true }
+    } catch {
+        $secExists = $false
+    }
+    if ($secExists) {
+        $secretsList.Add("${optSec}=${optSec}:latest")
+    }
+}
+$secretsArg = "--set-secrets=" + ($secretsList -join ",")
+
 & gcloud run deploy $ServiceName `
     --source backend `
     --region $Region `
@@ -142,7 +158,7 @@ Write-Host "==> [6/7] Deploying Cloud Run service $ServiceName..." -ForegroundCo
     --max-instances 3 `
     --min-instances 0 `
     --env-vars-file infra/env.demo.yaml `
-    "--set-secrets=LINK_SIGNING_KEY=LINK_SIGNING_KEY:latest,PHONE_KEY=PHONE_KEY:latest,INTERNAL_TOKEN=INTERNAL_TOKEN:latest" `
+    $secretsArg `
     --quiet
 
 $ServiceUrl = (& gcloud run services describe $ServiceName --region $Region --format 'value(status.url)').Trim()
