@@ -142,7 +142,8 @@ Write-Host "==> [6/7] Deploying Cloud Run service $ServiceName..." -ForegroundCo
     --max-instances 3 `
     --min-instances 0 `
     --env-vars-file infra/env.demo.yaml `
-    --set-secrets LINK_SIGNING_KEY=LINK_SIGNING_KEY:latest,PHONE_KEY=PHONE_KEY:latest,INTERNAL_TOKEN=INTERNAL_TOKEN:latest
+    "--set-secrets=LINK_SIGNING_KEY=LINK_SIGNING_KEY:latest,PHONE_KEY=PHONE_KEY:latest,INTERNAL_TOKEN=INTERNAL_TOKEN:latest" `
+    --quiet
 
 $ServiceUrl = (& gcloud run services describe $ServiceName --region $Region --format 'value(status.url)').Trim()
 Write-Host "    Service URL: $ServiceUrl" -ForegroundColor Green

@@ -18,35 +18,39 @@ Write-Host "==> Running U2U Backend Smoke Test (PowerShell)" -ForegroundColor Cy
 Write-Host "    Target: $ServiceUrl" -ForegroundColor Yellow
 Write-Host "=================================================================" -ForegroundColor Cyan
 
-# 1. Check GET /healthz
-Write-Host "==> [1/4] Checking GET /healthz..." -ForegroundColor Cyan
-$health = Invoke-RestMethod -Uri "$ServiceUrl/healthz" -Method Get
+# 1. Check GET /health (with /healthz fallback)
+Write-Host "==> [1/4] Checking GET /health..." -ForegroundColor Cyan
+try {
+    $health = Invoke-RestMethod -Uri "$ServiceUrl/health" -Method Get
+} catch {
+    $health = Invoke-RestMethod -Uri "$ServiceUrl/healthz" -Method Get
+}
 Write-Host "    Response: $($health | ConvertTo-Json -Compress)"
 if ($health.status -ne "ok") {
-    Write-Host "❌ Health check failed" -ForegroundColor Red
+    Write-Host "[-] Health check failed" -ForegroundColor Red
     exit 1
 }
-Write-Host "    ✓ Health check passed." -ForegroundColor Green
+Write-Host "    [OK] Health check passed." -ForegroundColor Green
 
 # 2. Check GET /config
 Write-Host "==> [2/4] Checking GET /config..." -ForegroundColor Cyan
 $config = Invoke-RestMethod -Uri "$ServiceUrl/config" -Method Get
 Write-Host "    Response: $($config | ConvertTo-Json -Compress)"
 if ($config.dataMode -ne "demo") {
-    Write-Host "❌ Config check failed" -ForegroundColor Red
+    Write-Host "[-] Config check failed" -ForegroundColor Red
     exit 1
 }
-Write-Host "    ✓ Config check passed." -ForegroundColor Green
+Write-Host "    [OK] Config check passed." -ForegroundColor Green
 
 # 3. Trigger demo story via POST /admin/scenario/story/run
 Write-Host "==> [3/4] Triggering demo story via POST /admin/scenario/story/run..." -ForegroundColor Cyan
 $story = Invoke-RestMethod -Uri "$ServiceUrl/admin/scenario/story/run" -Method Post -Headers $AuthHeader -ContentType "application/json"
 Write-Host "    Response: $($story | ConvertTo-Json -Compress)"
 if (-not $story.ok) {
-    Write-Host "❌ Failed to trigger demo story" -ForegroundColor Red
+    Write-Host "[-] Failed to trigger demo story" -ForegroundColor Red
     exit 1
 }
-Write-Host "    ✓ Demo story triggered in background." -ForegroundColor Green
+Write-Host "    [OK] Demo story triggered in background." -ForegroundColor Green
 
 # 4. Poll until request reaches FULFILLED
 Write-Host "==> [4/4] Polling until sample request reaches FULFILLED..." -ForegroundColor Cyan
@@ -72,7 +76,7 @@ while ($attempt -le $maxAttempts) {
 }
 
 if (-not $isFulfilled) {
-    Write-Host "⚠️ Warning: Story did not reach FULFILLED within timeout." -ForegroundColor Yellow
+    Write-Host "[WARN] Story did not reach FULFILLED within timeout." -ForegroundColor Yellow
 }
 
 # 5. Fetch /metrics
@@ -83,5 +87,5 @@ Write-Host "    Metrics: $($metrics | ConvertTo-Json -Compress)" -ForegroundColo
 
 Write-Host ""
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host "✅ Smoke test completed successfully!" -ForegroundColor Green
+Write-Host "[OK] Smoke test completed successfully!" -ForegroundColor Green
 Write-Host "=================================================================" -ForegroundColor Cyan

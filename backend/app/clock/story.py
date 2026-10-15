@@ -2,6 +2,7 @@ import asyncio
 from datetime import timedelta
 from uuid import uuid4
 
+from app.auth.constants import DEMO_STORY_REQUEST_ID
 from app.clock.service import Clock, SimulationClock, get_clock
 from app.core.config import get_settings
 from app.core.store import Store, TransactionStore, get_store
@@ -27,6 +28,7 @@ async def run_story(
     store: Store | None = None,
     clock: Clock | None = None,
     step_delay_seconds: float = 0.5,
+    req_id: str | None = None,
 ) -> BloodRequest:
     """Plays steps 1 to 5 of the demo story from U2U_BRIEF.md section 7.
 
@@ -54,7 +56,47 @@ async def run_story(
     centre = await current_store.get_centre(centre_id)
     centre_name = centre.name if centre else "Central Blood Bank, Egmore (Simulated)"
 
-    req_id = f"req-{uuid4().hex[:8]}"
+    req_id = req_id or DEMO_STORY_REQUEST_ID
+
+    # Clean up previous calls and events if re-running on the same request ID
+    old_calls = await current_store.list_calls(req_id)
+    if old_calls:
+        if hasattr(current_store, "_calls") and isinstance(current_store._calls, dict):
+            current_store._calls[req_id] = {}
+        if hasattr(current_store, "client") and hasattr(current_store.client, "collection"):
+            for oc in old_calls:
+                await (
+                    current_store.client.collection("requests")
+                    .document(req_id)
+                    .collection("calls")
+                    .document(oc.id)
+                    .delete()
+                )
+
+    old_events = await current_store.list_events(req_id)
+    if old_events:
+        if hasattr(current_store, "_events") and isinstance(current_store._events, dict):
+            current_store._events[req_id] = []
+        if hasattr(current_store, "client") and hasattr(current_store.client, "collection"):
+            for oe in old_events:
+                await (
+                    current_store.client.collection("requests")
+                    .document(req_id)
+                    .collection("events")
+                    .document(oe.id)
+                    .delete()
+                )
+
+    # Reset daily calls and donor donation dates so demo story is repeatable
+    if settings.DATA_MODE == "demo":
+        await current_store.set_config(
+            "daily_calls",
+            {"count": 0, "date": current_clock.now().date().isoformat(), "isSimulated": True},
+        )
+        all_donors = await current_store.list_donors()
+        for d in all_donors:
+            if d.last_donation_date is not None:
+                await current_store.save_donor(d.model_copy(update={"last_donation_date": None}))
 
     # --- Step 1: Hospital raises request ---
     req = BloodRequest(
@@ -160,6 +202,9 @@ async def run_story(
         r = await tx.get_request(req_id)
         ca = await tx.get_call(req_id, call_a.id)
         other_calls = await tx.list_calls(req_id)
+        donor_a_id = call_a.id.split("_")[-1]
+        donor_a = await tx.get_donor(donor_a_id)
+
         if r and ca:
             res = apply_staff_accept(r, ca, other_calls=other_calls, timestamp=now_iso)
             await tx.save_request(res.request)
@@ -167,8 +212,6 @@ async def run_story(
                 await tx.save_call(req_id, res.call)
             for e in res.timeline_events:
                 await tx.append_event(req_id, e)
-            donor_a_id = call_a.id.split("_")[-1]
-            donor_a = await tx.get_donor(donor_a_id)
             if donor_a:
                 await tx.save_donor(donor_a.model_copy(update={"last_donation_date": today_date}))
 
@@ -272,6 +315,9 @@ async def run_story(
             r = await tx.get_request(req_id)
             cf = await tx.get_call(req_id, call_f.id)
             all_calls_now = await tx.list_calls(req_id)
+            donor_f_id = call_f.id.split("_")[-1]
+            donor_f = await tx.get_donor(donor_f_id)
+
             if r and cf:
                 res = apply_staff_accept(r, cf, other_calls=all_calls_now, timestamp=now_iso)
                 await tx.save_request(res.request)
@@ -281,8 +327,6 @@ async def run_story(
                     await tx.append_event(req_id, e)
                 for oc in res.other_calls:
                     await tx.save_call(req_id, oc)
-                donor_f_id = call_f.id.split("_")[-1]
-                donor_f = await tx.get_donor(donor_f_id)
                 if donor_f:
                     await tx.save_donor(
                         donor_f.model_copy(update={"last_donation_date": today_date})

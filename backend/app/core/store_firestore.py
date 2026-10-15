@@ -16,9 +16,8 @@ T = TypeVar("T")
 
 async def _get_one_doc(transaction: AsyncTransaction, ref: Any) -> Any:
     """Helper reading a single document snapshot inside an async transaction."""
-    async for snap in transaction.get(ref):
-        return snap if snap.exists else None
-    return None
+    snap = await ref.get(transaction=transaction)
+    return snap if snap.exists else None
 
 
 class FirestoreTransactionStore(TransactionStore):
@@ -66,7 +65,7 @@ class FirestoreTransactionStore(TransactionStore):
         """Reads all calls under a request in the current round or full set."""
         self._assert_can_read()
         calls_col = self.client.collection("requests").document(request_id).collection("calls")
-        snaps = [snap async for snap in self.transaction.get(calls_col)]
+        snaps = [snap async for snap in calls_col.stream(transaction=self.transaction)]
         return [Call.model_validate(s.to_dict()) for s in snaps if s.exists]
 
     async def get_donor(self, donor_id: str) -> Donor | None:
@@ -230,6 +229,10 @@ class FirestoreStore(Store):
                 database=self._database,
             )
         return self._client
+
+    def reset(self) -> None:
+        """Reset hook for demo mode (collection wiping handled by scripts/seed.py)."""
+        pass
 
     # Hospitals
     async def get_hospital(self, hospital_id: str) -> Hospital | None:

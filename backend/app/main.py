@@ -58,7 +58,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Health endpoint
+    # Health endpoint (/health and /healthz; GFE intercepts /healthz on Cloud Run)
+    @app.get("/health", tags=["Health"])
     @app.get("/healthz", tags=["Health"])
     async def healthz():
         return {"status": "ok"}

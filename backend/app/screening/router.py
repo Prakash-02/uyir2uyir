@@ -82,6 +82,9 @@ async def accept_call(
                 detail=str(e),
             ) from e
 
+        # Read donor before writes
+        donor = await tx.get_donor(donor_id)
+
         # Save request and calls
         await tx.save_request(result.request)
         if result.call:
@@ -94,7 +97,6 @@ async def accept_call(
             await tx.save_call(request_id, oc)
 
         # Update donor's last donation date
-        donor = await tx.get_donor(donor_id)
         if donor:
             updated_donor = donor.model_copy(update={"last_donation_date": today_date})
             await tx.save_donor(updated_donor)

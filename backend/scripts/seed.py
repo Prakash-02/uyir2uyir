@@ -393,6 +393,18 @@ async def seed() -> None:
     )
     print("  + Config: config/app initialized")
 
+    # 5. Initialize daily_calls config to 0
+    await store.set_config(
+        "daily_calls",
+        {
+            "count": 0,
+            "date": "2026-10-15",
+            "isSimulated": True,
+            "dataMode": settings.DATA_MODE,
+        },
+    )
+    print("  + Config: config/daily_calls initialized to 0")
+
     print("[OK] Database seed completed successfully.")
 
 

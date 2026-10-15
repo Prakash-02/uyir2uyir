@@ -947,6 +947,51 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** b4cd911
 - **Human Review:** Scripts verified with LF endings and zero errors across test and lint suites; ready for manual execution.
 
+### Entry #D1
+- **Date:** 2026-10-15
+- **Goal:** Cloud Run deployment, Firestore transaction hardening, and live end-to-end smoke verification in demo mode (`uyir2uyir-53929`).
+- **Prompt Summary:**
+  1. Live Deployment to Google Cloud Platform:
+     - Deployed Cloud Run service `u2u-api-demo` in `asia-south1` with `--allow-unauthenticated`, `--no-cpu-throttling`, `--max-instances 3`, `--min-instances 0`, and secrets `LINK_SIGNING_KEY`, `PHONE_KEY`, `INTERNAL_TOKEN`.
+     - Created runtime service account `sa-api-demo` and scheduler service account `sa-scheduler`.
+     - Deployed Cloud Scheduler job `u2u-tick-demo` executing `POST /internal/tick` every minute (`* * * * *`) with OIDC tokens.
+     - Seeded `u2u-demo` database with fixtures (`hosp-sample-1`..`3`, `centre-sample-1`..`2`, 30 donors, `config/app`).
+     - Deployed Firestore security rules and composite indexes to `u2u-demo`.
+  2. Google Front End (GFE) Health Route Compatibility:
+     - Identified that Google Cloud's GFE intercepts `/healthz` on Cloud Run and returns a 404 robot page.
+     - Exposed `@app.get("/health")` alongside `@app.get("/healthz")` in `backend/app/main.py`.
+     - Updated `smoke_backend.sh` and `smoke_backend.ps1` to probe `/health` with fallback to `/healthz`.
+  3. Firestore Async Transaction Hardening:
+     - Fixed `AsyncTransaction.get` coroutine bug in `backend/app/core/store_firestore.py` by invoking `await ref.get(transaction=...)` and `calls_col.stream(transaction=...)`.
+     - Enforced strict Firestore transaction invariant (all reads precede writes) by moving `tx.get_donor(donor_id)` up before mutations in `run_story()` and `screening/router.py`.
+     - Added `reset()` stub to `FirestoreStore` for safe execution of `POST /admin/reset`.
+  4. Demo Story Idempotency & Repeatability:
+     - Set default request ID for demo story to `req-sample-1` (`DEMO_STORY_REQUEST_ID`).
+     - Added clean reset of previous calls, timeline events, `daily_calls` count, and donor `last_donation_date` at the start of `run_story()` so judges and automated suites can re-run the demo story infinitely without hitches.
+  5. End-to-End Smoke Test Verification:
+     - Executed `.\infra\smoke_backend.ps1 https://u2u-api-demo-77691642972.asia-south1.run.app`.
+     - Verified:
+       - `GET /health` -> 200 OK (`{"status":"ok"}`)
+       - `GET /config` -> 200 OK (`{"dataMode":"demo", ...}`)
+       - `POST /admin/scenario/story/run` -> 200 OK (`{"ok":true}`)
+       - Polling `GET /requests/req-sample-1/status` -> 200 OK reaching `FULFILLED`
+       - `GET /metrics` -> 200 OK with real computed intervals (`medianMinutesToFulfilled: 14.0`, `standDownReachPct: 100.0`, `isSimulated: true`).
+- **Files Changed:**
+  - `backend/app/auth/constants.py`
+  - `backend/app/clock/story.py`
+  - `backend/app/core/store_firestore.py`
+  - `backend/app/main.py`
+  - `backend/app/screening/router.py`
+  - `backend/scripts/seed.py`
+  - `docs/PROMPTS.md`
+  - `infra/deploy_backend_demo.ps1`
+  - `infra/deploy_backend_demo.sh`
+  - `infra/env.demo.yaml`
+  - `infra/smoke_backend.ps1`
+  - `infra/smoke_backend.sh`
+- **Commit Hash:** Pending
+- **Human Review:** Live Cloud Run deployment serving 100% traffic; smoke test completely green.
+
 ---
 
 ## Human Decisions

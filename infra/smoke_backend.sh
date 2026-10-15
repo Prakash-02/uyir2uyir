@@ -20,12 +20,12 @@ echo "==> Running U2U Backend Smoke Test"
 echo "    Target: ${SERVICE_URL}"
 echo "================================================================="
 
-# 1. Check GET /healthz
-echo "==> [1/4] Checking GET /healthz..."
-HEALTH_RESP=$(curl -sS -f "${SERVICE_URL}/healthz")
+# 1. Check GET /health (with /healthz fallback)
+echo "==> [1/4] Checking GET /health..."
+HEALTH_RESP=$(curl -sS -f "${SERVICE_URL}/health" 2>/dev/null || curl -sS -f "${SERVICE_URL}/healthz")
 echo "    Response: ${HEALTH_RESP}"
 if ! echo "${HEALTH_RESP}" | grep -q '"status"[[:space:]]*:[[:space:]]*"ok"'; then
-  echo "❌ Health check failed: expected status 'ok'"
+  echo "[-] Health check failed: expected status 'ok'"
   exit 1
 fi
 echo "    ✓ Health check passed."
