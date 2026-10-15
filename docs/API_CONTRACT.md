@@ -92,7 +92,7 @@ interface EvalResult {
 | `POST /internal/tick` | Internal / Scheduler | none | `{"status": "ok"}` | Built (`backend/app/clock/router.py`) |
 | `POST /donors/signup` | Donor | `{name, phone, bloodGroup, area, lang, lastDonation?, consentUrgent, consentHistory, adult}` | `{donorAlias}` | Planned |
 | `GET /metrics` | Staff (demo: any demo user) | none | `Metrics` | Built (`backend/app/screening/metrics.py`) |
-| `GET /eval/latest` | Anyone | none | `EvalResult` | Planned |
+| `GET /eval/latest` | Anyone | none | `EvalResult` | Built (`backend/app/eval/router.py`) |
 | `POST /admin/scenario/{id}/run` | Admin, demo | none | `{"ok": true, "scenario": id}` | Built (`backend/app/admin/router.py`) |
 | `POST /admin/reset` | Admin, demo | none | `{"ok": true, "reset": true}` | Built (`backend/app/admin/router.py`) |
 | `POST /admin/clock/advance` | Admin, demo | `{minutes: int}` | `{"ok": true, "advancedMinutes": minutes, "currentTime": str}` | Built (`backend/app/admin/router.py`) |

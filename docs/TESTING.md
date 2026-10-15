@@ -58,13 +58,20 @@ Quality assurance for U2U is structured into six verification layers:
 - **Commands:**
   ```bash
   cd backend
-  python -m app.eval.runner
+  python eval/run_eval.py
   ```
 - **Coverage Areas:**
-  - Precision and recall of Gemini Flash entity extraction across English, Tamil, and mixed scripts.
-  - Strict verbatim quote verification (100% rejection of unquoted or hallucinated strings).
+  - Labelled evaluation across 30 fully fictional test messages (`backend/eval/messages.jsonl`).
+  - Representation across English, Tamil, and Tanglish scripts.
+  - Precision and recall of Vertex AI Gemini Flash entity extraction with strict JSON schema.
+  - Verbatim character-for-character quote verification (100% rejection of hallucinated strings).
+  - Component normalisation ('pints' $\to$ `UNSPECIFIED`, 'platelets' alone $\to$ `UNSPECIFIED`).
+  - Ambiguous hospital abbreviation refusal (e.g. "GH" $\to$ `NOT_VERIFIED`).
+  - Prompt injection immunity (treating raw user text strictly as data).
   - **Financial Safety Blocker:** Zero tolerance for commercial donor solicitation passing through to hospital blood banks (`paymentToHospital == 0`).
   - **Hospital Attribution Integrity:** Zero tolerance for hallucinated or mismatched hospital identifiers (`wrongHospitalIds == 0`).
+  - Dual destination persistence: `backend/eval/results/latest.json` and Firestore `config/evalLatest`.
+  - Public judge-facing endpoint: `GET /eval/latest`.
 
 ---
 
@@ -188,11 +195,61 @@ The pure domain logic layer (`backend/app/requests/` and `backend/app/rules/`) w
 | `tests/test_logging_and_models.py` | Logging & PII Masking | **4 / 4 passed** | Validates phone number redaction in logs and 422 error body stripping. |
 | `tests/test_matching.py` | Matching Algorithm | **1 / 1 passed** | Compatibility, consent, contact gap, deduplication, and distance sorting. |
 | `tests/test_mode_guard.py` | Startup Mode Guard | **6 / 6 passed** | Enforces startup termination if `DATA_MODE` and `FIRESTORE_DB` mismatch. |
-| **Total Backend Tests** | Complete Backend Test Suite | **93 / 93 passed (1 skipped emulator)** | All tests pass in < 6.5s with zero network dependencies. |
-
-
+| `tests/test_eval.py` | Eval Endpoint & Benchmark Runner | **4 / 4 passed** | Verifies GET /eval/latest (404 on empty, 200 on stored document, file fallback) and batch evaluation runner execution against simulated store. |
+| **Total Backend Tests** | Complete Backend Test Suite | **97 / 97 passed (1 skipped emulator)** | All tests pass in < 7.0s with zero network dependencies. |
 
 ---
+
+### 3.4 Request Desk Labelled Evaluation Benchmark (`backend/eval/`)
+
+The Request Desk pipeline is benchmarked against a curated, labelled evaluation set (`backend/eval/messages.jsonl`) consisting of 30 fully fictional messages.
+
+#### 1. Evaluation Methodology
+- **Labelled Test Set:** Exactly 30 messages balancing English, Tamil, and Tanglish.
+  - An exact match against an active hospital order (`req-eval-exact-match`, patient `IP-101`).
+  - Registered hospitals with no matching request (`SENT_TO_HOSPITAL`).
+  - Unregistered / unknown hospitals (`NOT_VERIFIED`).
+  - Ambiguous generic hospitals (e.g. "GH" $\to$ `NOT_VERIFIED`).
+  - Payment traps and commercial donor solicitations $\to$ `NOT_VERIFIED`.
+  - Allowed blood processing charge mentions $\to$ `SENT_TO_HOSPITAL`.
+  - Non-standard units (pints/bottles) leaving component `UNSPECIFIED`.
+  - Non-standard components (platelets alone) leaving component `UNSPECIFIED`.
+  - Two patients in one forwarded message $\to$ `NOT_VERIFIED`.
+  - Prompt injections and administrative role masquerades $\to$ `NOT_VERIFIED`.
+  - Empty whitespace and spam marketing forwards $\to$ `NOT_VERIFIED`.
+- **Zero Hallucination / Mock Honesty:** All mock data and test messages are fully fictional. No real patient names, phone numbers, or hospitals are used.
+- **Dual Persistence:** Each evaluation run writes to:
+  1. Local JSON artifact: `backend/eval/results/latest.json`
+  2. Cloud Firestore document: `config/evalLatest`
+- **Served to Eval Page:** The frontend `/eval` page loads this benchmark via `GET /eval/latest`.
+
+#### 2. Zero-Tolerance Safety Gates
+Two safety gates are evaluated at the conclusion of every benchmark run:
+1. **`paymentToHospital` (Must be 0):** Zero commercial donor solicitations or payment requests may ever be routed to hospital staff.
+2. **`wrongHospitalIds` (Must be 0):** Zero instances of attributing an unverified or unknown hospital forward to a registered hospital catalog ID.
+
+> **Honest Statistical Disclosure:**
+> *"With 30 messages, zero errors means the true error rate is likely below about 10% (rule of three), not zero."*
+> Under the rule of three in statistical quality assurance, when 30 independent binomial trials result in zero failures ($k = 0, n = 30$), the 95% upper confidence bound for the failure rate is approximately $3/n = 3/30 = 10\%$. A zero-error benchmark on 30 cases demonstrates strong baseline reliability, but continuous monitoring remains essential in emergency medical dispatch.
+
+#### 3. Execution Command
+To run the live evaluation against Vertex AI Gemini Flash and the demo store:
+```bash
+cd backend
+python eval/run_eval.py
+```
+
+#### 4. Latest Evaluation Results Table
+*Status: Pending live human execution. The table below will be populated from `backend/eval/results/latest.json` upon execution.*
+
+| Metric | Target Gate | Latest Evaluation Result |
+|---|---|---|
+| Prompt Version | `desk_extract_v1` | *Pending execution* |
+| Total Labelled Samples | 30 | *Pending execution* |
+| Correct Answers | $\ge 27 / 30$ ($90\%$) | *Pending execution* |
+| Commercial Remuneration to Hospital (`paymentToHospital`) | **0 (Zero Tolerance)** | *Pending execution* |
+| Incorrect Hospital Attribution (`wrongHospitalIds`) | **0 (Zero Tolerance)** | *Pending execution* |
+| P95 Response Latency (`p95LatencyMs`) | $< 2,500\text{ ms}$ | *Pending execution* |
 
 ## 4. Pre-Commit Safety Checklist
 

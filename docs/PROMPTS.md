@@ -756,6 +756,52 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** 9323e40
 - **Human Review:** Verbatim quote checking, three answers, confirm links, rate limiting, and privacy verified.
 
+### Entry #B6
+- **Date:** 2026-10-15
+- **Goal:** Measure the Request Desk honestly with a labelled test set, and serve the latest result to the eval page.
+- **Prompt Summary:**
+  1. Authored 30 fully fictional labelled evaluation messages in `backend/eval/messages.jsonl` covering:
+     - English, Tamil, and Tanglish.
+     - An exact match against open hospital order (`req-eval-exact-match`, patient `IP-101`).
+     - Registered hospitals with no matching request (`SENT_TO_HOSPITAL`).
+     - Unknown / unregistered hospitals (`NOT_VERIFIED`).
+     - Ambiguous generic hospitals (e.g. "GH", "Govt Hospital" $\to$ `NOT_VERIFIED`).
+     - Payment traps and commercial donor solicitations (Rs 2000 to donor, ₹1500, cash fee $\to$ `NOT_VERIFIED`).
+     - Allowed blood processing charge mentions $\to$ `SENT_TO_HOSPITAL`.
+     - Non-standard units (pints/bottles) leaving component `UNSPECIFIED`.
+     - Non-standard components (platelets alone) leaving component `UNSPECIFIED`.
+     - Multiple patients in one forwarded message $\to$ `NOT_VERIFIED`.
+     - Prompt injections attempting system override or admin instruction $\to$ `NOT_VERIFIED`.
+     - Empty whitespace and spam marketing forwards $\to$ `NOT_VERIFIED`.
+     No real names, phone numbers, or hospitals.
+  2. Implemented evaluation runner in `backend/eval/run_eval.py`:
+     - Runs each test message through `check_desk_pipeline` with real Gemini Flash on Vertex AI against the seeded demo store.
+     - Measures latency per message, records expected vs got, pass status, and calculates P95 latency.
+     - Computes zero-tolerance safety gates: `paymentToHospital == 0` and `wrongHospitalIds == 0`.
+     - Saves benchmark results to `backend/eval/results/latest.json` and Cloud Firestore `config/evalLatest`.
+     - Displays formatted report to stdout; fails execution and reports if either safety gate is breached.
+     - Strictly enforces: Never edit labels to make a run pass.
+  3. Implemented `GET /eval/latest` endpoint in `backend/app/eval/router.py`:
+     - Returns `EvalResult` schema from `config/evalLatest` in Firestore, or falls back to local `latest.json` artifact, or returns `404 Not Found` if no evaluation has been executed yet.
+     - Conforms strictly to `docs/API_CONTRACT.md` and `frontend/src/api/types.ts`.
+  4. Added test suite in `backend/tests/test_eval.py` (4 tests passing): 404 response on empty store/file, 200 response with stored `EvalResult`, fallback to local `latest.json`, and batch runner execution with mock extractor verifying zero-tolerance gates.
+  5. Updated `docs/TESTING.md` with evaluation methodology, exact runner execution command, pending benchmark results table, and honest statistical disclosure: *"With 30 messages, zero errors means the true error rate is likely below about 10% (rule of three), not zero."*
+  6. Updated `docs/API_CONTRACT.md` marking `GET /eval/latest` as Built.
+- **Files Changed:**
+  - `backend/app/eval/__init__.py`
+  - `backend/app/eval/models.py`
+  - `backend/app/eval/router.py`
+  - `backend/app/main.py`
+  - `backend/eval/__init__.py`
+  - `backend/eval/messages.jsonl`
+  - `backend/eval/run_eval.py`
+  - `backend/tests/test_eval.py`
+  - `docs/API_CONTRACT.md`
+  - `docs/PROMPTS.md`
+  - `docs/TESTING.md`
+- **Commit Hash:** 12c27fc
+- **Human Review:** Pending live evaluation execution with `python eval/run_eval.py`.
+
 ---
 
 ## Human Decisions
