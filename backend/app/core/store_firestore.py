@@ -85,6 +85,14 @@ class FirestoreTransactionStore(TransactionStore):
             return snap.to_dict()
         return None
 
+    async def get_lock(self, lock_id: str) -> dict[str, Any] | None:
+        self._assert_can_read()
+        ref = self.client.collection("locks").document(lock_id)
+        snap = await _get_one_doc(self.transaction, ref)
+        if snap and snap.exists:
+            return snap.to_dict()
+        return None
+
     # --- WRITES ---
 
     async def save_request(self, request: BloodRequest) -> None:
@@ -132,6 +140,14 @@ class FirestoreTransactionStore(TransactionStore):
     async def set_config(self, config_id: str, data: dict[str, Any]) -> None:
         self._has_written = True
         ref = self.client.collection("config").document(config_id)
+        payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        self.transaction.set(ref, payload)
+
+    async def set_lock(self, lock_id: str, data: dict[str, Any]) -> None:
+        self._has_written = True
+        ref = self.client.collection("locks").document(lock_id)
         payload = dict(data)
         payload["dataMode"] = self.data_mode
         payload["isSimulated"] = self.data_mode == "demo"
@@ -245,6 +261,13 @@ class FirestoreStore(Store):
         snaps = [d async for d in query.stream()]
         return [BloodRequest.model_validate(d.to_dict()) for d in snaps if d.exists]
 
+    async def list_all_requests(self) -> list[BloodRequest]:
+        query = self.client.collection("requests").where(
+            filter=FieldFilter("dataMode", "==", self.data_mode)
+        )
+        snaps = [d async for d in query.stream()]
+        return [BloodRequest.model_validate(d.to_dict()) for d in snaps if d.exists]
+
     # Calls
     async def get_call(self, request_id: str, call_id: str) -> Call | None:
         ref = (
@@ -304,6 +327,21 @@ class FirestoreStore(Store):
 
     async def set_config(self, config_id: str, data: dict[str, Any]) -> None:
         ref = self.client.collection("config").document(config_id)
+        payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        await ref.set(payload)
+
+    # Locks
+    async def get_lock(self, lock_id: str) -> dict[str, Any] | None:
+        ref = self.client.collection("locks").document(lock_id)
+        doc = await ref.get()
+        if doc.exists:
+            return doc.to_dict()
+        return None
+
+    async def set_lock(self, lock_id: str, data: dict[str, Any]) -> None:
+        ref = self.client.collection("locks").document(lock_id)
         payload = dict(data)
         payload["dataMode"] = self.data_mode
         payload["isSimulated"] = self.data_mode == "demo"

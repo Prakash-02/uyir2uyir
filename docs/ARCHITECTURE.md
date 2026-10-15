@@ -314,12 +314,16 @@ stateDiagram-v2
 ## 6. Reliability Rules
 
 1. **Deterministic Counting Authority:**
-   Outreach rounds, pause triggers, and fulfillment closures are driven exclusively by Python backend code in `backend/app/rules/`. Neither the frontend client nor the AI model has authority to transition request or call states.
-2. **Cloud Scheduler Re-synchronization:**
-   The 1-minute Cloud Scheduler tick is idempotent. In the event of network disruption or worker restarts, the scheduler evaluates all active requests against current timestamp deadlines and transitions timed-out requests to `EXPIRED`.
-3. **Graceful AI Degradation:**
+   Outreach rounds, pause triggers ($N+1$), and fulfillment closures are driven exclusively by Python backend code in [`backend/app/requests/counting.py`](../backend/app/requests/counting.py) and [`backend/app/requests/transitions.py`](../backend/app/requests/transitions.py). Neither the frontend client nor the AI model has authority to transition request or call states.
+2. **Cloud Scheduler Lease Lock & Re-synchronization:**
+   The 1-minute Cloud Scheduler tick in [`backend/app/clock/router.py`](../backend/app/clock/router.py) takes a 50-second distributed lease in `locks/tick`. If a concurrent worker holds the lease, subsequent ticks return 200 immediately without redundant execution. Each round progression is strictly guarded by `"status is OPEN, round matches"`.
+3. **Transactional Dispatch with Compare-and-Set:**
+   Outreach calls in [`backend/app/outreach/service.py`](../backend/app/outreach/service.py) are staged in state `QUEUED` within a database transaction. Actual telephony or simulation dispatch happens strictly *after* transaction commit via compare-and-set (verifying state is still `QUEUED` before flipping to `DIALING` and triggering `TelephonyAdapter.place_call`).
+4. **Safety Caps & Simulated Data Isolation:**
+   Outreach enforces `REQUEST_CALL_CAP` (max 15 calls per blood request) and `DAILY_CALL_CAP` (max 30 outbound calls/day) in [`backend/app/outreach/service.py`](../backend/app/outreach/service.py). In `DATA_MODE=live`, calls to simulated donors are strictly refused.
+5. **Deterministic Donor Matching:**
+   Donor selection in [`backend/app/matching/service.py`](../backend/app/matching/service.py) applies clinical compatibility ([`backend/app/rules/compatibility.py`](../backend/app/rules/compatibility.py)), 90-day donation interval spacing ([`backend/app/rules/contact.py`](../backend/app/rules/contact.py)), urgent contact consent, and deterministic ordering (distance ascending $\to$ longest since last contacted $\to$ donor ID). Zero randomness.
+6. **Graceful AI Degradation:**
    If Vertex AI is unreachable or encounters quota limits during a Request Desk submission, the pipeline fails safely to `NOT_VERIFIED` with the message: *"Couldn't verify. Please call the hospital."* It never invents an extraction or creates an unverified hospital alert.
-4. **Rate Limiting & Donor Protection:**
-   The matching engine contacts donors in strict batches of 5. Once a request reaches `PAUSED` or `FULFILLED`, active dialers immediately stand down, and late keypresses are acknowledged with gratitude (`LATE_ACCEPT`) to avoid donor fatigue.
-5. **No Secret Ingestion in Client Bundles:**
+7. **No Secret Ingestion in Client Bundles:**
    No service account keys, Twilio auth tokens, or Vertex AI service tokens exist in the frontend application. All external integrations are isolated in backend Cloud Run micro-services accessing Secret Manager.

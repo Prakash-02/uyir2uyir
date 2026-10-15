@@ -19,6 +19,7 @@ class MemoryTransactionStore(TransactionStore):
         self._pending_events: list[tuple[str, TimelineEvent]] = []
         self._pending_donors: dict[str, Donor] = {}
         self._pending_configs: dict[str, dict[str, Any]] = {}
+        self._pending_locks: dict[str, dict[str, Any]] = {}
 
     async def get_request(self, request_id: str) -> BloodRequest | None:
         if request_id in self._pending_requests:
@@ -69,6 +70,15 @@ class MemoryTransactionStore(TransactionStore):
     async def set_config(self, config_id: str, data: dict[str, Any]) -> None:
         self._pending_configs[config_id] = dict(data)
 
+    async def get_lock(self, lock_id: str) -> dict[str, Any] | None:
+        if lock_id in self._pending_locks:
+            return dict(self._pending_locks[lock_id])
+        lock = self._store._locks.get(lock_id)
+        return dict(lock) if lock is not None else None
+
+    async def set_lock(self, lock_id: str, data: dict[str, Any]) -> None:
+        self._pending_locks[lock_id] = dict(data)
+
     def apply(self) -> None:
         """Applies all staged updates into the backing MemoryStore."""
         for req in self._pending_requests.values():
@@ -90,6 +100,9 @@ class MemoryTransactionStore(TransactionStore):
         for config_id, conf in self._pending_configs.items():
             self._store._configs[config_id] = conf
 
+        for lock_id, lock_data in self._pending_locks.items():
+            self._store._locks[lock_id] = lock_data
+
 
 class MemoryStore(Store):
     """Thread-safe, coroutine-safe in-memory store for offline development and testing."""
@@ -106,6 +119,7 @@ class MemoryStore(Store):
         self._calls: dict[str, dict[str, Call]] = {}
         self._events: dict[str, list[TimelineEvent]] = {}
         self._configs: dict[str, dict[str, Any]] = {}
+        self._locks: dict[str, dict[str, Any]] = {}
 
     @classmethod
     def get_instance(cls) -> "MemoryStore":
@@ -126,6 +140,7 @@ class MemoryStore(Store):
         self._calls.clear()
         self._events.clear()
         self._configs.clear()
+        self._locks.clear()
 
     # Hospitals
     async def get_hospital(self, hospital_id: str) -> Hospital | None:
@@ -211,6 +226,10 @@ class MemoryStore(Store):
                 if req.centre_id == centre_id
             ]
 
+    async def list_all_requests(self) -> list[BloodRequest]:
+        async with self._lock:
+            return [req.model_copy(deep=True) for req in self._requests.values()]
+
     # Calls
     async def get_call(self, request_id: str, call_id: str) -> Call | None:
         async with self._lock:
@@ -250,6 +269,16 @@ class MemoryStore(Store):
     async def set_config(self, config_id: str, data: dict[str, Any]) -> None:
         async with self._lock:
             self._configs[config_id] = dict(data)
+
+    # Locks
+    async def get_lock(self, lock_id: str) -> dict[str, Any] | None:
+        async with self._lock:
+            lock = self._locks.get(lock_id)
+            return dict(lock) if lock is not None else None
+
+    async def set_lock(self, lock_id: str, data: dict[str, Any]) -> None:
+        async with self._lock:
+            self._locks[lock_id] = dict(data)
 
     # Transactions
     async def run_transaction(self, fn: Callable[[TransactionStore], Awaitable[T]]) -> T:

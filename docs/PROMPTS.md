@@ -625,6 +625,57 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** e1ba5e2
 - **Human Review:** Storage interface, memory/firestore stores, seed script, security rules, and tests verified.
 
+### Entry #B3
+- **Date:** 2026-10-15
+- **Goal:** Expose the core loop through the API: hospitals raise requests, U2U calls 5 donors at a time through the simulator adapter, donors press keys, staff accept or defer, and a timer opens new rounds.
+- **Prompt Summary:**
+  1. Built deterministic matching service in `backend/app/matching/service.py`: selects up to 5 compatible donors based on component compatibility, urgent consent, contact spacing (>= 90 days), not opted out, not already called, ordered deterministically by distance then longest since last contacted, with no randomness.
+  2. Built outreach subsystem in `backend/app/outreach/`:
+     - `TelephonyAdapter` protocol and `SimulatorAdapter` marking calls as `RINGING`.
+     - `dispatch_round_calls`: fixed call IDs `f"{requestId}_{round}_{donorId}"`, transactional `QUEUED` write, post-commit compare-and-set to `DIALING` before invoking adapter.
+     - Strict caps enforcement (`REQUEST_CALL_CAP` = 15, `DAILY_CALL_CAP` = 30) and live-mode refusal of simulated donors.
+  3. Built request lifecycle router in `backend/app/requests/router.py`:
+     - `POST /requests`: hospital creates request in `OPEN` status, automatically triggering round 1 matching and dispatch.
+     - `POST /requests/{id}/cancel`: hospital cancellation standing down active outreach.
+     - `GET /requests/{id}/status`: public endpoint stripping all private patient and donor data.
+  4. Built simulator keypress router in `backend/app/outreach/router.py`:
+     - `POST /sim/calls/{callId}/press`: demo-only (404 in live), handles DTMF keys 1, 2, 9 through transactional transitions with strict duplicate-press idempotency.
+  5. Built clinical screening router in `backend/app/screening/router.py`:
+     - `POST /calls/{callId}/accept`: staff acceptance transitioning call to `ACCEPTED`, updating donor's `lastDonationDate`, and fulfilling request when $N$ reached.
+     - `POST /calls/{callId}/defer`: staff deferral with optional `returnDate`.
+  6. Built clock lease and ticker in `backend/app/clock/`:
+     - `Clock`, `RealClock`, and `SimulationClock` in `backend/app/clock/service.py`.
+     - `POST /internal/tick`: acquires 50-second lease in `locks/tick` (skips work if lease held), sweeps expired requests, opens next round when all calls finish or round timeout passes (180s standard, 300s weather alert), guarded by `"status is OPEN, round matches"`. Protected by `INTERNAL_TOKEN`.
+  7. Built weather settings in `backend/app/admin/router.py`:
+     - `POST /admin/settings/weather`: toggles `config/app.weatherAlert` which extends round timeout to 5 minutes and adds rain safety line to IVR script.
+  8. Auth stubbed in `backend/app/auth/dependencies.py`: `get_actor`, `require_hospital_actor`, `require_staff_actor` checking `X-Demo-Role` in demo mode.
+  9. Comprehensive test suite in `backend/tests/test_api_core_loop.py` and `backend/tests/test_matching.py` (80 tests passing): full demo story, 16th call cap refusal, duplicate keypress idempotency, and concurrent tick lease lock.
+  10. Updated `docs/API_CONTRACT.md`, `docs/ARCHITECTURE.md`, and `docs/PROMPTS.md`.
+- **Files Changed:**
+  - `backend/app/admin/router.py`
+  - `backend/app/auth/dependencies.py`
+  - `backend/app/clock/router.py`
+  - `backend/app/clock/service.py`
+  - `backend/app/core/store.py`
+  - `backend/app/core/store_firestore.py`
+  - `backend/app/core/store_memory.py`
+  - `backend/app/main.py`
+  - `backend/app/matching/service.py`
+  - `backend/app/outreach/adapter.py`
+  - `backend/app/outreach/router.py`
+  - `backend/app/outreach/service.py`
+  - `backend/app/requests/router.py`
+  - `backend/app/requests/transitions.py`
+  - `backend/app/screening/router.py`
+  - `backend/scripts/verify_b3_story.py`
+  - `backend/tests/test_api_core_loop.py`
+  - `backend/tests/test_matching.py`
+  - `docs/API_CONTRACT.md`
+  - `docs/ARCHITECTURE.md`
+  - `docs/PROMPTS.md`
+- **Commit Hash:** [pending commit]
+- **Human Review:** Core loop, matching engine, simulator adapter, screening, tick with lock lease, and caps verified.
+
 ---
 
 ## Human Decisions

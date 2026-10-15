@@ -64,6 +64,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Public config endpoint
     @app.get("/config", response_model=AppConfigResponse, tags=["Configuration"])
     async def get_config():
+        from app.core.store import get_store
+
+        store = get_store()
+        app_conf = await store.get_config("app") or {}
+        weather_alert = bool(app_conf.get("weatherAlert", False))
+
         banner = (
             "SIMULATED DATA · Demo mode · No real donors or patients"
             if current_settings.DATA_MODE == "demo"
@@ -72,8 +78,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return AppConfigResponse(
             data_mode=current_settings.DATA_MODE,
             banner_text=banner,
-            weather_alert=False,
+            weather_alert=weather_alert,
         )
+
+    # Attach domain routers
+    from app.admin.router import router as admin_router
+    from app.clock.router import router as clock_router
+    from app.outreach.router import router as outreach_router
+    from app.requests.router import router as requests_router
+    from app.screening.router import router as screening_router
+
+    app.include_router(requests_router)
+    app.include_router(outreach_router)
+    app.include_router(screening_router)
+    app.include_router(clock_router)
+    app.include_router(admin_router)
 
     return app
 

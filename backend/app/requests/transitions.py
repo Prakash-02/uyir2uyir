@@ -103,7 +103,7 @@ def apply_press_1(
             request_id=request.id,
             at=timestamp,
             kind="DONOR_ON_THE_WAY",
-            text=f"{call.donor_alias} pressed 1 and is on the way.",
+            text=f"{call.donor_alias} pressed 1 · {new_on_the_way + request.accepted} of {request.units_needed} covered.",
         )
     ]
 

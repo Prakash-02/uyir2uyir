@@ -76,24 +76,26 @@ interface EvalResult {
 
 ## 2. API Endpoints Table
 
-| Method and path | Who | Request body | Response |
-|---|---|---|---|
-| `GET /config` | Anyone | none | `AppConfig` |
-| `POST /requests` | Hospital | `{bloodGroup, component, unitsNeeded, patientRef}` | `BloodRequest` |
-| `POST /requests/{id}/cancel` | Hospital | none | `BloodRequest` |
-| `GET /requests/{id}/status` | Public | none | `PublicStatus` |
-| `POST /desk/check` | Public | `{text}` (max 2,000 chars) | `DeskResult` |
-| `GET /confirm/{token}` | Hospital blood bank | none | `RequestPreview` |
-| `POST /confirm` | Hospital blood bank | `{token, action: ConfirmAction}` | `BloodRequest` or `{status:'REJECTED'}` |
-| `POST /sim/calls/{callId}/press` | Simulator (demo) | `{key: SimKey}` | `Call` |
-| `POST /calls/{callId}/accept` | Staff | none | `Call` |
-| `POST /calls/{callId}/defer` | Staff | `{returnDate?}` | `Call` |
-| `POST /donors/signup` | Donor | `{name, phone, bloodGroup, area, lang, lastDonation?, consentUrgent, consentHistory, adult}` | `{donorAlias}` |
-| `GET /metrics` | Staff | none | `Metrics` |
-| `GET /eval/latest` | Anyone | none | `EvalResult` |
-| `POST /admin/scenario/{id}/run` | Admin, demo | none | `{ok:true}` |
-| `POST /admin/reset` | Admin, demo | none | `{ok:true}` |
-| `POST /admin/settings/weather` | Staff | `{on:boolean}` | `AppConfig` |
+| Method and path | Who | Request body | Response | Status & Implementation |
+|---|---|---|---|---|
+| `GET /healthz` | Anyone | none | `{"status": "ok"}` | Built (`backend/app/main.py`) |
+| `GET /config` | Anyone | none | `AppConfig` | Built (`backend/app/main.py`) |
+| `POST /requests` | Hospital | `{bloodGroup, component, unitsNeeded, patientRef}` | `BloodRequest` | Built (`backend/app/requests/router.py`) |
+| `POST /requests/{id}/cancel` | Hospital | none | `BloodRequest` | Built (`backend/app/requests/router.py`) |
+| `GET /requests/{id}/status` | Public | none | `PublicStatus` | Built (`backend/app/requests/router.py`) |
+| `POST /desk/check` | Public | `{text}` (max 2,000 chars) | `DeskResult` | Planned |
+| `GET /confirm/{token}` | Hospital blood bank | none | `RequestPreview` | Planned |
+| `POST /confirm` | Hospital blood bank | `{token, action: ConfirmAction}` | `BloodRequest` or `{status:'REJECTED'}` | Planned |
+| `POST /sim/calls/{callId}/press` | Simulator (demo) | `{key: SimKey}` | `Call` | Built (`backend/app/outreach/router.py`) |
+| `POST /calls/{callId}/accept` | Staff | none | `Call` | Built (`backend/app/screening/router.py`) |
+| `POST /calls/{callId}/defer` | Staff | `{returnDate?}` | `Call` | Built (`backend/app/screening/router.py`) |
+| `POST /internal/tick` | Internal / Scheduler | none | `{"status": "ok"}` | Built (`backend/app/clock/router.py`) |
+| `POST /donors/signup` | Donor | `{name, phone, bloodGroup, area, lang, lastDonation?, consentUrgent, consentHistory, adult}` | `{donorAlias}` | Planned |
+| `GET /metrics` | Staff | none | `Metrics` | Planned (Prompt B4) |
+| `GET /eval/latest` | Anyone | none | `EvalResult` | Planned |
+| `POST /admin/scenario/{id}/run` | Admin, demo | none | `{ok:true}` | Planned (Prompt B4) |
+| `POST /admin/reset` | Admin, demo | none | `{ok:true}` | Planned (Prompt B4) |
+| `POST /admin/settings/weather` | Staff | `{on:boolean}` | `AppConfig` | Built (`backend/app/admin/router.py`) |
 
 ---
 
