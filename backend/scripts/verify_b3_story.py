@@ -9,9 +9,9 @@ os.environ.setdefault("DATA_MODE", "demo")
 os.environ.setdefault("STORE", "memory")
 
 import asyncio
+
 from fastapi.testclient import TestClient
 
-from app.core.config import get_settings
 from app.core.store_memory import MemoryStore
 from app.main import create_app
 from scripts.seed import seed
@@ -42,7 +42,9 @@ async def main():
     print(f"    Created request: {req_id}, status: {req['status']}, round: {req['round']}")
 
     round_calls = list(store._calls.get(req_id, {}).values())
-    print(f"    Dispatched {len(round_calls)} calls in round {req['round']} via SimulatorAdapter (all RINGING).")
+    print(
+        f"    Dispatched {len(round_calls)} calls in round {req['round']} via SimulatorAdapter (all RINGING)."
+    )
 
     sorted_calls = sorted(round_calls, key=lambda c: c.distance_km)
     call_1 = sorted_calls[0]
@@ -77,7 +79,9 @@ async def main():
 
     final_status = client.get(f"/requests/{req_id}/status").json()
     print(f"\n[FINAL STATUS] Request {final_status['id']} is {final_status['status']}.")
-    print(f"               Hospital: {final_status['hospitalName']}, Group: {final_status['bloodGroup']}")
+    print(
+        f"               Hospital: {final_status['hospitalName']}, Group: {final_status['bloodGroup']}"
+    )
 
     events = store._events.get(req_id, [])
     print(f"\n[TIMELINE EVENTS] ({len(events)} events recorded):")

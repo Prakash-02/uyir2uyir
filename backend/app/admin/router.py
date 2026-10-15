@@ -1,5 +1,11 @@
-from fastapi import APIRouter
+from typing import Annotated
 
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from pydantic import Field
+
+from app.auth.dependencies import Actor, get_actor
+from app.clock.service import SimulationClock, get_clock
+from app.clock.story import run_story
 from app.core.config import get_settings
 from app.core.models import CamelModel
 from app.core.store import get_store
@@ -11,10 +17,88 @@ class WeatherSettingRequest(CamelModel):
     on: bool
 
 
+class ClockAdvanceRequest(CamelModel):
+    minutes: int = Field(gt=0)
+
+
 class AppConfigResponse(CamelModel):
     data_mode: str
     banner_text: str | None
     weather_alert: bool = False
+
+
+@router.post("/scenario/{scenario_id}/run")
+async def run_scenario(
+    scenario_id: str,
+    background_tasks: BackgroundTasks,
+    _actor: Annotated[Actor, Depends(get_actor)],
+) -> dict[str, bool]:
+    """Runs a demonstration scenario (demo mode only).
+
+    Returns immediately while execution runs as a background task.
+    Returns 404 in live mode.
+    """
+    settings = get_settings()
+    if settings.DATA_MODE != "demo":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Demo scenarios are not available in live data mode.",
+        )
+
+    # Dispatch demo story in background
+    store = get_store()
+    clock = get_clock()
+    background_tasks.add_task(run_story, store, clock)
+    return {"ok": True}
+
+
+@router.post("/reset")
+async def reset_demo(
+    _actor: Annotated[Actor, Depends(get_actor)],
+) -> dict[str, bool]:
+    """Clears and reseeds the demo database and clock (demo mode only).
+
+    Returns 404 in live mode.
+    """
+    settings = get_settings()
+    if settings.DATA_MODE != "demo":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Demo reset is not available in live data mode.",
+        )
+
+    store = get_store()
+    store.reset()
+
+    from scripts.seed import seed
+
+    await seed()
+    SimulationClock.reset_instance()
+    return {"ok": True}
+
+
+@router.post("/clock/advance")
+async def advance_clock(
+    payload: ClockAdvanceRequest,
+    _actor: Annotated[Actor, Depends(get_actor)],
+) -> dict[str, bool]:
+    """Advances simulated application clock by given minutes (demo mode only).
+
+    Returns 404 in live mode.
+    """
+    settings = get_settings()
+    if settings.DATA_MODE != "demo":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Clock advancement is not available in live data mode.",
+        )
+
+    clock = get_clock()
+    if isinstance(clock, SimulationClock):
+        clock.advance_seconds(payload.minutes * 60)
+        await clock.persist_to_store(get_store())
+
+    return {"ok": True}
 
 
 @router.post("/settings/weather", response_model=AppConfigResponse)

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import Settings, get_settings
+from app.core.config import Settings, get_settings, set_settings
 from app.core.logging import setup_logging, validation_exception_handler
 from app.core.mode_guard import verify_mode_guard
 from app.core.models import CamelModel
@@ -20,6 +20,8 @@ class AppConfigResponse(CamelModel):
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Application factory for U2U FastAPI backend."""
+    if settings is not None:
+        set_settings(settings)
     current_settings = settings or get_settings()
 
     # Verify mode safety before starting
@@ -86,11 +88,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     from app.clock.router import router as clock_router
     from app.outreach.router import router as outreach_router
     from app.requests.router import router as requests_router
+    from app.screening.metrics import router as metrics_router
     from app.screening.router import router as screening_router
 
     app.include_router(requests_router)
     app.include_router(outreach_router)
     app.include_router(screening_router)
+    app.include_router(metrics_router)
     app.include_router(clock_router)
     app.include_router(admin_router)
 

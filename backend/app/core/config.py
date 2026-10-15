@@ -72,7 +72,23 @@ class Settings(BaseSettings):
         return {num.strip() for num in self.CALL_ALLOWLIST.split(",") if num.strip()}
 
 
+_current_settings: Settings | None = None
+
+
+def set_settings(settings: Settings | None) -> None:
+    """Explicitly sets or clears the active settings instance (used by create_app and tests)."""
+    global _current_settings
+    _current_settings = settings
+
+
 @lru_cache
-def get_settings() -> Settings:
-    """Returns a cached Settings instance."""
+def _get_cached_settings() -> Settings:
     return Settings()
+
+
+def get_settings() -> Settings:
+    """Returns the current Settings instance."""
+    global _current_settings
+    if _current_settings is not None:
+        return _current_settings
+    return _get_cached_settings()

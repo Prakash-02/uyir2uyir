@@ -673,8 +673,41 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `docs/API_CONTRACT.md`
   - `docs/ARCHITECTURE.md`
   - `docs/PROMPTS.md`
-- **Commit Hash:** [pending commit]
+- **Commit Hash:** 2013e54
 - **Human Review:** Core loop, matching engine, simulator adapter, screening, tick with lock lease, and caps verified.
+
+### Entry #B4
+- **Date:** 2026-10-15
+- **Goal:** Add the judge-facing demo endpoints: run the story, reset the demo, advance the clock, and real metrics computed from the timeline.
+- **Prompt Summary:**
+  1. Implemented demo scenario runner in `backend/app/clock/story.py`: `run_story()` executes steps 1 to 5 of the Section 7 emergency dispatch story using pure production domain service calls (`create_request`, `handle_key_press`, `accept_call`, `defer_call`), with realistic clock advancement and timeline events `"Story step N: ..."` appended at each step. Dispatches asynchronously via FastAPI `BackgroundTasks`.
+  2. Built demo admin control endpoints in `backend/app/admin/router.py`:
+     - `POST /admin/scenario/{id}/run`: starts scenario runner in the background. Demo only (returns 404 in live mode).
+     - `POST /admin/reset`: clears and reseeds memory/firestore databases with pristine fixtures and resets clock. Demo only (404 in live).
+     - `POST /admin/clock/advance`: advances simulated clock by specified minutes. Demo only (404 in live).
+     - Accessible to any signed-in demo user (matching top banner controls on every screen).
+  3. Built coordination metrics engine in `backend/app/screening/metrics.py`:
+     - `GET /metrics`: computes real coordination metrics from timeline events (`medianMinutesToFirstOnTheWay`, `medianMinutesToCovered`, `medianMinutesToFulfilled`, `callsPerAccepted`, `standDownReachPct`).
+     - Includes standard uncoordinated broadcast baselines (45m to first on the way, 90m to covered, 180m to fulfilled).
+     - Restricted to staff role in live mode; accessible to any demo user in demo mode.
+  4. Added dynamic settings configuration in `backend/app/core/config.py` (`set_settings`) and mounted metrics router in `backend/app/main.py`.
+  5. Enhanced call press router in `backend/app/outreach/router.py` to handle en-route dropout (Key 2) with automated transition and round 2 trigger.
+  6. Authored comprehensive test suite in `backend/tests/test_demo_admin_and_metrics.py` (83 total backend tests passing cleanly): verifies background task execution, clock advance, database reset, live mode 404 enforcement, and metrics calculation.
+  7. Updated `docs/DEMO.md`, `docs/TESTING.md`, `docs/API_CONTRACT.md`, and `docs/PROMPTS.md`.
+- **Files Changed:**
+  - `backend/app/admin/router.py`
+  - `backend/app/clock/story.py`
+  - `backend/app/core/config.py`
+  - `backend/app/main.py`
+  - `backend/app/outreach/router.py`
+  - `backend/app/screening/metrics.py`
+  - `backend/tests/test_demo_admin_and_metrics.py`
+  - `docs/API_CONTRACT.md`
+  - `docs/DEMO.md`
+  - `docs/TESTING.md`
+  - `docs/PROMPTS.md`
+- **Commit Hash:** 6cab03a
+- **Human Review:** Judge-facing demo endpoints, background story execution, reset reseed, clock advance, and timeline metrics verified.
 
 ---
 

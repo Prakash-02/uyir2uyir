@@ -91,10 +91,11 @@ interface EvalResult {
 | `POST /calls/{callId}/defer` | Staff | `{returnDate?}` | `Call` | Built (`backend/app/screening/router.py`) |
 | `POST /internal/tick` | Internal / Scheduler | none | `{"status": "ok"}` | Built (`backend/app/clock/router.py`) |
 | `POST /donors/signup` | Donor | `{name, phone, bloodGroup, area, lang, lastDonation?, consentUrgent, consentHistory, adult}` | `{donorAlias}` | Planned |
-| `GET /metrics` | Staff | none | `Metrics` | Planned (Prompt B4) |
+| `GET /metrics` | Staff (demo: any demo user) | none | `Metrics` | Built (`backend/app/screening/metrics.py`) |
 | `GET /eval/latest` | Anyone | none | `EvalResult` | Planned |
-| `POST /admin/scenario/{id}/run` | Admin, demo | none | `{ok:true}` | Planned (Prompt B4) |
-| `POST /admin/reset` | Admin, demo | none | `{ok:true}` | Planned (Prompt B4) |
+| `POST /admin/scenario/{id}/run` | Admin, demo | none | `{"ok": true, "scenario": id}` | Built (`backend/app/admin/router.py`) |
+| `POST /admin/reset` | Admin, demo | none | `{"ok": true, "reset": true}` | Built (`backend/app/admin/router.py`) |
+| `POST /admin/clock/advance` | Admin, demo | `{minutes: int}` | `{"ok": true, "advancedMinutes": minutes, "currentTime": str}` | Built (`backend/app/admin/router.py`) |
 | `POST /admin/settings/weather` | Staff | `{on:boolean}` | `AppConfig` | Built (`backend/app/admin/router.py`) |
 
 ---

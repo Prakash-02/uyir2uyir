@@ -50,7 +50,16 @@ sequenceDiagram
    > *"Someone gave life to your family today. When you're ready, you can do the same."*
    Accompanied by the public consent link: `https://u2u.org.in/join`.
 
-*Note: Steps 1 through 5 are played automatically by the scenario runner (`POST /admin/scenario/demo-o-plus/run`). Step 6 is an intentional human action.*
+*Note: Steps 1 through 5 are executed automatically by the backend scenario runner (`backend/app/clock/story.py` via `POST /admin/scenario/demo-o-plus/run`). Step 6 is an intentional human action.*
+
+### Backend Scenario Architecture:
+The backend demo runner (`run_story()`) plays steps 1 to 5 exclusively through production domain services without bypassing transactions or writing raw database documents:
+1. **Step 1:** Dispatches `POST /requests` for 2 units of O+ red blood cells at Kauvery Hospital (`req_story_o_plus`). Automatically runs Round 1 matching and dispatches calls to Donors A–E.
+2. **Step 2:** Dispatches simulated DTMF key `1` for Donors A, B, and C. The request pauses ($N+1=3$). Donors D and E respond late and are marked `LATE_ACCEPT`.
+3. **Step 3:** Dispatches staff `POST /calls/{callId}/accept` for Donor A and `POST /calls/{callId}/defer` for Donor B (30 days). Request remains paused (covered = 2).
+4. **Step 4:** Advances simulated clock and dispatches en-route cancellation (DTMF `2`) for Donor C due to flood warning. Covered drops to 1 ($< N$), reopening the request and triggering Round 2 outreach to Donors F–J.
+5. **Step 5:** Donor F presses `1` and staff accepts Donor F. Accepted reaches 2 ($= N$), transitioning the request to `FULFILLED` and standing down all remaining dialers and en-route donors.
+Between each step, `run_story()` appends a `TimelineEvent` with text `Story step N: ...` and advances the simulation clock so that `GET /metrics` produces realistic coordination timings.
 
 ---
 
