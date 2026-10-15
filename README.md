@@ -119,13 +119,27 @@ DATA_MODE=demo STORE=firestore .venv/bin/python scripts/seed.py
 The U2U backend deploys to **Google Cloud Run** in `asia-south1` with continuous execution enabled (`--no-cpu-throttling` to sustain background simulation story runs), connected to **Secret Manager** for signing and phone encryption keys, and triggered by **Cloud Scheduler** for 1-minute expiration and round progression sweeps.
 
 ```bash
-# 1. Deploy Firestore security rules and composite indexes to u2u-demo
-./infra/deploy_firestore_rules.sh <PROJECT_ID>
+# 1. Login and select Firebase project (Git Bash / PowerShell)
+firebase login
+firebase use uyir2uyir-53929
 
-# 2. Deploy backend service, service accounts, secrets, and Cloud Scheduler job
-./infra/deploy_backend_demo.sh <PROJECT_ID> [REGION]
+# 2. Deploy Firestore security rules and composite indexes to u2u-demo (Git Bash)
+./infra/deploy_firestore_rules.sh uyir2uyir-53929
 
-# 3. Run post-deploy smoke verification
+# 3. Seed u2u-demo database from your laptop (PowerShell)
+cd backend
+$env:DATA_MODE="demo"; $env:STORE="firestore"; $env:GOOGLE_CLOUD_PROJECT="uyir2uyir-53929"; $env:FIRESTORE_DB="u2u-demo"; .\run.ps1 test
+.\.venv\Scripts\python.exe scripts/seed.py
+Remove-Item env:DATA_MODE, env:STORE, env:GOOGLE_CLOUD_PROJECT, env:FIRESTORE_DB
+cd ..
+
+# 4. Fill GEMINI_MODEL in infra/env.demo.yaml, then run first deploy (Git Bash)
+./infra/deploy_backend_demo.sh uyir2uyir-53929 asia-south1
+
+# 5. Set PUBLIC_BASE_URL in infra/env.demo.yaml to the deployed Cloud Run URL, then redeploy once (Git Bash)
+./infra/deploy_backend_demo.sh uyir2uyir-53929 asia-south1
+
+# 6. Run post-deploy smoke verification (Git Bash)
 ./infra/smoke_backend.sh <SERVICE_URL>
 ```
 
@@ -134,7 +148,7 @@ The U2U backend deploys to **Google Cloud Run** in `asia-south1` with continuous
 |---|---|---|
 | **Cloud Run Service** | [`backend/Dockerfile`](backend/Dockerfile), [`infra/deploy_backend_demo.sh`](infra/deploy_backend_demo.sh) | Containerized FastAPI runtime on port 8080 |
 | **Environment Configuration** | [`infra/env.demo.yaml`](infra/env.demo.yaml) | Safe multi-value env vars (CORS origins, allowlists) |
-| **Secret Manager** | [`infra/deploy_backend_demo.sh`](infra/deploy_backend_demo.sh) | `LINK_SIGNING_KEY` and `PHONE_KEY` (AES-GCM) |
+| **Secret Manager** | [`infra/deploy_backend_demo.sh`](infra/deploy_backend_demo.sh) | `LINK_SIGNING_KEY`, `PHONE_KEY`, and `INTERNAL_TOKEN` |
 | **Cloud Scheduler OIDC Ticker** | [`backend/app/clock/router.py`](backend/app/clock/router.py) | 1-minute tick guarded by Google OIDC token verification |
 | **Firestore Database (`u2u-demo`)** | [`infra/firestore.demo.rules`](infra/firestore.demo.rules), [`infra/firestore.indexes.json`](infra/firestore.indexes.json) | Read-only client demo rules and composite indexes |
 | **Post-Deploy Smoke Test** | [`infra/smoke_backend.sh`](infra/smoke_backend.sh) | End-to-end verification of `/healthz`, `/config`, story run, and `/metrics` |

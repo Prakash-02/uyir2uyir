@@ -394,7 +394,7 @@ graph TD
 - **`--allow-unauthenticated`:** Allows browser clients, Twilio webhooks, and public audio endpoints to reach the service. Application-layer security (Firebase ID tokens, HMAC link signatures, Twilio request signatures, and OIDC tokens) enforces authorization on every route.
 - **`--no-cpu-throttling`:** Critical flag that keeps CPU allocated between requests, allowing background tasks (such as [`backend/app/clock/story.py`](../backend/app/clock/story.py) and delayed outreach dispatch) to execute continuously.
 - **`--env-vars-file infra/env.demo.yaml`:** Passes complex environment variables without comma splitting issues inherent to `--set-env-vars`, safely maintaining `ALLOWED_ORIGINS` and `CALL_ALLOWLIST`.
-- **`--set-secrets`:** Mounts `LINK_SIGNING_KEY` and `PHONE_KEY` directly from Google Secret Manager.
+- **`--set-secrets`:** Mounts `LINK_SIGNING_KEY`, `PHONE_KEY`, and `INTERNAL_TOKEN` directly from Google Secret Manager.
 
 ### 7.2 Service Accounts & Least Privilege IAM
 
@@ -403,8 +403,10 @@ graph TD
 | `sa-api-demo` | `roles/datastore.user` | Read/write access to Firestore (`u2u-demo` database) |
 | `sa-api-demo` | `roles/aiplatform.user` | Vertex AI Gemini Flash 2.0 extraction calls |
 | `sa-api-demo` | `roles/logging.logWriter` | Structured application and audit logs |
-| `sa-api-demo` | `roles/secretmanager.secretAccessor` | Access strictly scoped to `LINK_SIGNING_KEY` and `PHONE_KEY` |
+| `sa-api-demo` | `roles/firebaseauth.admin` | Sets demo role custom claims via `firebase-admin` on anonymous accounts |
+| `sa-api-demo` | `roles/secretmanager.secretAccessor` | Access strictly scoped to `LINK_SIGNING_KEY`, `PHONE_KEY`, and `INTERNAL_TOKEN` |
 | `sa-scheduler` | `roles/run.invoker` | Permission to invoke Cloud Run service endpoint `/internal/tick` |
+| `{PROJECT_NUMBER}-compute@developer.gserviceaccount.com` | `roles/run.builder` | Cloud Build authorization for `gcloud run deploy --source` builds |
 
 ### 7.3 Cloud Scheduler 1-Minute Tick via Google OIDC
 
@@ -414,9 +416,10 @@ Cloud Scheduler executes an automated HTTP POST request every minute (`* * * * *
 - **Token Subject/Email:** `sa-scheduler@${PROJECT_ID}.iam.gserviceaccount.com`
 - **Application Validation:** [`backend/app/clock/router.py`](../backend/app/clock/router.py) validates the token using `google.oauth2.id_token.verify_oauth2_token()`, verifying that the token was signed by Google, the audience matches the service URL, and the email matches the authorized scheduler service account.
 
-### 7.4 Deployment Scripts
+### 7.4 Deployment Scripts & Lifecycle
 
-- [`infra/deploy_backend_demo.sh`](../infra/deploy_backend_demo.sh): Idempotent bash script provisioning service accounts, secrets, environment files, Cloud Run service, and Cloud Scheduler ticker.
 - [`infra/deploy_firestore_rules.sh`](../infra/deploy_firestore_rules.sh): Deploys [`infra/firestore.demo.rules`](../infra/firestore.demo.rules) and [`infra/firestore.indexes.json`](../infra/firestore.indexes.json) to the `u2u-demo` named database via Firebase CLI.
+- [`infra/deploy_backend_demo.sh`](../infra/deploy_backend_demo.sh): Idempotent bash script provisioning service accounts, secrets, Cloud Build builder role, Cloud Run service, and Cloud Scheduler ticker.
 - [`infra/smoke_backend.sh`](../infra/smoke_backend.sh): Post-deployment smoke script that verifies `/healthz`, `/config`, triggers the 5-step scenario story, polls until the request is `FULFILLED`, and asserts timeline `/metrics`.
+
 

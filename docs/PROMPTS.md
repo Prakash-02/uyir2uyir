@@ -915,6 +915,38 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** e3758a3
 - **Human Review:** All 116 tests passing, bash syntax verified, ready for human execution of deploy scripts.
 
+### Entry #D0
+- **Date:** 2026-10-15
+- **Goal:** Pre-deployment verification and hardening for Cloud Run backend in demo mode (`uyir2uyir-53929`).
+- **Prompt Summary:**
+  1. Backend Test & Lint Verification:
+     - Executed `.\run.ps1 lint` and `.\run.ps1 test` in `backend/`. All 76 files formatted cleanly with 0 lint errors, 115 tests passed cleanly (1 skipped for unconfigured Firestore client).
+     - Added `backend/run.ps1` helper for native Windows PowerShell execution.
+  2. Cloud Run Deployment Script Enhancements (`infra/deploy_backend_demo.sh`):
+     - Added `roles/firebaseauth.admin` IAM role binding to `sa-api-demo` for demo role custom claims assignment via `firebase-admin`.
+     - Automatically derives `PROJECT_NUMBER` via `gcloud projects describe` and binds `roles/run.builder` to `{PROJECT_NUMBER}-compute@developer.gserviceaccount.com` for source builds.
+     - Added `INTERNAL_TOKEN` generation and inclusion in Secret Manager and `--set-secrets`.
+     - Added pre-flight check preventing deployment if `GEMINI_MODEL` is still the placeholder.
+     - Added post-deploy prompt instructing the user to set `PUBLIC_BASE_URL` in `infra/env.demo.yaml` and redeploy once for OIDC audience alignment.
+  3. Environment Configuration (`infra/env.demo.yaml`):
+     - Configured for `GOOGLE_CLOUD_PROJECT=uyir2uyir-53929`, `VERTEX_LOCATION=asia-south1`, `ALLOWED_ORIGINS="https://uyir2uyir-53929.web.app,https://uyir2uyir-53929.firebaseapp.com,http://localhost:5173"`.
+     - Added clear placeholders for `GEMINI_MODEL` and `PUBLIC_BASE_URL`.
+  4. Line Ending Normalization:
+     - Created `.gitattributes` enforcing `*.sh text eol=lf`.
+     - Verified all `.sh` scripts have LF endings (`\n`) and valid bash syntax.
+  5. Documentation:
+     - Updated `README.md` and `docs/ARCHITECTURE.md` with exact sequential deployment commands and code paths.
+- **Files Changed:**
+  - `.gitattributes`
+  - `backend/run.ps1`
+  - `docs/ARCHITECTURE.md`
+  - `docs/PROMPTS.md`
+  - `infra/deploy_backend_demo.sh`
+  - `infra/env.demo.yaml`
+  - `README.md`
+- **Commit Hash:** b4cd911
+- **Human Review:** Scripts verified with LF endings and zero errors across test and lint suites; ready for manual execution.
+
 ---
 
 ## Human Decisions
