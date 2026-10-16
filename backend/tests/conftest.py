@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 # Ensure default environment variables for testing before Settings is instantiated
-os.environ.setdefault("GEMINI_MODEL", "gemini-2.0-flash")
+os.environ.setdefault("GEMINI_MODEL", "gemini-2.5-flash")
 os.environ.setdefault("DATA_MODE", "demo")
 os.environ.setdefault("FIRESTORE_DB", "u2u-demo")
 os.environ.setdefault("ALLOW_TEST_HEADER_AUTH", "true")
@@ -19,7 +19,7 @@ def test_settings() -> Settings:
     return Settings(
         DATA_MODE="demo",
         FIRESTORE_DB="u2u-demo",
-        GEMINI_MODEL="gemini-2.0-flash",
+        GEMINI_MODEL="gemini-2.5-flash",
         ALLOW_TEST_HEADER_AUTH=True,
     )
 

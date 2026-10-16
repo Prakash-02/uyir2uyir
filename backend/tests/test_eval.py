@@ -3,6 +3,7 @@
 import json
 from collections.abc import Generator
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -129,8 +130,13 @@ def client() -> Generator[TestClient, None, None]:
     yield TestClient(app)
 
 
-def test_eval_latest_404_when_empty(client: TestClient):
+def test_eval_latest_404_when_empty(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
     """GET /eval/latest returns 404 when no evaluation results exist."""
+    import app.eval.router as eval_router
+
+    monkeypatch.setattr(eval_router, "RESULTS_FILE", tmp_path / "nonexistent.json")
     resp = client.get("/eval/latest")
     assert resp.status_code == 404
     assert resp.json()["detail"] == "No evaluation results found."

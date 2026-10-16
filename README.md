@@ -22,7 +22,7 @@ During medical emergencies, families frequently scramble at odd hours forwarding
 
 > [!NOTE]
 > **Core Declarations:**
-> - **All AI runs on Gemini on Vertex AI:** Generative entity extraction and translation run exclusively on Gemini Flash (`gemini-2.0-flash`). All decisions are validated verbatim in deterministic code.
+> - **All AI runs on Gemini on Vertex AI:** Generative entity extraction and translation run exclusively on Gemini Flash (`gemini-2.5-flash`). All decisions are validated verbatim in deterministic code.
 > - **Twilio is only the phone carrier:** Twilio (if used) is only the phone carrier to place calls and stream DTMF keypresses; no proprietary AI or vendor intelligence is used in telephony.
 > - **All data is simulated:** All donors, hospitals, patient IDs, and blood requests are simulated prototype data.
 

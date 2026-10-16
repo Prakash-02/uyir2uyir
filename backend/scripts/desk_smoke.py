@@ -19,12 +19,18 @@ import asyncio
 import os
 import sys
 
+# Ensure UTF-8 output on Windows consoles
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 # Ensure backend root is on sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 os.environ.setdefault("DATA_MODE", "demo")
 os.environ.setdefault("STORE", "memory")
-os.environ.setdefault("GEMINI_MODEL", "gemini-2.0-flash")
+os.environ.setdefault("GEMINI_MODEL", "gemini-2.5-flash")
+os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "uyir2uyir-53929")
+os.environ.setdefault("VERTEX_LOCATION", "asia-south1")
 
 from app.core.config import get_settings
 from app.core.store import get_store

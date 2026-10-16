@@ -1,0 +1,191 @@
+{
+  "promptVersion": "desk_extract_v1",
+  "runAt": "2026-10-16T09:03:26.337078+00:00",
+  "total": 30,
+  "correct": 19,
+  "paymentToHospital": 0,
+  "wrongHospitalIds": 0,
+  "p95LatencyMs": 5996.13,
+  "rows": [
+    {
+      "id": "msg-01",
+      "expected": "VERIFIED_MATCH",
+      "got": "NOT_VERIFIED",
+      "pass": false
+    },
+    {
+      "id": "msg-02",
+      "expected": "VERIFIED_MATCH",
+      "got": "NOT_VERIFIED",
+      "pass": false
+    },
+    {
+      "id": "msg-03",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "NOT_VERIFIED",
+      "pass": false
+    },
+    {
+      "id": "msg-04",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "NOT_VERIFIED",
+      "pass": false
+    },
+    {
+      "id": "msg-05",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "NOT_VERIFIED",
+      "pass": false
+    },
+    {
+      "id": "msg-06",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-07",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-08",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-09",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-10",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-11",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-12",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-13",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-14",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-15",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-16",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-17",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "NOT_VERIFIED",
+      "pass": false
+    },
+    {
+      "id": "msg-18",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "NOT_VERIFIED",
+      "pass": false
+    },
+    {
+      "id": "msg-19",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "NOT_VERIFIED",
+      "pass": false
+    },
+    {
+      "id": "msg-20",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "NOT_VERIFIED",
+      "pass": false
+    },
+    {
+      "id": "msg-21",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "NOT_VERIFIED",
+      "pass": false
+    },
+    {
+      "id": "msg-22",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "NOT_VERIFIED",
+      "pass": false
+    },
+    {
+      "id": "msg-23",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-24",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-25",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-26",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-27",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-28",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-29",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "msg-30",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    }
+  ]
+}

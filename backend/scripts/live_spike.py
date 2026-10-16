@@ -336,7 +336,7 @@ async def main() -> None:
         settings = get_settings()
     except Exception:
         settings = Settings(
-            GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
+            GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
             GOOGLE_CLOUD_PROJECT=os.getenv("GOOGLE_CLOUD_PROJECT", PROJECT_ID),
             VERTEX_LOCATION=os.getenv("VERTEX_LOCATION", "asia-south1"),
         )

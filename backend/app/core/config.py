@@ -23,8 +23,8 @@ class Settings(BaseSettings):
     # Vertex AI & Gemini
     VERTEX_LOCATION: str = Field(default="asia-south1", description="Vertex AI region")
     GEMINI_MODEL: str = Field(
-        ...,
-        description="Gemini model name, explicitly read from environment with no default in code",
+        default="gemini-2.5-flash",
+        description="Gemini model name for Request Desk entity extraction",
     )
     LIVE_MODEL: str = Field(
         default="gemini-live-2.5-flash-native-audio",

@@ -30,7 +30,7 @@ if (-not (Test-Path "infra/env.demo.yaml")) {
 
 $envYaml = Get-Content "infra/env.demo.yaml" -Raw
 if ($envYaml -match "YOUR_GEMINI_MODEL_HERE") {
-    Write-Host "❌ ERROR: Please edit infra/env.demo.yaml and set GEMINI_MODEL (e.g. gemini-2.0-flash) before deploying." -ForegroundColor Red
+    Write-Host "❌ ERROR: Please edit infra/env.demo.yaml and set GEMINI_MODEL (e.g. gemini-2.5-flash) before deploying." -ForegroundColor Red
     exit 1
 }
 

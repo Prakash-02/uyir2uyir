@@ -22,7 +22,7 @@ U2U (Uyir2Uyir, "life to life" in Tamil) relays urgent blood requests from verif
 - Google Cloud AI Builder Cup 2026 (Sustainability and Social Impact).
 - Python 3.12 FastAPI modular monolith deployed on **Google Cloud Run** (`asia-south1`).
 - Multi-database **Cloud Firestore** (`u2u-demo` and `u2u-live`).
-- Vertex AI Gemini Flash (`gemini-2.0-flash` or `gemini-1.5-flash`) at temperature 0.
+- Vertex AI Gemini Flash (`gemini-2.5-flash`) at temperature 0.
 
 **Honesty Rule:** All mock and prototype data must be designated with `isSimulated: true`. The backend never attributes simulated handlers to live Gemini, Twilio, or Cloud TTS APIs.
 
@@ -258,7 +258,7 @@ flowchart TD
    - Security rule: Public read-only snapshots allowed for frontend listeners; all writes blocked except service account.
 3. **Vertex AI Gemini Flash:**
    - Endpoint: `asia-south1-aiplatform.googleapis.com`.
-   - Model: `gemini-2.0-flash` or `gemini-1.5-flash`.
+   - Model: `gemini-2.5-flash`.
    - Parameters: `temperature=0.0`, `max_output_tokens=1024`, `response_mime_type="application/json"`.
 4. **Cloud Text-to-Speech:**
    - Voices: `ta-IN-Standard-A` / `ta-IN-Wavenet-A` (Tamil), `en-IN-Standard-A` (English).

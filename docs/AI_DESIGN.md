@@ -35,8 +35,7 @@ At U2U, the boundary is absolute:
 ### Vertex AI Model Availability & Region Disclosure
 
 - **Default Region:** `asia-south1` (Mumbai).
-- **Supported Models in `asia-south1`:** `gemini-1.5-flash` is fully available in `asia-south1`.
-- **Region Fallback for `gemini-2.0-flash`:** If deploying with `GEMINI_MODEL=gemini-2.0-flash`, use `VERTEX_LOCATION=us-central1` (or `asia-southeast1`) where Vertex AI 2.0 Flash is generally available.
+- **Request Desk Model:** `gemini-2.5-flash` is fully available and operational in `asia-south1` (replacing `gemini-2.0-flash`, which returns 404 in `asia-south1`).
 - **Client Timeout:** `types.HttpOptions(timeout=8000)` enforces an 8,000-millisecond hard ceiling.
 - **Quota Tracking:** Tracked in `config/app` (`geminiCallsToday`, `geminiCallsDate`). Capped by `DAILY_GEMINI_CAP` (default 2,000/day).
 - **Graceful Fallback:** If Vertex AI times out or is unreachable, the pipeline catches `AIUnavailable` and immediately returns:

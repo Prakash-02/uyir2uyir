@@ -30,7 +30,7 @@ if [ ! -f "infra/env.demo.yaml" ]; then
 fi
 
 if grep -q "YOUR_GEMINI_MODEL_HERE" infra/env.demo.yaml; then
-  echo "❌ ERROR: Please edit infra/env.demo.yaml and set GEMINI_MODEL (e.g. gemini-2.0-flash) before deploying."
+  echo "❌ ERROR: Please edit infra/env.demo.yaml and set GEMINI_MODEL (e.g. gemini-2.5-flash) before deploying."
   exit 1
 fi
 

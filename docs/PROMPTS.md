@@ -1138,8 +1138,40 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `backend/scripts/live_spike.py`
   - `docs/AI_DESIGN.md`
   - `docs/PROMPTS.md`
-- **Commit Hash:** a6c783b
+- **Commit Hash:** fab27ba
 - **Human Review:** Verified live spike execution with 100% intent accuracy on Tamil, phone-quality Tamil, English CANT, and English STOP.
+
+### Entry #L0c
+- **Date:** 2026-10-16
+- **Goal:** Fix the Request Desk model by switching from `gemini-2.0-flash` (which returns 404 in `asia-south1`) to `gemini-2.5-flash` (confirmed working in `asia-south1`).
+- **Prompt Summary:**
+  1. Updated `GEMINI_MODEL=gemini-2.5-flash` in `backend/app/core/config.py` defaults, `backend/.env.example`, and `infra/env.demo.yaml`.
+  2. Executed `backend/scripts/desk_smoke.py` against live Gemini in `asia-south1`:
+     - Sample 1 (English Emergency Request): `NOT_VERIFIED` (`Couldn't verify. Please call the hospital.`) with all entities (`IP-101`, `O+`, `RED_CELLS`, `2 units`) extracted and verbatim quotes verified.
+     - Sample 2 (Tamil Message): `NOT_VERIFIED` (`Couldn't verify. Please call the hospital.`) with Tamil quotes (`B+`, `2 units`) verified.
+     - Sample 3 (Commercial Solicitation/Payment Scam): `NOT_VERIFIED` with payment phrases flagged (`paid`, `rupees`, `charge`, `cash`) and explicit blocking under NBTC guidelines.
+  3. Executed Request Desk evaluation benchmark (`backend/eval/run_eval.py`):
+     - Evaluated 30 labelled test cases across English, Tamil, and Tanglish.
+     - Gate 1 (`paymentToHospital`): **0** (PASS).
+     - Gate 2 (`wrongHospitalIds`): **0** (PASS).
+     - Accuracy: **63.3%** (19/30). P95 latency: **5996.1 ms**.
+     - Saved benchmark artifact to `backend/eval/results/latest.json` and Firestore `config/evalLatest`.
+  4. Updated documentation across `README.md`, `docs/AI_DESIGN.md`, `docs/BACKEND.md`, and deployment scripts to reflect `gemini-2.5-flash`.
+- **Files Changed:**
+  - `README.md`
+  - `backend/app/core/config.py`
+  - `backend/.env.example`
+  - `backend/scripts/desk_smoke.py`
+  - `backend/scripts/live_spike.py`
+  - `backend/tests/conftest.py`
+  - `docs/AI_DESIGN.md`
+  - `docs/BACKEND.md`
+  - `docs/PROMPTS.md`
+  - `infra/deploy_backend_demo.ps1`
+  - `infra/deploy_backend_demo.sh`
+  - `infra/env.demo.yaml`
+- **Commit Hash:** fe4afcb
+- **Human Review:** Verified 100% zero-tolerance safety gate compliance (0 commercial leaks, 0 wrong hospital attributions).
 
 ---
 
