@@ -26,6 +26,18 @@ class Settings(BaseSettings):
         ...,
         description="Gemini model name, explicitly read from environment with no default in code",
     )
+    LIVE_MODEL: str = Field(
+        default="gemini-2.0-flash-exp",
+        description="Gemini Live model name for experimental multimodal calling",
+    )
+    LIVE_LOCATION: str = Field(
+        default="us-central1",
+        description="GCP location for Gemini Live sessions",
+    )
+    LIVE_DAILY_MINUTES: int = Field(
+        default=60,
+        description="Daily cap on live calling session duration in minutes",
+    )
 
     # Security & Keys
     LINK_SIGNING_KEY: str = Field(

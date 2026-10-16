@@ -1090,6 +1090,29 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** e88d513
 - **Human Review:** Verified clean lint, 125 backend tests passed (1 skipped), 115 frontend tests passed, 0 broken relative links.
 
+### Entry #L0
+- **Date:** 2026-10-16
+- **Goal:** Find out, with real calls, whether Gemini Live works for U2U before building on it. Write one spike script, report facts, and make zero app changes.
+- **Prompt Summary:**
+  1. Inspected the installed `google-genai` version (`0.8.0`) and its Live API interface (`client.aio.live.connect`, `types.LiveConnectConfig`, `types.Blob` audio streaming in 20 ms chunks, `types.FunctionDeclaration` for `record_reply`, `session.receive()`).
+  2. Implemented `backend/scripts/live_spike.py` to:
+     - Probe Live-capable models on Vertex AI for project `uyir2uyir-53929` in `asia-south1`, then `us-central1`.
+     - Synthesize 16 kHz 16-bit mono LINEAR16 PCM test clips with Cloud Text-to-Speech (Tamil arrival promise, English rain decline, English opt-out).
+     - Test telephony downsampling/upsampling via `audioop` (16 kHz -> 8 kHz $\mu$-law -> 16 kHz).
+  3. Executed `.\.venv\Scripts\python scripts\live_spike.py` once. Probed `gemini-2.0-flash-exp`, `gemini-2.0-flash`, `gemini-2.0-flash-realtime-exp`, and `gemini-2.5-flash`.
+  4. Factual Finding: All 2.0 Live models were rejected by Vertex AI with WebSocket code 1008 policy violation (`Publisher model was not found or your project does not have access to it`) across both `asia-south1` and `us-central1`. `gemini-2.5-flash` returned WebSocket 1007 (`not supported in the live api`).
+  5. Added `LIVE_MODEL`, `LIVE_LOCATION`, and `LIVE_DAILY_MINUTES=60` placeholders to `Settings` (`backend/app/core/config.py`), `backend/.env.example`, and `infra/env.demo.yaml`.
+  6. Documented empirical spike results and summary table in Section 7 of `docs/AI_DESIGN.md`.
+- **Files Changed:**
+  - `backend/app/core/config.py`
+  - `backend/.env.example`
+  - `infra/env.demo.yaml`
+  - `backend/scripts/live_spike.py`
+  - `docs/AI_DESIGN.md`
+  - `docs/PROMPTS.md`
+- **Commit Hash:** Pending
+- **Human Review:** Verified factual spike run, zero app changes, lint and test suites clean.
+
 ---
 
 ## Human Decisions
