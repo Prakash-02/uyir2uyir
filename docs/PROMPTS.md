@@ -1110,7 +1110,7 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `backend/scripts/live_spike.py`
   - `docs/AI_DESIGN.md`
   - `docs/PROMPTS.md`
-- **Commit Hash:** Pending
+- **Commit Hash:** f206398
 - **Human Review:** Verified factual spike run, zero app changes, lint and test suites clean.
 
 ---
