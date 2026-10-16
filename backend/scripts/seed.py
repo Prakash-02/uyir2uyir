@@ -362,8 +362,26 @@ async def seed() -> None:
         print(f"  + Centre: {centre.name} ({centre.id})")
 
     # 3. Seed Donors
+    from app.core.phone_vault import store_donor_contact
+
+    verified_env = (
+        os.environ.get("DEMO_VERIFIED_PHONES") or os.environ.get("VERIFIED_DONOR_PHONES") or ""
+    )
+    verified_phones = [p.strip() for p in verified_env.split(",") if p.strip()]
+
     for idx, d_data in enumerate(DONORS_FIXTURE, start=1):
-        phone_hash = hashlib.sha256(f"salt-sim-{d_data['id']}".encode()).hexdigest()
+        if idx <= len(verified_phones) and idx <= 3:
+            real_phone = verified_phones[idx - 1]
+            contact_res = await store_donor_contact(store, d_data["id"], real_phone)
+            phone_hash = contact_res["phoneHash"]
+            phone_masked = contact_res["phoneMasked"]
+            print(
+                f"    * Attached verified phone to {d_data['alias']} ({d_data['id']}): {phone_masked}"
+            )
+        else:
+            phone_hash = hashlib.sha256(f"salt-sim-{d_data['id']}".encode()).hexdigest()
+            phone_masked = f"+91 ••••• ••{idx:03d}"
+
         donor = Donor(
             id=d_data["id"],
             alias=d_data["alias"],
@@ -373,7 +391,7 @@ async def seed() -> None:
             city="Chennai",
             distance_km=d_data["distanceKm"],
             phone_hash=phone_hash,
-            phone_masked=f"+91 ••••• ••{idx:03d}",
+            phone_masked=phone_masked,
             consent_urgent=True,
             consent_history=True,
             adult=True,

@@ -100,6 +100,14 @@ class FirestoreTransactionStore(TransactionStore):
             return snap.to_dict()
         return None
 
+    async def get_stream_token(self, token_hash: str) -> dict[str, Any] | None:
+        self._assert_can_read()
+        ref = self.client.collection("streamTokens").document(token_hash)
+        snap = await _get_one_doc(self.transaction, ref)
+        if snap and snap.exists:
+            return snap.to_dict()
+        return None
+
     async def get_donor_contact(self, donor_id: str) -> dict[str, Any] | None:
         self._assert_can_read()
         ref = self.client.collection("donorContacts").document(donor_id)
@@ -175,6 +183,19 @@ class FirestoreTransactionStore(TransactionStore):
         payload["dataMode"] = self.data_mode
         payload["isSimulated"] = self.data_mode == "demo"
         self.transaction.set(ref, payload)
+
+    async def save_stream_token(self, token_hash: str, data: dict[str, Any]) -> None:
+        self._has_written = True
+        ref = self.client.collection("streamTokens").document(token_hash)
+        payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        self.transaction.set(ref, payload)
+
+    async def delete_stream_token(self, token_hash: str) -> None:
+        self._has_written = True
+        ref = self.client.collection("streamTokens").document(token_hash)
+        self.transaction.delete(ref)
 
     async def save_donor_contact(self, donor_id: str, data: dict[str, Any]) -> None:
         self._has_written = True
@@ -449,6 +470,23 @@ class FirestoreStore(Store):
         async for doc in query.stream():
             docs.append(doc.to_dict())
         return docs
+
+    # Stream Tokens
+    async def get_stream_token(self, token_hash: str) -> dict[str, Any] | None:
+        ref = self.client.collection("streamTokens").document(token_hash)
+        doc = await ref.get()
+        return doc.to_dict() if doc.exists else None
+
+    async def save_stream_token(self, token_hash: str, data: dict[str, Any]) -> None:
+        ref = self.client.collection("streamTokens").document(token_hash)
+        payload = dict(data)
+        payload["dataMode"] = self.data_mode
+        payload["isSimulated"] = self.data_mode == "demo"
+        await ref.set(payload)
+
+    async def delete_stream_token(self, token_hash: str) -> None:
+        ref = self.client.collection("streamTokens").document(token_hash)
+        await ref.delete()
 
     # Donor Contacts (Vault)
     async def get_donor_contact(self, donor_id: str) -> dict[str, Any] | None:

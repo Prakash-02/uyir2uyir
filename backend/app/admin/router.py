@@ -176,3 +176,49 @@ async def set_telephony_setting(
         "updatedAt": now_iso,
         "ok": True,
     }
+
+
+@router.get("/demo/telephony")
+async def get_demo_telephony_setting() -> dict[str, Any]:
+    """Retrieves current telephony adapter configuration (demo mode only)."""
+    settings = get_settings()
+    if settings.DATA_MODE != "demo":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Demo endpoints are not available in live data mode.",
+        )
+    store = get_store()
+    conf = await store.get_config("telephony") or {}
+    return {
+        "adapter": conf.get("adapter", "simulator"),
+        "consecutiveErrors": conf.get("consecutiveErrors", 0),
+        "lastError": conf.get("lastError"),
+        "updatedAt": conf.get("updatedAt"),
+    }
+
+
+@router.post("/demo/telephony")
+async def set_demo_telephony_setting(
+    payload: TelephonySettingRequest,
+) -> dict[str, Any]:
+    """Switches telephony adapter between simulator and twilio (demo mode only)."""
+    settings = get_settings()
+    if settings.DATA_MODE != "demo":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Demo endpoints are not available in live data mode.",
+        )
+    store = get_store()
+    clock = get_clock()
+    now_iso = clock.now_iso()
+    conf = await store.get_config("telephony") or {}
+    conf["adapter"] = payload.adapter
+    conf["consecutiveErrors"] = 0
+    conf["updatedAt"] = now_iso
+    await store.set_config("telephony", conf)
+    return {
+        "adapter": payload.adapter,
+        "consecutiveErrors": 0,
+        "updatedAt": now_iso,
+        "ok": True,
+    }

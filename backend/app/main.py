@@ -96,12 +96,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     from app.requests.router import router as requests_router
     from app.screening.metrics import router as metrics_router
     from app.screening.router import router as screening_router
+    from app.voice.twilio_stream import router as voice_stream_router
 
     app.include_router(auth_router)
     app.include_router(donors_router)
     app.include_router(requests_router)
     app.include_router(outreach_router)
     app.include_router(twilio_router)
+    app.include_router(voice_stream_router)
     app.include_router(tts_router)
     app.include_router(screening_router)
     app.include_router(desk_router)

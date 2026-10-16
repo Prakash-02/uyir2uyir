@@ -123,9 +123,13 @@ done
 echo "==> [6/7] Deploying Cloud Run service ${SERVICE_NAME}..."
 
 SECRETS_LIST="LINK_SIGNING_KEY=LINK_SIGNING_KEY:latest,PHONE_KEY=PHONE_KEY:latest,INTERNAL_TOKEN=INTERNAL_TOKEN:latest"
-for OPT_SEC in TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_FROM_NUMBER; do
+for OPT_SEC in TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_FROM_NUMBER CALL_ALLOWLIST; do
   if gcloud secrets describe "${OPT_SEC}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
     SECRETS_LIST="${SECRETS_LIST},${OPT_SEC}=${OPT_SEC}:latest"
+    gcloud secrets add-iam-policy-binding "${OPT_SEC}" \
+      --project="${PROJECT_ID}" \
+      --member="serviceAccount:${SA_API}" \
+      --role="roles/secretmanager.secretAccessor" >/dev/null 2>&1 || true
   fi
 done
 
@@ -136,7 +140,8 @@ gcloud run deploy "${SERVICE_NAME}" \
   --allow-unauthenticated \
   --no-cpu-throttling \
   --max-instances 3 \
-  --min-instances 0 \
+  --min-instances 1 \
+  --timeout 300 \
   --env-vars-file infra/env.demo.yaml \
   "--set-secrets=${SECRETS_LIST}" \
   --quiet

@@ -388,6 +388,7 @@ from enum import Enum
 from typing import Optional, List, Generic, TypeVar
 from pydantic import BaseModel, Field
 
+
 class BloodGroup(str, Enum):
     A_POS = "A+"
     A_NEG = "A-"
@@ -398,6 +399,7 @@ class BloodGroup(str, Enum):
     O_POS = "O+"
     O_NEG = "O-"
 
+
 class Component(str, Enum):
     WHOLE_BLOOD = "WHOLE_BLOOD"
     RED_CELLS = "RED_CELLS"
@@ -405,6 +407,7 @@ class Component(str, Enum):
     PLATELETS_RDP = "PLATELETS_RDP"
     PLASMA = "PLASMA"
     UNSPECIFIED = "UNSPECIFIED"
+
 
 class RequestStatus(str, Enum):
     AWAITING_HOSPITAL = "AWAITING_HOSPITAL"
@@ -414,6 +417,7 @@ class RequestStatus(str, Enum):
     EXPIRED = "EXPIRED"
     CANCELLED = "CANCELLED"
     REJECTED = "REJECTED"
+
 
 class CallState(str, Enum):
     QUEUED = "QUEUED"
@@ -429,14 +433,17 @@ class CallState(str, Enum):
     LATE_ACCEPT = "LATE_ACCEPT"
     CANCELLED = "CANCELLED"
 
+
 class Lang(str, Enum):
     EN = "en"
     TA = "ta"
+
 
 class AppConfig(BaseModel):
     dataMode: str = Field(pattern="^(demo|live)$")
     bannerText: Optional[str] = None
     weatherAlert: bool = False
+
 
 class BloodRequest(BaseModel):
     id: str
@@ -457,6 +464,7 @@ class BloodRequest(BaseModel):
     isSimulated: bool = True
     patientRef: Optional[str] = None
 
+
 class Call(BaseModel):
     id: str
     requestId: str
@@ -469,12 +477,15 @@ class Call(BaseModel):
     distanceKm: float
     updatedAt: str
 
+
 T = TypeVar("T")
+
 
 class QuotedField(BaseModel, Generic[T]):
     value: Optional[T] = None
     quote: Optional[str] = None
     kept: bool = False
+
 
 class DeskTrace(BaseModel):
     hospital: QuotedField[str]
@@ -485,6 +496,7 @@ class DeskTrace(BaseModel):
     paymentPhrases: List[str] = []
     geminiChoice: str
     codeDecision: str
+
 
 class DeskResult(BaseModel):
     answer: str = Field(pattern="^(VERIFIED_MATCH|SENT_TO_HOSPITAL|NOT_VERIFIED)$")

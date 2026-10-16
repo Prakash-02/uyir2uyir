@@ -22,6 +22,8 @@ from app.core.store import Store, TransactionStore
 
 # Indian mobile format: optional +91 / 91 / 0 prefix, first digit 6-9, followed by 9 digits
 INDIAN_MOBILE_REGEX = re.compile(r"^(?:(?:\+|00)?91|0)?[6-9]\d{9}$")
+# General E.164 format: leading +, country code (1-9), followed by 6 to 14 digits
+E164_REGEX = re.compile(r"^\+[1-9]\d{6,14}$")
 
 
 def validate_indian_mobile(phone: str) -> str:
@@ -48,6 +50,17 @@ def validate_indian_mobile(phone: str) -> str:
     return f"+91{digits}"
 
 
+def normalize_phone_number(phone: str) -> str:
+    """Validates and normalizes phone number to E.164.
+
+    Accepts numbers in E.164 format (+...) or standard Indian mobile formats.
+    """
+    cleaned = re.sub(r"[\s\-\(\)]", "", phone.strip())
+    if E164_REGEX.match(cleaned):
+        return cleaned
+    return validate_indian_mobile(phone)
+
+
 def get_encryption_key(key_str: str | None = None) -> bytes:
     """Derives a 256-bit AES key from the configured PHONE_KEY."""
     if key_str is None:
@@ -55,9 +68,9 @@ def get_encryption_key(key_str: str | None = None) -> bytes:
     return hashlib.sha256(key_str.encode("utf-8")).digest()
 
 
-def mask_phone_last4(last4: str) -> str:
+def mask_phone_last4(last4: str, prefix: str = "+91") -> str:
     """Formats safe masked representation for staff / audit display."""
-    return f"+91 ••••• ••{last4}"
+    return f"{prefix} ••••• ••{last4}"
 
 
 def encrypt_phone(phone: str, key: bytes | None = None) -> tuple[str, str, str]:
@@ -107,9 +120,10 @@ async def store_donor_contact(
 
     Never stores or returns the raw phone number.
     """
-    normalized = validate_indian_mobile(raw_phone)
+    normalized = normalize_phone_number(raw_phone)
     encrypted_b64, phone_hash, last4 = encrypt_phone(normalized)
 
+    prefix = "+1" if normalized.startswith("+1") else "+91"
     now_iso = datetime.now(UTC).isoformat()
     contact_data = {
         "donorId": donor_id,
@@ -124,5 +138,5 @@ async def store_donor_contact(
         "donorId": donor_id,
         "phoneHash": phone_hash,
         "last4": last4,
-        "phoneMasked": mask_phone_last4(last4),
+        "phoneMasked": mask_phone_last4(last4, prefix=prefix),
     }

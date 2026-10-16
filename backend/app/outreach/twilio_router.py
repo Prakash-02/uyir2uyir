@@ -14,7 +14,7 @@ Guarantees:
 
 import logging
 import uuid
-from urllib.parse import parse_qsl
+from urllib.parse import parse_qsl, urlparse
 
 from fastapi import APIRouter, HTTPException, Request, Response, status
 from twilio.request_validator import RequestValidator
@@ -35,6 +35,7 @@ from app.requests.transitions import (
     apply_press_9,
     apply_reminder_press_2,
 )
+from app.voice.tokens import create_stream_token
 
 logger = logging.getLogger("u2u.outreach.webhooks")
 
@@ -109,29 +110,25 @@ async def twilio_voice_webhook(mode: str, call_id: str, request: Request) -> Res
     if not created:
         return Response(content="<Response/>", media_type="application/xml")
 
-    # Parse call ID: requestId_round_donorId
-    parts = call_id.split("_", 2)
-    request_id = parts[0] if parts else ""
-
-    call = await store.get_call(request_id, call_id)
-    lang = call.lang if call else "ta"
-    lang_str = lang.value if hasattr(lang, "value") else str(lang)
+    token = await create_stream_token(store, call_id)
 
     settings = get_settings()
     base_url = settings.PUBLIC_BASE_URL.rstrip("/")
-    audio_url = f"{base_url}/audio/{request_id}/{lang_str}.mp3"
-    action_url = f"{base_url}/twilio/{mode}/gather/{call_id}"
+    parsed = urlparse(base_url)
+    host = parsed.netloc or parsed.path.lstrip("/")
+    if not host:
+        host = base_url.replace("https://", "").replace("http://", "")
+
+    stream_url = f"wss://{host}/twilio/{mode}/stream/{call_id}"
 
     twiml = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         "<Response>\n"
-        f'    <Gather numDigits="1" timeout="8" action="{action_url}">\n'
-        f"        <Play>{audio_url}</Play>\n"
-        "    </Gather>\n"
-        f'    <Gather numDigits="1" timeout="8" action="{action_url}">\n'
-        f"        <Play>{audio_url}</Play>\n"
-        "    </Gather>\n"
-        "    <Hangup/>\n"
+        "    <Connect>\n"
+        f'        <Stream url="{stream_url}">\n'
+        f'            <Parameter name="token" value="{token}" />\n'
+        "        </Stream>\n"
+        "    </Connect>\n"
         "</Response>"
     )
     return Response(content=twiml, media_type="application/xml")

@@ -1212,8 +1212,60 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `docs/AI_DESIGN.md`
   - `docs/TESTING.md`
   - `docs/PROMPTS.md`
-- **Commit Hash:** Pending
+- **Commit Hash:** 4f4dc67
 - **Human Review:** Verified 93.3% accuracy, 0 gate failures, clean tests and linter.
+
+### Entry #L1
+- **Date:** 2026-10-16
+- **Goal:** Connect real outbound Twilio calls from the outreach module to a two-way WebSocket audio stream on the backend (`wss://u2u-api-demo-3esyvkg5jq-el.a.run.app/twilio/{mode}/stream/{callId}`). Play fixed Cloud Text-to-Speech opening audio, listen for DTMF keypresses 1, 2, and 9 via transitions in transactions, stream closing audio, and hang up.
+- **Prompt Summary:**
+  1. Extended `backend/app/ai/tts.py` to support bilingual speech (`ta-IN`, `en-IN`) with in-memory caching (`_STREAM_AUDIO_CACHE`, strictly zero disk writes). Implemented dual audio output forms: 8 kHz mu-law (via `audioop.lin2ulaw`, WAV headers stripped) for carrier media streams (160 bytes per 20 ms frame) and 24 kHz LINEAR16 PCM for browser playback. Generated templates for `opening` (including consent disclosure: "Your reply is used only to understand your answer and is not stored."), `keypad_prompt` ("Press 1 if you can come, 2 if you can't, 9 to stop calls"), `closing_coming`, `closing_cant`, `closing_stop`, `closing_enough`, and `weather`.
+  2. Created `backend/app/voice/` module:
+     - `tokens.py`: Implemented single-use stream tokens tied to `callId`, stored SHA-256 hashed in Firestore (`streamTokens/{callId}`) with a 2-minute TTL.
+     - `twilio_stream.py`: FastAPI WebSocket handler at `WS /twilio/{mode}/stream/{callId}` handling `connected`, `start`, `media`, `dtmf`, and `stop`. Atomically verifies token and validates `mode == DATA_MODE`. Streams opening audio and keypad prompt in 160-byte base64 frames with sequence marks. On DTMF 1, 2, or 9, executes pure transition functions (`apply_press_1`, `apply_press_2`, `apply_press_9`) in a transaction (`source="phone_keypad"`), streams the matching closing audio, and closes the connection. Handles 20-second keypad inactivity timeout with `apply_call_no_answer`.
+  3. Updated `backend/app/outreach/twilio_adapter.py` and `twilio_router.py`:
+     - Updated call parameters: `timeout=25`, `time_limit=120`, `record=False`.
+     - `POST /twilio/{mode}/voice/{callId}` creates a stream token and returns TwiML `<Connect><Stream>` pointing to the WebSocket stream URL with the token parameter.
+     - `POST /twilio/{mode}/status/{callId}` validates `X-Twilio-Signature`, handles `no-answer`, `busy`, `failed` -> `NO_ANSWER`, and deduplicates on CallSid + status.
+  4. Added dynamic telephony adapter switcher:
+     - Added `GET /admin/demo/telephony` and `POST /admin/demo/telephony` demo admin endpoints.
+     - Created CLI script `backend/scripts/switch_telephony.py` to inspect and switch the active telephony adapter between `simulator` and `twilio`.
+     - Maintained automatic fallback to simulator after 3 consecutive Twilio errors.
+  5. Updated phone vault and seeding:
+     - Extended `backend/app/core/phone_vault.py` with standard E.164 normalization for non-IN numbers (e.g. US Twilio numbers).
+     - Updated `backend/scripts/seed.py` to optionally load verified team phone numbers from environment variable `DEMO_VERIFIED_PHONES` into the encrypted phone vault for demo donors `donor-a1`..`donor-a3`.
+  6. Updated deployment configurations:
+     - Updated `infra/deploy_backend_demo.ps1` and `infra/deploy_backend_demo.sh` with `--timeout 300`, `--min-instances 1`, and Secret Manager accessor bindings for `CALL_ALLOWLIST`.
+     - Updated `infra/env.demo.yaml` with `PUBLIC_BASE_URL: "https://u2u-api-demo-3esyvkg5jq-el.a.run.app"`.
+  7. Verification:
+     - Added 8 tests in `backend/tests/test_twilio_stream.py` verifying bad token rejection, mode mismatch rejection, 160-byte frame alignment & zero disk writes, DTMF 1 idempotency, DTMF 2, DTMF 9, timeout to `NO_ANSWER`, and unallowlisted phone refusal.
+     - Full backend test suite passed: 133 tests passed, 1 skipped. Ruff lint passed with 0 errors.
+     - Full frontend test suite passed: 115 tests passed across 19 files. Oxlint passed with 0 errors.
+- **Files Changed:**
+  - `backend/app/admin/router.py`
+  - `backend/app/ai/tts.py`
+  - `backend/app/core/phone_vault.py`
+  - `backend/app/core/store.py`
+  - `backend/app/core/store_firestore.py`
+  - `backend/app/core/store_memory.py`
+  - `backend/app/main.py`
+  - `backend/app/outreach/service.py`
+  - `backend/app/outreach/twilio_adapter.py`
+  - `backend/app/outreach/twilio_router.py`
+  - `backend/app/voice/__init__.py`
+  - `backend/app/voice/tokens.py`
+  - `backend/app/voice/twilio_stream.py`
+  - `backend/scripts/seed.py`
+  - `backend/scripts/switch_telephony.py`
+  - `backend/tests/test_twilio_stream.py`
+  - `docs/ARCHITECTURE.md`
+  - `docs/PROMPTS.md`
+  - `infra/deploy_backend_demo.ps1`
+  - `infra/deploy_backend_demo.sh`
+  - `infra/env.demo.yaml`
+  - `run.ps1`
+- **Commit Hash:** 2710150
+- **Human Review:** Verified WebSocket audio stream, 160-byte mu-law framing, DTMF handling, security token validation, and test suite.
 
 ---
 

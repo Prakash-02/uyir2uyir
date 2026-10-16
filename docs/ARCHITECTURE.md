@@ -426,7 +426,7 @@ Cloud Scheduler executes an automated HTTP POST request every minute (`* * * * *
 
 ## 8. Telephony & Voice Outreach Architecture
 
-U2U implements a dual telephony dispatch architecture supporting simulated in-browser demonstration and real outbound carrier calls to allowlisted team numbers:
+U2U implements a dual telephony dispatch architecture supporting simulated in-browser demonstration and real outbound carrier calls to allowlisted team numbers via Twilio Media Streams:
 
 ```mermaid
 flowchart TD
@@ -438,17 +438,26 @@ flowchart TD
     TW -->|Dial-time Vault Read| VAULT["decrypt_phone()<br/>app/core/phone_vault.py"]
     VAULT --> ALLOW{"In CALL_ALLOWLIST?"}
     ALLOW -->|No| REFUSE["Refuse Call (ValueError)<br/>Never dials unverified phone"]
-    ALLOW -->|Yes| DIAL["Twilio REST API<br/>calls.create(to, from, url, status_callback)"]
+    ALLOW -->|Yes| DIAL["Twilio REST API<br/>calls.create(to, from, url, status_callback)<br/>timeout=25, time_limit=120, record=False"]
     
     DIAL -->|Call Placed| PHONE["Team Phone Rings"]
     PHONE -->|Voice Webhook| VOICE["POST /twilio/{mode}/voice/{callId}"]
-    VOICE --> PLAY["TwiML: <Play> TTS Audio<br/>GET /audio/{templateId}/{lang}.mp3"]
-    VOICE --> GATH["TwiML: <Gather numDigits=1 timeout=8>"]
+    VOICE --> TOK["tokens.py<br/>create_stream_token(callId)"]
+    TOK --> TWIML["TwiML Response:<br/>&lt;Connect&gt;&lt;Stream url='wss://.../twilio/{mode}/stream/{callId}'&gt;<br/>&lt;Parameter name='token' value='...' /&gt;&lt;/Stream&gt;&lt;/Connect&gt;"]
     
-    PHONE -->|Keypress 1, 2, 9| GATHER_WH["POST /twilio/{mode}/gather/{callId}"]
-    GATHER_WH --> TRANS["transitions.py<br/>apply_press_1 / 2 / 9"]
+    TWIML --> WSS["Twilio WebSocket Media Stream<br/>WS /twilio/{mode}/stream/{callId}<br/>app/voice/twilio_stream.py"]
     
-    PHONE -->|No answer / Busy / Hangup| STATUS_WH["POST /twilio/{mode}/status/{callId}"]
+    subgraph MediaStream["WebSocket Two-Way Stream (Zero Disk Storage)"]
+        WSS --> VTOK["verify_and_consume_stream_token()<br/>SHA-256 hashed, 2-min expiry, single-use"]
+        VTOK --> OPENING["Stream Opening Audio + Keypad Prompt<br/>tts.py (8 kHz mu-law, 160B/20ms frames)"]
+        OPENING --> LISTEN["Listen for Twilio 'dtmf' events"]
+        LISTEN -->|DTMF 1, 2, 9| TRANS["transitions.py (Transaction)<br/>apply_press_1 / 2 / 9 (source='phone_keypad')"]
+        TRANS --> CLOSING["Stream Closing Audio (mu-law)"]
+        CLOSING --> HANGUP["Close WebSocket Connection"]
+        LISTEN -->|20s Inactivity| TIMEOUT["apply_call_no_answer()<br/>Close WebSocket"]
+    end
+    
+    PHONE -->|No answer / Busy / Failed| STATUS_WH["POST /twilio/{mode}/status/{callId}"]
     STATUS_WH --> NO_ANS["apply_call_no_answer()<br/>transitions.py"]
     
     TW -.->|3 Consecutive Errors| FALLBACK["Switch config/telephony.adapter -> simulator<br/>Append TELEPHONY_FALLBACK event"]
@@ -460,11 +469,14 @@ flowchart TD
 | Component | File Path | Responsibilities |
 |---|---|---|
 | **Telephony Protocol & Simulator** | [`backend/app/outreach/adapter.py`](../backend/app/outreach/adapter.py) | Defines `TelephonyAdapter` protocol and `SimulatorAdapter` marking calls `RINGING` for UI simulator. |
-| **Twilio Adapter** | [`backend/app/outreach/twilio_adapter.py`](../backend/app/outreach/twilio_adapter.py) | Places outbound calls via Twilio Voice API (`timeout=25`, `time_limit=90`, `record=False`). Decrypts phone from vault at dial time and enforces `CALL_ALLOWLIST`. Tracks consecutive errors and switches to simulator after 3 failures. |
-| **Twilio Webhooks Router** | [`backend/app/outreach/twilio_router.py`](../backend/app/outreach/twilio_router.py) | Handles `/twilio/{mode}/voice/{callId}`, `/twilio/{mode}/gather/{callId}`, and `/twilio/{mode}/status/{callId}`. Validates `X-Twilio-Signature` using `twilio.request_validator.RequestValidator` against `PUBLIC_BASE_URL`. Enforces `mode == DATA_MODE` (403 on mismatch) and deduplicates events on `webhookEvents/{CallSid}_{event}` using create-only. |
-| **Cloud Text-to-Speech** | [`backend/app/ai/tts.py`](../backend/app/ai/tts.py) | Synthesizes bilingual audio scripts (`ta-IN-Standard-A` for Tamil, `en-IN-Standard-A` for English) once per template, language, and weather flag. Caches MP3 in memory and `/tmp`, served via `GET /audio/{templateId}/{lang}.mp3`. |
-| **Outreach Orchestrator** | [`backend/app/outreach/service.py`](../backend/app/outreach/service.py) | Dispatches round calls, dynamically chooses telephony adapter via `get_telephony_adapter()`, and registers audio templates. |
-| **Admin Controls** | [`backend/app/admin/router.py`](../backend/app/admin/router.py) | Exposes `GET /admin/settings/telephony` and `POST /admin/settings/telephony` for dynamic adapter inspection and toggling. |
+| **Twilio Adapter** | [`backend/app/outreach/twilio_adapter.py`](../backend/app/outreach/twilio_adapter.py) | Places outbound calls via Twilio Voice API (`timeout=25`, `time_limit=120`, `record=False`). Decrypts phone from vault at dial time and enforces `CALL_ALLOWLIST`. Tracks consecutive errors and switches to simulator after 3 failures. |
+| **Twilio Webhooks Router** | [`backend/app/outreach/twilio_router.py`](../backend/app/outreach/twilio_router.py) | Handles `POST /twilio/{mode}/voice/{callId}` (creates stream token, returns TwiML `<Connect><Stream>`) and `POST /twilio/{mode}/status/{callId}` (handles no-answer, busy, failed; dedupes on CallSid + status). Validates `X-Twilio-Signature` using `RequestValidator`. Enforces `mode == DATA_MODE` (403 on mismatch). |
+| **Stream Tokens** | [`backend/app/voice/tokens.py`](../backend/app/voice/tokens.py) | Manages single-use stream tokens tied to `callId`. Stored SHA-256 hashed in Firestore `streamTokens/{callId}` with 2-minute TTL. Validated and consumed atomically on WebSocket `start`. |
+| **Twilio Media Stream** | [`backend/app/voice/twilio_stream.py`](../backend/app/voice/twilio_stream.py) | FastAPI WebSocket endpoint at `WS /twilio/{mode}/stream/{callId}`. Handles `connected`, `start`, `media`, `dtmf`, and `stop`. Streams 8 kHz mu-law audio in 160-byte (20 ms) frames with sequence marks. Applies DTMF 1, 2, or 9 idempotently via transitions in transactions (`source="phone_keypad"`). Enforces 20-second timeout to `NO_ANSWER`. Never writes audio to disk. |
+| **Cloud Text-to-Speech Engine** | [`backend/app/ai/tts.py`](../backend/app/ai/tts.py) | Synthesizes bilingual audio scripts (`ta-IN` for Tamil, `en-IN` for English) with consent disclosure. Produces 8 kHz mu-law (via `audioop.lin2ulaw`, WAV header stripped) for phone streams and 24 kHz LINEAR16 PCM for browser playback. Cached strictly in memory (`_STREAM_AUDIO_CACHE`). |
+| **Outreach Orchestrator** | [`backend/app/outreach/service.py`](../backend/app/outreach/service.py) | Dispatches round calls, dynamically chooses telephony adapter via `get_telephony_adapter()`, and manages outreach state. |
+| **Telephony Switcher & Admin** | [`backend/app/admin/router.py`](../backend/app/admin/router.py) & [`backend/scripts/switch_telephony.py`](../backend/scripts/switch_telephony.py) | Exposes `GET /admin/demo/telephony` and `POST /admin/demo/telephony` endpoints and CLI script to dynamically toggle between `simulator` and `twilio` adapters. |
+
 
 ---
 

@@ -154,7 +154,7 @@ def test_mode_mismatch_gives_403(twilio_client: TestClient):
 
 @pytest.mark.asyncio
 async def test_voice_webhook_returns_twiml(twilio_client: TestClient):
-    """Voice webhook returns TwiML with <Play> and <Gather> replayed once, then <Hangup>."""
+    """Voice webhook returns TwiML with <Connect><Stream> connecting to WebSocket."""
     store = get_store()
     await _seed_test_request_and_call(store)
 
@@ -168,13 +168,10 @@ async def test_voice_webhook_returns_twiml(twilio_client: TestClient):
     xml = resp.text
 
     assert "<Response>" in xml
-    assert "<Play>" in xml
-    assert "/audio/req-test-1/ta.mp3" in xml
-    assert '<Gather numDigits="1" timeout="8"' in xml
-    assert "/twilio/demo/gather/req-test-1_1_d1" in xml
-    assert "<Hangup/>" in xml
-    # Check that it is replayed once (appears twice in TwiML)
-    assert xml.count("<Gather") == 2
+    assert "<Connect>" in xml
+    assert "<Stream" in xml
+    assert "/twilio/demo/stream/req-test-1_1_d1" in xml
+    assert '<Parameter name="token"' in xml
 
 
 @pytest.mark.asyncio
@@ -278,7 +275,7 @@ async def test_allowlisted_number_places_call():
     kwargs = mock_twilio_client.calls.create.call_args.kwargs
     assert kwargs["to"] == "+919876543210"
     assert kwargs["timeout"] == 25
-    assert kwargs["time_limit"] == 90
+    assert kwargs["time_limit"] == 120
     assert kwargs["record"] is False
     assert f"/twilio/demo/voice/{call.id}" in kwargs["url"]
     assert f"/twilio/demo/status/{call.id}" in kwargs["status_callback"]

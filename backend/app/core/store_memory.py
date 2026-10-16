@@ -21,6 +21,7 @@ class MemoryTransactionStore(TransactionStore):
         self._pending_configs: dict[str, dict[str, Any]] = {}
         self._pending_locks: dict[str, dict[str, Any]] = {}
         self._pending_confirm_links: dict[str, dict[str, Any]] = {}
+        self._pending_stream_tokens: dict[str, dict[str, Any] | None] = {}
         self._pending_donor_contacts: dict[str, dict[str, Any]] = {}
         self._pending_consent_events: list[tuple[str, dict[str, Any]]] = []
         self._pending_audit_entries: list[dict[str, Any]] = []
@@ -93,6 +94,19 @@ class MemoryTransactionStore(TransactionStore):
     async def save_confirm_link(self, token_hash: str, data: dict[str, Any]) -> None:
         self._pending_confirm_links[token_hash] = dict(data)
 
+    async def get_stream_token(self, token_hash: str) -> dict[str, Any] | None:
+        if token_hash in self._pending_stream_tokens:
+            val = self._pending_stream_tokens[token_hash]
+            return dict(val) if val is not None else None
+        token = self._store._stream_tokens.get(token_hash)
+        return dict(token) if token is not None else None
+
+    async def save_stream_token(self, token_hash: str, data: dict[str, Any]) -> None:
+        self._pending_stream_tokens[token_hash] = dict(data)
+
+    async def delete_stream_token(self, token_hash: str) -> None:
+        self._pending_stream_tokens[token_hash] = None
+
     async def get_donor_contact(self, donor_id: str) -> dict[str, Any] | None:
         if donor_id in self._pending_donor_contacts:
             return dict(self._pending_donor_contacts[donor_id])
@@ -141,6 +155,12 @@ class MemoryTransactionStore(TransactionStore):
         for token_hash, link_data in self._pending_confirm_links.items():
             self._store._confirm_links[token_hash] = link_data
 
+        for token_hash, token_data in self._pending_stream_tokens.items():
+            if token_data is None:
+                self._store._stream_tokens.pop(token_hash, None)
+            else:
+                self._store._stream_tokens[token_hash] = token_data
+
         for donor_id, contact in self._pending_donor_contacts.items():
             self._store._donor_contacts[donor_id] = contact
 
@@ -174,6 +194,7 @@ class MemoryStore(Store):
         self._locks: dict[str, dict[str, Any]] = {}
         self._pastes: dict[str, dict[str, Any]] = {}
         self._confirm_links: dict[str, dict[str, Any]] = {}
+        self._stream_tokens: dict[str, dict[str, Any]] = {}
         self._donor_contacts: dict[str, dict[str, Any]] = {}
         self._consents: dict[str, list[dict[str, Any]]] = {}
         self._audit: list[dict[str, Any]] = []
@@ -201,6 +222,7 @@ class MemoryStore(Store):
         self._locks.clear()
         self._pastes.clear()
         self._confirm_links.clear()
+        self._stream_tokens.clear()
         self._donor_contacts.clear()
         self._consents.clear()
         self._audit.clear()
@@ -371,6 +393,20 @@ class MemoryStore(Store):
                 for link in self._confirm_links.values()
                 if link.get("hospitalId") == hospital_id or link.get("hospital_id") == hospital_id
             ]
+
+    # Stream Tokens
+    async def get_stream_token(self, token_hash: str) -> dict[str, Any] | None:
+        async with self._lock:
+            token = self._stream_tokens.get(token_hash)
+            return dict(token) if token is not None else None
+
+    async def save_stream_token(self, token_hash: str, data: dict[str, Any]) -> None:
+        async with self._lock:
+            self._stream_tokens[token_hash] = dict(data)
+
+    async def delete_stream_token(self, token_hash: str) -> None:
+        async with self._lock:
+            self._stream_tokens.pop(token_hash, None)
 
     # Donor Contacts (Vault)
     async def get_donor_contact(self, donor_id: str) -> dict[str, Any] | None:

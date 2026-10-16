@@ -14,22 +14,32 @@ if (-not (Test-Path $VenvPython)) {
 switch ($Command) {
     "lint" {
         Write-Host "==> Running ruff check..." -ForegroundColor Cyan
-        & $VenvPython -m ruff check .
+        & $VenvPython -m ruff check $PSScriptRoot
         Write-Host "==> Running ruff format --check..." -ForegroundColor Cyan
-        & $VenvPython -m ruff format --check .
+        & $VenvPython -m ruff format --check $PSScriptRoot
     }
     "test" {
         Write-Host "==> Running pytest..." -ForegroundColor Cyan
-        & $VenvPython -m pytest
+        Push-Location $PSScriptRoot
+        try {
+            & $VenvPython -m pytest
+        } finally {
+            Pop-Location
+        }
     }
     "dev" {
         Write-Host "==> Starting uvicorn dev server on port 8080..." -ForegroundColor Cyan
-        & $VenvPython -m uvicorn app.main:app --reload --port 8080
+        Push-Location $PSScriptRoot
+        try {
+            & $VenvPython -m uvicorn app.main:app --reload --port 8080
+        } finally {
+            Pop-Location
+        }
     }
     "format" {
         Write-Host "==> Formatting code with ruff..." -ForegroundColor Cyan
-        & $VenvPython -m ruff format .
-        & $VenvPython -m ruff check --fix .
+        & $VenvPython -m ruff format $PSScriptRoot
+        & $VenvPython -m ruff check --fix $PSScriptRoot
     }
     default {
         Write-Host "Unknown command '$Command'. Usage: .\run.ps1 [lint|test|dev|format]" -ForegroundColor Red

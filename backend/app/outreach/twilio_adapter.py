@@ -125,7 +125,7 @@ class TwilioAdapter(TelephonyAdapter):
                 status_callback=status_url,
                 status_callback_event=["completed", "busy", "no-answer", "failed"],
                 timeout=25,
-                time_limit=90,
+                time_limit=120,
                 record=False,
             )
             await self._record_success()
