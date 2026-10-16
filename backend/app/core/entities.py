@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from app.core.models import CamelModel
 from app.requests.models import BloodGroup, Lang
 
@@ -5,6 +7,7 @@ from app.requests.models import BloodGroup, Lang
 class Hospital(CamelModel):
     id: str
     name: str
+    aliases: list[str] = Field(default_factory=list)
     centre_id: str = ""
     area: str
     city: str = "Chennai"

@@ -29,6 +29,7 @@ HOSPITALS_FIXTURE = [
     {
         "id": DEMO_STORY_HOSPITAL_ID,
         "name": "Sample General Hospital, Chennai",
+        "aliases": ["Sample General Hospital", "SGH"],
         "area": "Adyar",
         "city": "Chennai",
         "centreId": DEMO_STORY_CENTRE_ID,
@@ -36,6 +37,7 @@ HOSPITALS_FIXTURE = [
     {
         "id": "hosp-sample-2",
         "name": "Metropolitan Care Hospital, Chennai",
+        "aliases": ["Metropolitan Care Hospital", "MCH"],
         "area": "Anna Nagar",
         "city": "Chennai",
         "centreId": "centre-sample-2",
@@ -43,6 +45,11 @@ HOSPITALS_FIXTURE = [
     {
         "id": "hosp-sample-3",
         "name": "Coastal District Hospital, Chennai",
+        "aliases": [
+            "Coastal District Hospital",
+            "CDH",
+            "கோஸ்டல் டிஸ்ட்ரிக்ட் ஹாஸ்பிடல் சென்னை",
+        ],
         "area": "Mylapore",
         "city": "Chennai",
         "centreId": DEMO_STORY_CENTRE_ID,

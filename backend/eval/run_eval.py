@@ -113,7 +113,7 @@ async def run_evaluation(
     if verbose:
         print(f"\n[*] Starting U2U Request Desk Evaluation ({len(messages)} labelled test cases)")
         print(
-            f"[*] Prompt Version: desk_extract_v1 | Store: {current_settings.STORE} | Model: {current_settings.GEMINI_MODEL}"
+            f"[*] Prompt Version: desk_extract_v2 | Store: {current_settings.STORE} | Model: {current_settings.GEMINI_MODEL}"
         )
         print("-" * 75)
         print(f"{'ID':<8} {'Category':<26} {'Expected':<18} {'Got':<18} {'Status':<6} {'Latency'}")
@@ -221,7 +221,7 @@ async def run_evaluation(
     run_at_iso = datetime.now(UTC).isoformat()
 
     eval_result = EvalResult(
-        prompt_version="desk_extract_v1",
+        prompt_version="desk_extract_v2",
         run_at=run_at_iso,
         total=total,
         correct=correct,

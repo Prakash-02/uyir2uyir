@@ -1,41 +1,41 @@
 {
-  "promptVersion": "desk_extract_v1",
-  "runAt": "2026-10-16T09:03:26.337078+00:00",
+  "promptVersion": "desk_extract_v2",
+  "runAt": "2026-10-16T09:35:59.420455+00:00",
   "total": 30,
-  "correct": 19,
+  "correct": 28,
   "paymentToHospital": 0,
   "wrongHospitalIds": 0,
-  "p95LatencyMs": 5996.13,
+  "p95LatencyMs": 4583.05,
   "rows": [
     {
       "id": "msg-01",
       "expected": "VERIFIED_MATCH",
-      "got": "NOT_VERIFIED",
-      "pass": false
+      "got": "VERIFIED_MATCH",
+      "pass": true
     },
     {
       "id": "msg-02",
       "expected": "VERIFIED_MATCH",
-      "got": "NOT_VERIFIED",
-      "pass": false
+      "got": "VERIFIED_MATCH",
+      "pass": true
     },
     {
       "id": "msg-03",
       "expected": "SENT_TO_HOSPITAL",
-      "got": "NOT_VERIFIED",
-      "pass": false
+      "got": "SENT_TO_HOSPITAL",
+      "pass": true
     },
     {
       "id": "msg-04",
       "expected": "SENT_TO_HOSPITAL",
-      "got": "NOT_VERIFIED",
-      "pass": false
+      "got": "SENT_TO_HOSPITAL",
+      "pass": true
     },
     {
       "id": "msg-05",
       "expected": "SENT_TO_HOSPITAL",
-      "got": "NOT_VERIFIED",
-      "pass": false
+      "got": "SENT_TO_HOSPITAL",
+      "pass": true
     },
     {
       "id": "msg-06",
@@ -118,26 +118,26 @@
     {
       "id": "msg-19",
       "expected": "SENT_TO_HOSPITAL",
-      "got": "NOT_VERIFIED",
-      "pass": false
+      "got": "SENT_TO_HOSPITAL",
+      "pass": true
     },
     {
       "id": "msg-20",
       "expected": "SENT_TO_HOSPITAL",
-      "got": "NOT_VERIFIED",
-      "pass": false
+      "got": "SENT_TO_HOSPITAL",
+      "pass": true
     },
     {
       "id": "msg-21",
       "expected": "SENT_TO_HOSPITAL",
-      "got": "NOT_VERIFIED",
-      "pass": false
+      "got": "SENT_TO_HOSPITAL",
+      "pass": true
     },
     {
       "id": "msg-22",
       "expected": "SENT_TO_HOSPITAL",
-      "got": "NOT_VERIFIED",
-      "pass": false
+      "got": "SENT_TO_HOSPITAL",
+      "pass": true
     },
     {
       "id": "msg-23",

@@ -23,7 +23,7 @@ At U2U, the boundary is absolute:
 |---|---|---|
 | **1. Ingestion & Guardrails** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | Capped at 2,000 characters. In-memory IP rate limiter (10 per minute per IP). |
 | **2. Deduplication & Caching** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | SHA-256 fingerprint of normalized text. Deduplicates repeats within 24h. Raw text discarded. |
-| **3. Model Extraction** | [`backend/app/ai/gemini.py`](../backend/app/ai/gemini.py) | One call to Gemini Flash (`temperature: 0.0`, strict JSON schema, 8s timeout). Prompt: [`desk_extract_v1.md`](../backend/prompts/desk_extract_v1.md). |
+| **3. Model Extraction** | [`backend/app/ai/gemini.py`](../backend/app/ai/gemini.py) | One call to Gemini Flash (`gemini-2.5-flash`, `thinking_budget: 0`, `temperature: 0.0`, strict JSON schema with hospital table and dynamic ID enum, 8s timeout). Prompt: [`desk_extract_v2.md`](../backend/prompts/desk_extract_v2.md). |
 | **4. Quote Check** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | Verbatim character-for-character check against original text. Unmatched quotes dropped (`kept=False`, `value=None`). |
 | **5. Canonical Dictionaries** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | PRBC/PCV $\to$ `RED_CELLS`, SDP/apheresis $\to$ `PLATELETS_SDP`, RDP $\to$ `PLATELETS_RDP`, pints $\to$ `UNSPECIFIED`. Blood group normalisation (EN & TA). |
 | **6. Hospital & Alias Check** | [`backend/app/desk/pipeline.py`](../backend/app/desk/pipeline.py) | Exact registered hospital catalog match. Generic acronyms (e.g. "GH") trigger: `"Please paste again with the full hospital name."` |
@@ -178,11 +178,21 @@ The Request Desk pipeline is benchmarked against a curated, labelled evaluation 
 - **Zero-Tolerance Safety Rules:**
   - `paymentToHospital`: Must equal **0**. (Zero instances of commercial payment requests forwarded to hospital staff).
   - `wrongHospitalIds`: Must equal **0**. (Zero instances of attributing a message to an incorrect hospital).
-- **Tracked Metrics (`GET /eval/latest`):**
-  - Prompt version and timestamp.
-  - Overall accuracy percentage ($\text{correct} / \text{total}$).
-  - P95 response latency in milliseconds.
-  - Itemized pass/fail trace rows visible to hackathon judg## 7. Gemini Live Spike Results
+  - Tracked Metrics (`GET /eval/latest`): prompt version, run timestamp, accuracy, zero-tolerance safety gates, P95 latency, and itemized rows.
+
+### Latest Benchmark Results (Prompt `desk_extract_v2`)
+- **Model:** `gemini-2.5-flash` (`asia-south1`)
+- **Thinking Configuration:** `ThinkingConfig(thinking_budget=0)`
+- **Prompt Version:** `desk_extract_v2`
+- **Total Test Cases:** 30
+- **Correct Answers:** **28 / 30 (93.3%)**
+- **Safety Gate 1 (`paymentToHospital`):** **0** (Zero tolerance PASS)
+- **Safety Gate 2 (`wrongHospitalIds`):** **0** (Zero tolerance PASS)
+- **P95 Latency:** **4,583.1 ms**
+
+---
+
+## 7. Gemini Live Spike Results
 
 To evaluate whether bidirectional real-time streaming audio (Gemini Multimodal Live API) could power automated emergency blood donor calling, an empirical spike script was executed: [`backend/scripts/live_spike.py`](../backend/scripts/live_spike.py).
 

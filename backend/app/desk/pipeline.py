@@ -230,11 +230,10 @@ async def check_desk_pipeline(
 
     # Step b: One Gemini call with registered hospital list
     hospitals = await s.list_hospitals()
-    hospital_ids = [h.id for h in hospitals]
 
     extractor = get_gemini_extractor()
     try:
-        extraction: GeminiExtraction = await extractor.extract(text, hospital_ids)
+        extraction: GeminiExtraction = await extractor.extract(text, hospitals)
     except AIUnavailable as exc:
         logger.warning("Gemini unavailable: %s", exc)
         return DeskResult(

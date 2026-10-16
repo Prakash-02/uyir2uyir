@@ -1,5 +1,6 @@
 import os
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -41,8 +42,10 @@ class FakeGemini:
         self.default = GeminiExtraction()
         self.calls: list[tuple[str, list[str]]] = []
 
-    async def extract(self, text: str, hospital_ids: list[str]) -> GeminiExtraction:
-        self.calls.append((text, hospital_ids))
+    async def extract(
+        self, text: str, hospitals: Any = None, *, hospital_ids: Any = None
+    ) -> GeminiExtraction:
+        self.calls.append((text, hospitals or hospital_ids or []))
         for key, result in self.mapping.items():
             if key in text:
                 return result

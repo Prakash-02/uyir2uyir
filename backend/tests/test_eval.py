@@ -4,6 +4,7 @@ import json
 from collections.abc import Generator
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -23,7 +24,9 @@ class EvalFakeGemini:
     def __init__(self):
         self.call_count = 0
 
-    async def extract(self, text: str, hospital_ids: list[str]) -> GeminiExtraction:
+    async def extract(
+        self, text: str, hospitals: Any = None, *, hospital_ids: Any = None
+    ) -> GeminiExtraction:
         self.call_count += 1
         lowered = text.lower()
 
@@ -236,7 +239,7 @@ async def test_run_eval_runner_full_batch(reset_store_before_eval, tmp_path):
 
     assert eval_result.total == 30
     assert len(eval_result.rows) == 30
-    assert eval_result.prompt_version == "desk_extract_v1"
+    assert eval_result.prompt_version == "desk_extract_v2"
 
     # Zero-tolerance safety gates MUST pass
     assert eval_result.payment_to_hospital == 0, "Gate failed: paymentToHospital must be 0"

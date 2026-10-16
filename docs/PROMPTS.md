@@ -1173,6 +1173,48 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** fe4afcb
 - **Human Review:** Verified 100% zero-tolerance safety gate compliance (0 commercial leaks, 0 wrong hospital attributions).
 
+### Entry #L0d
+- **Date:** 2026-10-16
+- **Goal:** Fix Request Desk hospital matching: pass hospital names, aliases, and city to Gemini in a structured table, bump prompt to v2, disable thinking on Gemini 2.5 Flash, and achieve >90% eval accuracy with zero safety gate violations.
+- **Prompt Summary:**
+  1. Diagnosed root cause of 19/30 eval score: `backend/app/ai/gemini.py` was passing only raw IDs (`ALLOWED_HOSPITAL_IDS: [hosp-sample-1, ...]`) with zero names, aliases, or city mappings. When messages named "Sample General Hospital" or "Metropolitan Care Hospital", Gemini had no mapping and returned `NONE`, turning every message into `NOT_VERIFIED`.
+  2. Updated `backend/app/core/entities.py` to add `aliases: list[str] = Field(default_factory=list)` to `Hospital`.
+  3. Updated `backend/scripts/seed.py` to add aliases to seeded fixtures:
+     - `hosp-sample-1`: `["Sample General Hospital", "SGH"]`
+     - `hosp-sample-2`: `["Metropolitan Care Hospital", "MCH"]`
+     - `hosp-sample-3`: `["Coastal District Hospital", "CDH", "கோஸ்டல் டிஸ்ட்ரிக்ட் ஹாஸ்பிடல் சென்னை"]`
+  4. Created versioned prompt `backend/prompts/desk_extract_v2.md` instructing Gemini to match against the `REGISTERED HOSPITALS TABLE` (`ID | full name | aliases | city`), pick the ID whose name or alias appears in the message, and return verbatim substring quotes.
+  5. Updated `backend/app/ai/gemini.py`:
+     - Added `format_hospital_table` generating `ID | full name | aliases | city`.
+     - Built dynamic Pydantic `response_schema` constraining `hospital.value` to an enum of registered IDs plus `"NONE"`.
+     - Set `thinking_config=ThinkingConfig(thinking_budget=0)` to disable internal reasoning tokens and reduce latency.
+     - Kept temperature 0.0 and JSON schema.
+  6. Updated `backend/app/desk/pipeline.py` to pass loaded `Hospital` objects to `extractor.extract(text, hospitals)`, preserving verbatim quote verification and ambiguity checks.
+  7. Re-ran `backend/scripts/desk_smoke.py`:
+     - Sample 1: `SENT_TO_HOSPITAL` (`Sample General Hospital, Chennai`, `IP-101`, `O+`, `RED_CELLS`, `2 units` kept).
+     - Sample 2: `SENT_TO_HOSPITAL` (`Metropolitan Care Hospital, Chennai`, `B+`, `2 units` kept).
+     - Sample 3: `NOT_VERIFIED` (`Couldn't verify. Requests offering or soliciting payment are prohibited.`) with payment phrases flagged and mandatory footer `"Nobody may charge you for a donor."`.
+  8. Re-ran evaluation benchmark (`backend/eval/run_eval.py`):
+     - Accuracy: **28 / 30 (93.3%)** (up from 19/30).
+     - Safety Gate 1 (`paymentToHospital`): **0** (PASS).
+     - Safety Gate 2 (`wrongHospitalIds`): **0** (PASS).
+     - P95 Latency: **4,583.1 ms**.
+  9. Verified test suite and linters: `.\run.ps1 lint` (0 errors) and `.\run.ps1 test` (125 passed, 1 skipped).
+- **Files Changed:**
+  - `backend/app/ai/gemini.py`
+  - `backend/app/core/entities.py`
+  - `backend/app/desk/pipeline.py`
+  - `backend/eval/run_eval.py`
+  - `backend/prompts/desk_extract_v2.md`
+  - `backend/scripts/seed.py`
+  - `backend/tests/test_desk_pipeline.py`
+  - `backend/tests/test_eval.py`
+  - `docs/AI_DESIGN.md`
+  - `docs/TESTING.md`
+  - `docs/PROMPTS.md`
+- **Commit Hash:** Pending
+- **Human Review:** Verified 93.3% accuracy, 0 gate failures, clean tests and linter.
+
 ---
 
 ## Human Decisions

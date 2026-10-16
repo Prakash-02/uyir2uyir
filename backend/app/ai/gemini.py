@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Literal, Protocol
 
 from google import genai
 from google.genai import types
@@ -39,10 +39,73 @@ class GeminiExtraction(BaseModel):
     payment_phrases: list[str] = Field(default_factory=list)
 
 
+def format_hospital_table(hospitals: list[Any]) -> str:
+    """Formats hospital list into table lines: ID | full name | aliases | city."""
+    lines: list[str] = []
+    for h in hospitals:
+        if isinstance(h, str):
+            lines.append(f"{h} | {h} | None | Chennai")
+        elif isinstance(h, dict):
+            h_id = h.get("id", "")
+            name = h.get("name", "")
+            aliases_raw = h.get("aliases", [])
+            aliases_str = ", ".join(aliases_raw) if aliases_raw else "None"
+            city = h.get("city", "Chennai")
+            lines.append(f"{h_id} | {name} | {aliases_str} | {city}")
+        else:
+            h_id = getattr(h, "id", "")
+            name = getattr(h, "name", "")
+            aliases_raw = getattr(h, "aliases", [])
+            aliases_str = ", ".join(aliases_raw) if aliases_raw else "None"
+            city = getattr(h, "city", "Chennai")
+            lines.append(f"{h_id} | {name} | {aliases_str} | {city}")
+    return "\n".join(lines)
+
+
+def get_hospital_ids(hospitals: list[Any]) -> list[str]:
+    """Extracts hospital IDs from strings, dicts, or Hospital entities."""
+    ids: list[str] = []
+    for h in hospitals:
+        if isinstance(h, str):
+            ids.append(h)
+        elif isinstance(h, dict):
+            if "id" in h:
+                ids.append(h["id"])
+        elif hasattr(h, "id"):
+            ids.append(h.id)
+    return ids
+
+
+def create_extraction_schema(hospital_ids: list[str]) -> type[BaseModel]:
+    """Dynamically creates response_schema with hospital.value enum limited to IDs + NONE."""
+    allowed_values = tuple(dict.fromkeys(hospital_ids + ["NONE"]))
+    HospEnum = Literal[allowed_values]  # type: ignore
+
+    class DynamicQuotedHospital(BaseModel):
+        value: HospEnum | None = None
+        quote: str | None = None
+
+    class DynamicExtraction(BaseModel):
+        hospital: DynamicQuotedHospital = Field(default_factory=DynamicQuotedHospital)
+        patient_number: RawQuotedString | None = Field(default_factory=RawQuotedString)
+        blood_group: RawQuotedString | None = Field(default_factory=RawQuotedString)
+        component: RawQuotedString | None = Field(default_factory=RawQuotedString)
+        units: RawQuotedInt | None = Field(default_factory=RawQuotedInt)
+        payment_phrases: list[str] = Field(default_factory=list)
+
+    return DynamicExtraction
+
+
 class GeminiExtractor(Protocol):
     """Protocol for extracting entities from blood request text."""
 
-    async def extract(self, text: str, hospital_ids: list[str]) -> GeminiExtraction: ...
+    async def extract(
+        self,
+        text: str,
+        hospitals: list[Any] | None = None,
+        *,
+        hospital_ids: list[str] | None = None,
+    ) -> GeminiExtraction: ...
 
 
 _system_prompt_cache: str | None = None
@@ -52,7 +115,7 @@ def get_system_prompt() -> str:
     global _system_prompt_cache
     if _system_prompt_cache is None:
         prompt_path = (
-            Path(__file__).resolve().parent.parent.parent / "prompts" / "desk_extract_v1.md"
+            Path(__file__).resolve().parent.parent.parent / "prompts" / "desk_extract_v2.md"
         )
         if prompt_path.exists():
             _system_prompt_cache = prompt_path.read_text(encoding="utf-8")
@@ -86,14 +149,27 @@ class VertexGeminiExtractor:
         app_config["geminiCallsToday"] = current_count + 1
         await self.store.set_config("app", app_config)
 
-    async def extract(self, text: str, hospital_ids: list[str]) -> GeminiExtraction:
+    async def extract(
+        self,
+        text: str,
+        hospitals: list[Any] | None = None,
+        *,
+        hospital_ids: list[str] | None = None,
+    ) -> GeminiExtraction:
         await self._check_and_increment_daily_cap()
 
+        target_hospitals = hospitals if hospitals is not None else (hospital_ids or [])
         system_base = get_system_prompt()
-        hospitals_str = ", ".join(hospital_ids) if hospital_ids else "NONE"
-        system_instruction = f"{system_base}\n\nALLOWED_HOSPITAL_IDS:\n[{hospitals_str}]"
+        hosp_table = format_hospital_table(target_hospitals)
+        system_instruction = (
+            f"{system_base}\n\nREGISTERED HOSPITALS TABLE:\n{hosp_table}"
+            if hosp_table
+            else f"{system_base}\n\nREGISTERED HOSPITALS TABLE:\nNONE"
+        )
 
         prompt_content = f"<message>\n{text}\n</message>"
+        hosp_ids = get_hospital_ids(target_hospitals)
+        response_schema = create_extraction_schema(hosp_ids)
 
         client = genai.Client(
             vertexai=True,
@@ -105,7 +181,8 @@ class VertexGeminiExtractor:
         config = types.GenerateContentConfig(
             temperature=0.0,
             response_mime_type="application/json",
-            response_schema=GeminiExtraction,
+            response_schema=response_schema,
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
             max_output_tokens=1000,
             system_instruction=system_instruction,
             http_options=types.HttpOptions(timeout=8000),

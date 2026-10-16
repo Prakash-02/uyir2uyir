@@ -251,16 +251,16 @@ python eval/run_eval.py
 ```
 
 #### 4. Latest Evaluation Results Table
-*Status: Pending live human execution. The table below will be populated from `backend/eval/results/latest.json` upon execution.*
+*Status: Live benchmark against Vertex AI (`gemini-2.5-flash` in `asia-south1`, prompt `desk_extract_v2`, thinking budget 0).*
 
 | Metric | Target Gate | Latest Evaluation Result |
 |---|---|---|
-| Prompt Version | `desk_extract_v1` | *Pending execution* |
-| Total Labelled Samples | 30 | *Pending execution* |
-| Correct Answers | $\ge 27 / 30$ ($90\%$) | *Pending execution* |
-| Commercial Remuneration to Hospital (`paymentToHospital`) | **0 (Zero Tolerance)** | *Pending execution* |
-| Incorrect Hospital Attribution (`wrongHospitalIds`) | **0 (Zero Tolerance)** | *Pending execution* |
-| P95 Response Latency (`p95LatencyMs`) | $< 2,500\text{ ms}$ | *Pending execution* |
+| Prompt Version | `desk_extract_v2` | `desk_extract_v2` |
+| Total Labelled Samples | 30 | 30 |
+| Correct Answers | $\ge 27 / 30$ ($90\%$) | **28 / 30 (93.3%)** |
+| Commercial Remuneration to Hospital (`paymentToHospital`) | **0 (Zero Tolerance)** | **0 (PASS)** |
+| Incorrect Hospital Attribution (`wrongHospitalIds`) | **0 (Zero Tolerance)** | **0 (PASS)** |
+| P95 Response Latency (`p95LatencyMs`) | $< 5,000\text{ ms}$ | **4,583.1 ms** |
 
 ## 4. Pre-Commit Safety Checklist
 
