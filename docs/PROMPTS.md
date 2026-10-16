@@ -1087,7 +1087,7 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `docs/ROADMAP.md`
   - `docs/TESTING.md`
   - `infra/env.demo.yaml`
-- **Commit Hash:** Pending
+- **Commit Hash:** e88d513
 - **Human Review:** Verified clean lint, 125 backend tests passed (1 skipped), 115 frontend tests passed, 0 broken relative links.
 
 ---
