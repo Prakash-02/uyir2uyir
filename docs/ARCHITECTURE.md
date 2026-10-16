@@ -1,6 +1,6 @@
 # U2U Architecture
 
-> **Status:** planned (System design specification for implementation)
+> **Status:** built (System architecture and modular monolith implemented and deployed)
 
 This document specifies the technical architecture, modular structure, state machines, persistence model, and reliability guarantees for U2U (Uyir2Uyir).
 
@@ -465,5 +465,55 @@ flowchart TD
 | **Cloud Text-to-Speech** | [`backend/app/ai/tts.py`](../backend/app/ai/tts.py) | Synthesizes bilingual audio scripts (`ta-IN-Standard-A` for Tamil, `en-IN-Standard-A` for English) once per template, language, and weather flag. Caches MP3 in memory and `/tmp`, served via `GET /audio/{templateId}/{lang}.mp3`. |
 | **Outreach Orchestrator** | [`backend/app/outreach/service.py`](../backend/app/outreach/service.py) | Dispatches round calls, dynamically chooses telephony adapter via `get_telephony_adapter()`, and registers audio templates. |
 | **Admin Controls** | [`backend/app/admin/router.py`](../backend/app/admin/router.py) | Exposes `GET /admin/settings/telephony` and `POST /admin/settings/telephony` for dynamic adapter inspection and toggling. |
+
+---
+
+## 9. How to Verify
+
+Judges and evaluators can independently verify the implementation, test coverage, and live cloud deployment using the following commands:
+
+### 9.1 Frontend Test Suite & Accessibility Audit
+Runs 115 unit, component, and accessibility tests across 19 test files with Vitest and `axe-core`:
+```bash
+cd frontend
+npm run lint
+npm test
+npm run build
+```
+
+### 9.2 Backend Test Suite & State Machine Invariants
+Runs 125 tests (plus 1 optional emulator test skipped when emulator host is unset) across 17 test suites, including 200 Hypothesis stateful property runs:
+```bash
+cd backend
+# On Windows PowerShell:
+.\run.ps1 lint
+.\run.ps1 test
+
+# On macOS/Linux:
+make lint
+make test
+```
+
+### 9.3 Request Desk AI Benchmark (Gemini on Vertex AI)
+Runs the labelled evaluation suite across 30 test cases in `backend/eval/` (verifying exact-quote verification and financial remuneration blocking):
+```bash
+cd backend
+python eval/run_eval.py
+```
+
+### 9.4 Cloud Run Live Deployment Smoke Test
+Verifies health, configuration, scenario story replay, and metrics on the deployed Cloud Run service:
+```bash
+# On Linux / macOS / Git Bash:
+./infra/smoke_backend.sh https://u2u-api-demo-77691642972.asia-south1.run.app
+
+# On Windows PowerShell:
+.\infra\smoke_backend.ps1 https://u2u-api-demo-77691642972.asia-south1.run.app
+```
+
+### 9.5 Live Deployment Endpoints
+- **Web Application (Firebase Hosting):** [https://uyir2uyir-53929.web.app](https://uyir2uyir-53929.web.app)
+- **Backend API (Google Cloud Run):** [https://u2u-api-demo-77691642972.asia-south1.run.app](https://u2u-api-demo-77691642972.asia-south1.run.app)
+
 
 

@@ -1,6 +1,6 @@
 # U2U Demonstration & Evaluation Guide
 
-> **Status:** planned (Demo runner and simulation screens scheduled for implementation)
+> **Status:** built (Demo runner, simulated IVR handset, and scenario execution implemented)
 
 This guide documents the 6-step emergency dispatch scenario, the 2-minute judge walkthrough, and the demo environment access procedures for U2U (Uyir2Uyir).
 

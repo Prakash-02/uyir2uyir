@@ -1,7 +1,7 @@
 # U2U (Uyir2Uyir)
 > Urgent blood requests relayed from verified hospitals to nearby consented donors via automated calls, with a public WhatsApp message verification desk.
 
-- **Live Demo:** [Pending deployment]
+- **Live Demo:** [https://uyir2uyir-53929.web.app](https://uyir2uyir-53929.web.app)
 - **Video Walkthrough:** [Pending recording]
 - **Status:** Prototype. All donors, hospitals and patients are simulated.
 
@@ -13,15 +13,18 @@ During medical emergencies, families frequently scramble at odd hours forwarding
 |---|---|---|
 | Gemini on Vertex AI | reads pasted messages | `backend/app/ai/gemini.py` |
 | Firebase Hosting | High-performance frontend web application delivery with SPA rewrites & long cache | `firebase.json` |
-| Cloud Firestore | Multi-database persistence (`u2u-demo` / `u2u-live`) & live listeners | `frontend/src/api/http/live.ts` |
+| Cloud Firestore | Multi-database persistence (`u2u-demo` / `u2u-live`) & live listeners | `frontend/src/api/http/live.ts`, `backend/app/core/store_firestore.py` |
 | Cloud Run | Scalable FastAPI modular monolith backend container | `backend/Dockerfile` |
-| Firebase Authentication | Anonymous demo logins, role-based identity & custom claims | `frontend/src/lib/firebase.ts` |
+| Firebase Authentication | Anonymous demo logins, role-based identity & custom claims | `frontend/src/lib/firebase.ts`, `backend/app/auth/` |
 | Cloud Text-to-Speech | Cached Tamil and English voice audio synthesis for calls | `backend/app/ai/tts.py` |
 | Cloud Scheduler | 1-minute ticker for expiration and donor outreach rounds | `backend/app/clock/router.py` |
-| Secret Manager & Cloud Logging | Secure secret isolation and centralized audit logging | `backend/app/core/logging.py` |
+| Secret Manager & Cloud Logging | Secure secret isolation and centralized audit logging | `backend/app/core/logging.py`, `infra/deploy_backend_demo.sh` |
 
 > [!NOTE]
-> **Telephony Boundary:** Twilio is used only for the phone call; all AI runs on Gemini.
+> **Core Declarations:**
+> - **All AI runs on Gemini on Vertex AI:** Generative entity extraction and translation run exclusively on Gemini Flash (`gemini-2.0-flash`). All decisions are validated verbatim in deterministic code.
+> - **Twilio is only the phone carrier:** Twilio (if used) is only the phone carrier to place calls and stream DTMF keypresses; no proprietary AI or vendor intelligence is used in telephony.
+> - **All data is simulated:** All donors, hospitals, patient IDs, and blood requests are simulated prototype data.
 
 ### Documentation Index
 - [U2U_BRIEF.md](U2U_BRIEF.md) — Single source of truth specification
@@ -70,7 +73,7 @@ U2U is built on the philosophy: *Life passes on. Freely. Safely. In time.*
 
 ## Architecture
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (Status: planned) for full system diagrams and dataflow specifications.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (Status: built) for full system diagrams and dataflow specifications.
 - **Frontend:** React 19 + TypeScript strict + Vite + Tailwind CSS v4 on Firebase Hosting.
 - **Backend:** Python 3.12 FastAPI modular monolith on Cloud Run.
 - **Storage:** Firestore with strict separation between `u2u-demo` and `u2u-live`.
@@ -227,7 +230,7 @@ Configured in [`.github/workflows/frontend.yml`](.github/workflows/frontend.yml)
 
 ## Testing and Evaluation
 
-*(Status: planned)*
+*(Status: built — 115 frontend tests passing, 125 backend tests passing, 200 Hypothesis stateful examples)*
 - **Frontend:** Vitest, Testing Library, and jsdom unit/component tests. Automated accessibility tests via `axe-core`.
 - **Backend:** Pytest integration tests across state-machine rules and API endpoints.
 - **Request Desk Evaluation:** Labelled test set evaluated against precision, recall, and safety rules (zero tolerance for payment leaks or hallucinated hospital IDs).

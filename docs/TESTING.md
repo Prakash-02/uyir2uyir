@@ -1,6 +1,6 @@
 # U2U Verification & Test Plan
 
-> **Status:** planned (Test execution framework established; benchmark results pending live test execution)
+> **Status:** built (Test execution framework and automated test suites fully passing; eval benchmark executed on demand)
 
 This document outlines the testing strategy, test suites, evaluation metrics, and safety checks for U2U (Uyir2Uyir).
 
@@ -159,26 +159,34 @@ Every design system token pair was verified mathematically against WCAG 2.1 AA c
 
 | Verification Suite | Target Benchmark | Actual Status / Result |
 |---|---|---|
-| Frontend Unit Tests | 100% pass rate (17 suites) | **PASS (106 / 106 tests passed)** |
+| Frontend Unit Tests | 100% pass rate (19 suites) | **PASS (115 / 115 tests passed)** |
 | Accessibility (`axe-core`) | 0 critical / serious violations (11 routes) | **PASS (0 violations across all 11 routes)** |
 | Mobile 360px Viewport | 0px horizontal scroll, 48px touch targets | **PASS (verified on /centre & /desk)** |
 | WCAG AA Contrast | All token pairs >= 4.5:1 | **PASS (all tokens 6.0:1 – 18.2:1)** |
 | Code Splitting & Performance | Lazy-loaded routes, main < 350 kB | **PASS (Main: 311 kB, Gzip: 98.7 kB)** |
-| Backend Domain & Rule Engine | 100% pass rate (Hypothesis >= 200 runs) | **PASS (55 / 55 domain tests passed)** |
-| Backend API Integration & Core Loop | 100% pass rate | **PASS (19 / 19 integration tests passed)** |
+| Backend Domain & Rule Engine | 100% pass rate (Hypothesis >= 200 runs) | **PASS (55 / 55 domain tests passed across 5 suites)** |
+| Backend API Integration & Core Loop | 100% pass rate | **PASS (6 / 6 core loop tests passed)** |
+| Auth, Privacy & Role Claims | 100% pass rate | **PASS (13 / 13 auth & privacy tests passed)** |
+| Cloud Scheduler OIDC & Clock Tick | 100% pass rate | **PASS (5 / 5 clock & OIDC tests passed)** |
+| Telephony & Twilio Adapter | 100% pass rate | **PASS (10 / 10 telephony & webhook tests passed)** |
 | Backend Demo Admin & Metrics | 100% pass rate | **PASS (4 / 4 demo admin tests passed)** |
 | Request Desk & Gemini Pipeline | 100% pass rate | **PASS (10 / 10 desk & quote tests passed)** |
-| Backend Storage & Transactions | In-memory transactional replay & Firestore emulator test | **PASS (4 / 4 passed, 1 skipped emulator)** |
+| Health & Mode Guards | 100% pass rate | **PASS (9 / 9 health & mode guard tests passed)** |
+| Logging & PII Masking | 100% pass rate | **PASS (4 / 4 logging & redaction tests passed)** |
+| Donor Matching Algorithm | 100% pass rate | **PASS (1 / 1 matching test passed)** |
+| Storage & Transactions | In-memory replay & emulator fallback | **PASS (4 / 4 passed, 1 skipped emulator)** |
+| Eval Endpoint & Benchmark Harness | 100% pass rate | **PASS (4 / 4 eval harness tests passed)** |
+| **Total Backend Test Suite** | 100% pass rate across 17 suites | **PASS (125 / 125 passed, 1 skipped emulator)** |
 | Request Desk Zero-Payment Rule | `paymentToHospital == 0` | **PASS (0 payment forwards permitted)** |
-| Request Desk Hospital Enum Match | `wrongHospitalIds == 0` | **Status: pending** |
-| Request Desk P95 Latency | < 2,500 ms | **Status: pending** |
+| Request Desk Hospital Enum Match | `wrongHospitalIds == 0` | **Status: pending execution** (`latest.json` pending live run) |
+| Request Desk P95 Latency | < 2,500 ms | **Status: pending execution** (`latest.json` pending live run) |
 | E2E 6-Step Scenario Runner | Successful pass through steps 1–5 | **PASS (`run_story` background task verified)** |
 
 ---
 
 ### 3.3 Backend Domain Logic & Property-Based Test Suite
 
-The pure domain logic layer (`backend/app/requests/` and `backend/app/rules/`) was verified across five dedicated test suites:
+The pure domain logic layer (`backend/app/requests/` and `backend/app/rules/`) and all system integration layers are verified across 17 dedicated test suites:
 
 | Test File | Test Category | Pass Count | Details |
 |---|---|---|---|
@@ -189,6 +197,9 @@ The pure domain logic layer (`backend/app/requests/` and `backend/app/rules/`) w
 | `tests/domain/test_property.py` | Hypothesis State Machine & Invariants | **2 / 2 passed** | **200 stateful examples** (up to 50 steps each) evaluating 5 domain invariants: (1) accepted $\le$ staff accepted, (2) counts non-negative, (3) status matches counting rule unless terminal, (4) no donor in two states, (5) opted-out donors never called again; plus illegal transition rejection tests. |
 | `tests/test_store.py` | Storage & Transactions | **4 / 4 passed, 1 skipped** | Verifies `MemoryStore` CRUD, listing filters, transaction rollback on failure, and full Section 7 story replay through `run_transaction`. Optional Firestore emulator concurrency test is skipped when `FIRESTORE_EMULATOR_HOST` is not set. |
 | `tests/test_api_core_loop.py` | Core API & Simulator Loop | **6 / 6 passed** | Full request lifecycle via endpoints, duplicate press idempotency, 15-call per-request cap refusal, concurrent tick lock lease, weather alert setting. |
+| `tests/test_auth_privacy.py` | Auth, Tokens & Privacy | **13 / 13 passed** | Validates Firebase Auth tokens, demo login custom role claims, 422 error sanitization on unselected consent, and patientRef anonymization. |
+| `tests/test_clock_oidc.py` | Scheduler OIDC & Clock Advance | **5 / 5 passed** | Verifies Google Cloud Scheduler OIDC bearer token verification, minute-tick cron lock, and manual demo clock advance. |
+| `tests/test_twilio_adapter.py` | Telephony & Twilio Webhooks | **10 / 10 passed** | Verifies Twilio REST outbound dialling, allowlist filtering, cryptographic signature verification, TwiML generation, and automated fallback to simulator after 3 consecutive errors. |
 | `tests/test_demo_admin_and_metrics.py` | Demo Admin & Metrics | **4 / 4 passed** | Scenario background task execution, clock advance, reset with pristine reseed, live-mode 404 enforcement, and timeline metrics calculation with broadcast baselines. |
 | `tests/test_desk_pipeline.py` | Request Desk & Gemini Pipeline | **10 / 10 passed** | Verifies 3 contract answers, verbatim quote validation, payment blocker, 'processing charge' allowance, prompt injection defense, ambiguous 'GH' refusal, single-use/expiry confirm links, and privacy (raw text never stored). |
 | `tests/test_health_and_config.py` | Mode Guard & Health | **3 / 3 passed** | `/healthz` and `/config` response verification in live and demo modes. |
@@ -196,7 +207,7 @@ The pure domain logic layer (`backend/app/requests/` and `backend/app/rules/`) w
 | `tests/test_matching.py` | Matching Algorithm | **1 / 1 passed** | Compatibility, consent, contact gap, deduplication, and distance sorting. |
 | `tests/test_mode_guard.py` | Startup Mode Guard | **6 / 6 passed** | Enforces startup termination if `DATA_MODE` and `FIRESTORE_DB` mismatch. |
 | `tests/test_eval.py` | Eval Endpoint & Benchmark Runner | **4 / 4 passed** | Verifies GET /eval/latest (404 on empty, 200 on stored document, file fallback) and batch evaluation runner execution against simulated store. |
-| **Total Backend Tests** | Complete Backend Test Suite | **97 / 97 passed (1 skipped emulator)** | All tests pass in < 7.0s with zero network dependencies. |
+| **Total Backend Tests** | Complete Backend Test Suite | **125 / 125 passed (1 skipped emulator)** | All tests pass in ~7.2s with zero network dependencies. |
 
 ---
 

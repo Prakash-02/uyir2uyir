@@ -1061,8 +1061,34 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/components/DemoRolePicker.test.tsx`
   - `frontend/src/components/DemoRolePicker.tsx`
   - `frontend/src/lib/firebase.ts`
-- **Commit Hash:** Pending
+- **Commit Hash:** 9abd333
 - **Human Review:** Verified dual-mode builds (`mock` and `http`), 115 tests passing, accessibility clean across all routes.
+
+### Entry #13
+- **Date:** 2026-10-16
+- **Goal:** Make sure every backend claim in the repo is true and easy for judges to verify (backend honesty pass, accurate test numbers, secrets audit, core declarations, and verification guide).
+- **Prompt Summary:**
+  1. Audited every Google Cloud service row in `README.md` and every status claim in the docs against actual codebase implementations. Updated `API_CONTRACT.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `PRIVACY_SAFETY.md`, `DESIGN_SYSTEM.md`, `DEMO.md`, and `FRONTEND.md` to `built`.
+  2. Updated `docs/TESTING.md` with verified real numbers only: 125 backend tests passed (1 skipped optional emulator) across 17 suites, 115 frontend tests passed across 19 suites, 200 Hypothesis stateful examples (50 steps each). Stated clearly that `latest.json` does not exist on disk and benchmark results remain pending on-demand execution.
+  3. Conducted a comprehensive secrets, tokens, PII, and service account key audit across `backend/`, `infra/`, and `docs/`. Replaced stale Cloud Run revision URL in `infra/env.demo.yaml` with stable public base URL. Verified zero real phone numbers, tokens, or credentials are committed.
+  4. Added explicit Core Declarations to `README.md`: all AI runs on Gemini on Vertex AI; Twilio (if used) is only the phone carrier; all data is simulated.
+  5. Added Section 9 "How to Verify" to `docs/ARCHITECTURE.md` with exact commands to run each test suite, the eval runner, and the live Cloud Run smoke test.
+  6. Verified that all relative markdown links across docs and README resolve cleanly.
+- **Files Changed:**
+  - `README.md`
+  - `backend/README.md`
+  - `docs/API_CONTRACT.md`
+  - `docs/ARCHITECTURE.md`
+  - `docs/DEMO.md`
+  - `docs/DESIGN_SYSTEM.md`
+  - `docs/FRONTEND.md`
+  - `docs/PRIVACY_SAFETY.md`
+  - `docs/PROMPTS.md`
+  - `docs/ROADMAP.md`
+  - `docs/TESTING.md`
+  - `infra/env.demo.yaml`
+- **Commit Hash:** Pending
+- **Human Review:** Verified clean lint, 125 backend tests passed (1 skipped), 115 frontend tests passed, 0 broken relative links.
 
 ---
 

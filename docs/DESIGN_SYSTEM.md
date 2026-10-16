@@ -1,6 +1,6 @@
 # U2U Design System
 
-> **Status:** planned (Component implementation scheduled for Milestone 1)
+> **Status:** built (Component implementation, design tokens, and accessibility patterns complete)
 
 This document specifies the visual language, design tokens, component specifications, typography, and accessibility guidelines for U2U (Uyir2Uyir), derived from Section 6 of `U2U_BRIEF.md`.
 

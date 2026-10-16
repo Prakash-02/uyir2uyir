@@ -1,6 +1,6 @@
 # U2U API Contract
 
-> **Status:** planned (Frontend and backend implementations mirror this contract)
+> **Status:** built (Frontend and backend implementations mirror this contract)
 
 This document contains the canonical API contract between the U2U frontend and backend services, transcribed verbatim from Section 5 of `U2U_BRIEF.md`.
 
@@ -90,7 +90,7 @@ interface EvalResult {
 | `POST /calls/{callId}/accept` | Staff | none | `Call` | Built (`backend/app/screening/router.py`) |
 | `POST /calls/{callId}/defer` | Staff | `{returnDate?}` | `Call` | Built (`backend/app/screening/router.py`) |
 | `POST /internal/tick` | Internal / Scheduler | none | `{"status": "ok"}` | Built (`backend/app/clock/router.py`) |
-| `POST /donors/signup` | Donor | `{name, phone, bloodGroup, area, lang, lastDonation?, consentUrgent, consentHistory, adult}` | `{donorAlias}` | Planned |
+| `POST /donors/signup` | Donor | `{name, phone, bloodGroup, area, lang, lastDonation?, consentUrgent, consentHistory, adult}` | `{donorAlias}` | Built (`backend/app/donors/router.py`) |
 | `GET /metrics` | Staff (demo: any demo user) | none | `Metrics` | Built (`backend/app/screening/metrics.py`) |
 | `GET /eval/latest` | Anyone | none | `EvalResult` | Built (`backend/app/eval/router.py`) |
 | `POST /admin/scenario/{id}/run` | Admin, demo | none | `{"ok": true, "scenario": id}` | Built (`backend/app/admin/router.py`) |

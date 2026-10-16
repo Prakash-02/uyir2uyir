@@ -1,6 +1,6 @@
 # U2U Implementation Roadmap & Pilot Path
 
-> **Status:** planned (Hackathon milestones and long-term pilot trajectory)
+> **Status:** built (Hackathon milestones 0a through 5 complete; clinical pilot pathway planned)
 
 This document outlines the development milestones for the Google Cloud AI Builder Cup 2026 prototype, explicit out-of-scope boundaries, and the long-term clinical pilot pathway.
 
@@ -38,38 +38,38 @@ flowchart LR
 - Initialized monorepo skeleton, root `AGENTS.md`, environment templates, and licensing.
 
 ### Milestone 0b: Canonical Documentation Set
-- **Status:** Current (2026-10-13)
+- **Status:** Complete (2026-10-13)
 - Created complete 9-document specification set (`ARCHITECTURE.md`, `API_CONTRACT.md`, `DESIGN_SYSTEM.md`, `FRONTEND.md`, `AI_DESIGN.md`, `PRIVACY_SAFETY.md`, `TESTING.md`, `DEMO.md`, `ROADMAP.md`).
 
 ### Milestone 1: Frontend Vite Scaffold & Tailwind v4 Design Tokens
-- **Status:** planned
-- Scaffold React 19 + TypeScript + Vite project in `frontend/`.
-- Configure Tailwind CSS v4 variables mapped to warm-paper and crimson design tokens.
-- Implement the 14 core accessible UI components with full keyboard and screen reader support.
+- **Status:** Complete
+- Scaffolded React 19 + TypeScript + Vite project in `frontend/`.
+- Configured Tailwind CSS v4 variables mapped to warm-paper and crimson design tokens.
+- Implemented core accessible UI components with full keyboard and screen reader support.
 
 ### Milestone 2: Interactive Role Screens & Client Mock Engine
-- **Status:** planned
-- Build all 9 application routes (`/`, `/hospital`, `/centre`, `/desk`, `/confirm/:token`, `/join`, `/sim`, `/impact`, `/eval`).
-- Implement `mockClient.ts` to replicate the $N+1$ counting rule and state machine for offline zero-latency demo evaluation.
-- Embed the mandatory orange `"SIMULATED DATA"` banner across all screens.
+- **Status:** Complete
+- Built all 9 application routes (`/`, `/hospital`, `/centre`, `/desk`, `/confirm/:token`, `/join`, `/sim`, `/impact`, `/eval`).
+- Implemented `mockClient.ts` to replicate the $N+1$ counting rule and state machine for offline zero-latency demo evaluation.
+- Embedded the mandatory orange `"SIMULATED DATA"` banner across all screens.
 
 ### Milestone 3: FastAPI Modular Monolith & Rule Engine
-- **Status:** planned
-- Scaffold Python 3.12 FastAPI backend package structure across the 9 modules.
-- Implement the deterministic $N+1$ rule engine, call state machines, and Firestore client adapters.
-- Build Pytest unit tests for all state transitions and timeout expirations.
+- **Status:** Complete
+- Scaffolded Python 3.12 FastAPI backend package structure across all modules.
+- Implemented deterministic $N+1$ rule engine, call state machines, and Firestore client adapters.
+- Built 125 backend tests verifying state transitions, invariants, and timeout expirations.
 
 ### Milestone 4: Gemini Flash Extraction Pipeline on Vertex AI
-- **Status:** planned
-- Integrate Vertex AI Gemini Flash (`asia-south1`) with temperature 0 and structured JSON schema output.
-- Implement Python verbatim quote verification and financial remuneration detection.
-- Construct the labelled test dataset in `backend/eval/` and implement the `/eval` API endpoint.
+- **Status:** Complete
+- Integrated Vertex AI Gemini Flash (`asia-south1`) with temperature 0 and structured JSON schema output.
+- Implemented Python verbatim quote verification and financial remuneration detection.
+- Constructed labelled test dataset in `backend/eval/` and implemented `/eval/latest` API endpoint.
 
 ### Milestone 5: Full Integration, Live Snapshot Listeners & Cloud Deployment
-- **Status:** planned
-- Connect frontend real-time listeners directly to Firestore (`u2u-demo` / `u2u-live`).
-- Deploy FastAPI container to Google Cloud Run and Vite bundle to Firebase Hosting.
-- Execute full E2E 6-step demo scenario verification.
+- **Status:** Complete
+- Connected frontend real-time listeners directly to Firestore (`u2u-demo`).
+- Deployed FastAPI container to Google Cloud Run and Vite bundle to Firebase Hosting.
+- Executed full E2E 6-step demo scenario verification.
 
 ---
 

@@ -1,6 +1,6 @@
 # U2U Privacy, Safety & Clinical Guardrails
 
-> **Status:** planned (Enforced across backend, frontend, and data persistence models)
+> **Status:** built (Enforced across backend, frontend, and data persistence models)
 
 This document outlines the strict privacy boundaries, data minimization protocols, consent mechanisms, and clinical guardrails governing U2U (Uyir2Uyir).
 
