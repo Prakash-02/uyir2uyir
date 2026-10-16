@@ -331,18 +331,31 @@ export function CentrePage() {
             </div>
           ) : (
             <div className="space-y-2.5">
-              {calls.map((call) => {
-                const isOnTheWay = call.state === 'ON_THE_WAY'
-                return (
-                  <CallRow
-                    key={call.id}
-                    donorAlias={call.donorAlias}
-                    bloodGroup={call.bloodGroup}
-                    state={call.state}
-                    distanceKm={call.distanceKm}
-                    etaMinutes={call.etaMinutes}
-                    round={call.round}
-                    action={
+              {[...calls]
+                .sort((a, b) => {
+                  if (a.state === 'ON_THE_WAY' && b.state === 'ON_THE_WAY') {
+                    if (a.etaMinutes === null && b.etaMinutes === null) return 0
+                    if (a.etaMinutes === null) return 1
+                    if (b.etaMinutes === null) return -1
+                    return a.etaMinutes - b.etaMinutes
+                  }
+                  if (a.state === 'ON_THE_WAY') return -1
+                  if (b.state === 'ON_THE_WAY') return 1
+                  return 0
+                })
+                .map((call) => {
+                  const isOnTheWay = call.state === 'ON_THE_WAY'
+                  return (
+                    <CallRow
+                      key={call.id}
+                      donorAlias={call.donorAlias}
+                      bloodGroup={call.bloodGroup}
+                      state={call.state}
+                      distanceKm={call.distanceKm}
+                      etaMinutes={call.etaMinutes}
+                      quote={call.quote}
+                      round={call.round}
+                      action={
                       isOnTheWay ? (
                         <div className="flex items-center gap-2">
                           <Button

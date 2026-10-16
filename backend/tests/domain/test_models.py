@@ -39,6 +39,7 @@ CONTRACT_CALL_FIELDS = {
     "state",
     "round",
     "etaMinutes",
+    "quote",
     "distanceKm",
     "updatedAt",
 }

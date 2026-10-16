@@ -51,6 +51,7 @@ export interface Call {
   state: CallState;
   round: number;
   etaMinutes: number | null;
+  quote?: string | null;
   distanceKm: number;
   updatedAt: string;
 }

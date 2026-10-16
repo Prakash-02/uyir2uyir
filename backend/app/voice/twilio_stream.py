@@ -3,30 +3,36 @@
 Guarantees:
 - WebSocket endpoint at WS /twilio/{mode}/stream/{call_id}.
 - Rejects mode mismatches and invalid/expired stream tokens with immediate closure.
-- Streams fixed Cloud Text-to-Speech audio in 8 kHz mu-law format (160 bytes per 20 ms frame).
-- Sends 'opening' prompt, an 'opening_end' mark, then 'keypad_prompt' and 'keypad_prompt_end' mark.
-- Listens for DTMF digits (1, 2, or 9) and applies transitions via transitions.py in a transaction.
-- Plays matching closing audio and hangs up the call.
-- After 20 seconds with no key press: marks call as NO_ANSWER and hangs up.
-- Never stores or logs audio to disk.
+- Streams fixed Cloud Text-to-Speech opening audio in 8 kHz mu-law format (160 bytes per 20 ms frame).
+- Hands call over to Gemini Live session after fixed opening audio.
+- Gemini talks with donor, reports answer through record_reply tool (COMING, CANT, STOP, UNCLEAR).
+- Code checks tool call, applies state transition in transaction (source='gemini_live'), plays closing, ends call.
+- DTMF keypad 1, 2, or 9 overrides at any time, immediately closing Live session.
+- Fallbacks:
+  - Daily minutes quota cap (LIVE_DAILY_MINUTES reached) -> keypad only.
+  - Live session fails to open within 3.0s or errors -> keypad prompt fallback.
+  - Live session drops mid-call -> keypad prompt fallback.
+  - 45s total or 3 donor turns without tool call -> UNCLEAR, fixed closing, ends call.
+- Zero audio or transcript written to disk or database.
 """
 
 import asyncio
 import base64
 import json
 import logging
+from collections.abc import Callable
+from typing import Any
 from uuid import uuid4
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 
 from app.ai.tts import synthesize_stream_audio
 from app.clock.service import get_clock
-from app.core.audit import record_audit
 from app.core.config import get_settings
-from app.core.store import TransactionStore, get_store
+from app.core.store import Store, TransactionStore, get_store
 from app.matching.service import select_donors_for_request
 from app.outreach.service import dispatch_round_calls, get_telephony_adapter
-from app.requests.models import Call, CallState
+from app.requests.models import BloodRequest, Call, CallState, TimelineEvent
 from app.requests.transitions import (
     IllegalTransition,
     Intent,
@@ -36,6 +42,7 @@ from app.requests.transitions import (
     apply_press_9,
     apply_reminder_press_2,
 )
+from app.voice.live_session import LiveBridge, TwilioAudioAdapter
 from app.voice.tokens import verify_and_consume_stream_token
 
 logger = logging.getLogger("u2u.voice.stream")
@@ -43,6 +50,17 @@ logger = logging.getLogger("u2u.voice.stream")
 router = APIRouter(prefix="/twilio", tags=["Twilio Media Streams"])
 
 STREAM_TIMEOUT_SECONDS: float = 20.0
+LIVE_OPEN_TIMEOUT_SECONDS: float = 3.0
+LIVE_CALL_MAX_SECONDS: float = 45.0
+
+# Optional factory override for unit testing with fake live sessions
+_LIVE_SESSION_FACTORY: Callable[..., Any] | None = None
+
+
+def set_live_session_factory(factory: Callable[..., Any] | None) -> None:
+    """Sets a global factory for creating live sessions (used by test suites)."""
+    global _LIVE_SESSION_FACTORY
+    _LIVE_SESSION_FACTORY = factory
 
 
 async def send_audio_frames(
@@ -88,13 +106,25 @@ async def send_clear(websocket: WebSocket, stream_sid: str) -> None:
     await websocket.send_text(json.dumps(msg))
 
 
+async def check_live_daily_quota(store: Store, clock: Any, max_minutes: int) -> bool:
+    """Returns True if within daily live quota, False if cap is reached."""
+    try:
+        app_conf = await store.get_config("app") or {}
+        today_str = clock.now().strftime("%Y-%m-%d")
+        stored_date = app_conf.get("liveMinutesDate")
+        current_mins = app_conf.get("liveMinutesToday", 0.0) if stored_date == today_str else 0.0
+        return current_mins < max_minutes
+    except Exception:
+        return True
+
+
 @router.websocket("/{mode}/stream/{call_id}")
 async def twilio_media_stream_websocket(
     websocket: WebSocket,
     mode: str,
     call_id: str,
 ) -> None:
-    """Two-way audio WebSocket connecting Twilio Media Stream to U2U telephony engine."""
+    """Two-way audio WebSocket connecting Twilio Media Stream to U2U telephony and Gemini Live."""
     await websocket.accept()
 
     settings = get_settings()
@@ -126,8 +156,11 @@ async def twilio_media_stream_websocket(
     verified = False
     dtmf_handled = asyncio.Event()
     stop_playback = asyncio.Event()
+
     timeout_task: asyncio.Task[None] | None = None
     prompt_playing_task: asyncio.Task[None] | None = None
+    live_watcher_task: asyncio.Task[None] | None = None
+    live_bridge: LiveBridge | None = None
 
     async def _handle_no_key_timeout(timeout_secs: float | None = None) -> None:
         """Applies NO_ANSWER transition if no DTMF key is pressed within timeout."""
@@ -168,6 +201,89 @@ async def twilio_media_stream_websocket(
         except Exception as e:
             logger.debug("Timeout watcher exception for call %s: %s", call_id, e)
 
+    async def _watch_live_session(
+        bridge: LiveBridge,
+        target_sid: str,
+        call_lang: str,
+        donor_alias: str,
+        keypad_audio: bytes,
+    ) -> None:
+        """Monitors live session duration (45s limit), turns, and tool call completion."""
+        start_t = clock.now().timestamp()
+        try:
+            while not bridge.is_closed and not dtmf_handled.is_set():
+                await asyncio.sleep(0.5)
+                elapsed = clock.now().timestamp() - start_t
+
+                # 1. Did tool call turn complete or session close cleanly?
+                if bridge.tool_called_event.is_set() and bridge.is_closed:
+                    logger.info("Live bridge tool call completed; closing call %s", call_id)
+                    await websocket.close()
+                    return
+
+                # 2. Check 45s total or 3 donor turns without a tool call
+                if not bridge.tool_called_event.is_set() and (
+                    elapsed >= LIVE_CALL_MAX_SECONDS or bridge.donor_turns_count >= 3
+                ):
+                    logger.info(
+                        "Live session limit reached (elapsed=%.1fs, turns=%d) for %s; UNCLEAR",
+                        elapsed,
+                        bridge.donor_turns_count,
+                        call_id,
+                    )
+                    await bridge.close()
+                    await store.append_event(
+                        request_id,
+                        TimelineEvent(
+                            id=f"evt-{uuid4().hex[:8]}",
+                            request_id=request_id,
+                            at=clock.now_iso(),
+                            kind="CALL_UNCLEAR",
+                            text=f"{donor_alias} talked to Gemini: UNCLEAR, no decision after 45s",
+                        ),
+                    )
+                    closing_audio = await synthesize_stream_audio(
+                        "closing_cant",
+                        lang=call_lang,
+                        output_format="mulaw_8k",
+                    )
+                    await send_clear(websocket, target_sid)
+                    await send_audio_frames(websocket, target_sid, closing_audio)
+                    await websocket.close()
+                    return
+
+                # 3. Did live session drop mid-call unexpectedly before tool call?
+                if (
+                    bridge.is_closed
+                    and not bridge.tool_called_event.is_set()
+                    and not dtmf_handled.is_set()
+                ):
+                    logger.warning(
+                        "Live session dropped mid-call for %s; keypad prompt fallback", call_id
+                    )
+                    await store.append_event(
+                        request_id,
+                        TimelineEvent(
+                            id=f"evt-{uuid4().hex[:8]}",
+                            request_id=request_id,
+                            at=clock.now_iso(),
+                            kind="LIVE_FALLBACK",
+                            text="Gemini Live disconnected, keypad used",
+                        ),
+                    )
+                    await send_audio_frames(
+                        websocket, target_sid, keypad_audio, stop_event=stop_playback
+                    )
+                    if not stop_playback.is_set():
+                        await send_mark(websocket, target_sid, "keypad_prompt_end")
+                        nonlocal timeout_task
+                        timeout_task = asyncio.create_task(_handle_no_key_timeout())
+                    return
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            logger.debug("Live session watcher exception for call %s: %s", call_id, e)
+
     try:
         while True:
             text_data = await websocket.receive_text()
@@ -183,7 +299,7 @@ async def twilio_media_stream_websocket(
                 logger.debug("Twilio stream connected for call %s", call_id)
                 continue
 
-            # B. Start event: validates token and starts opening audio playback
+            # B. Start event
             if event_type == "start":
                 start_data = data.get("start", {})
                 stream_sid = start_data.get("streamSid") or data.get("streamSid", "")
@@ -228,6 +344,8 @@ async def twilio_media_stream_websocket(
                     or "Blood Centre"
                 )
 
+                donor_alias = call_obj.donor_alias if call_obj else "Donor"
+
                 # Synthesize opening and keypad prompt audio (8 kHz mu-law, cached in-memory)
                 opening_audio = await synthesize_stream_audio(
                     "opening",
@@ -244,13 +362,17 @@ async def twilio_media_stream_websocket(
                     output_format="mulaw_8k",
                 )
 
-                async def _play_prompts_and_start_timeout(
+                async def _play_opening_and_hand_to_live(
                     target_stream_sid: str,
                     target_opening: bytes,
                     target_keypad: bytes,
+                    call_lang: str,
+                    donor_name: str,
+                    target_call: Call | None,
+                    target_req: BloodRequest | None,
                 ) -> None:
                     try:
-                        # 1. Send opening audio in 160-byte frames
+                        # 1. Send fixed opening audio in 160-byte frames
                         await send_audio_frames(
                             websocket,
                             target_stream_sid,
@@ -260,30 +382,124 @@ async def twilio_media_stream_websocket(
                         if not stop_playback.is_set():
                             await send_mark(websocket, target_stream_sid, "opening_end")
 
-                        # 2. Send keypad prompt audio in 160-byte frames
-                        await send_audio_frames(
-                            websocket,
-                            target_stream_sid,
-                            target_keypad,
-                            stop_event=stop_playback,
-                        )
-                        if not stop_playback.is_set():
-                            await send_mark(websocket, target_stream_sid, "keypad_prompt_end")
+                        if stop_playback.is_set():
+                            return
 
-                        # 3. Start 20s timeout watcher after prompts
-                        nonlocal timeout_task
-                        if not stop_playback.is_set():
-                            timeout_task = asyncio.create_task(_handle_no_key_timeout())
+                        # 2. Check daily live calling minutes quota
+                        within_quota = await check_live_daily_quota(
+                            store, clock, settings.LIVE_DAILY_MINUTES
+                        )
+                        if not within_quota:
+                            logger.info(
+                                "Live daily quota reached (%d min); falling back to keypad",
+                                settings.LIVE_DAILY_MINUTES,
+                            )
+                            await store.append_event(
+                                request_id,
+                                TimelineEvent(
+                                    id=f"evt-{uuid4().hex[:8]}",
+                                    request_id=request_id,
+                                    at=clock.now_iso(),
+                                    kind="LIVE_FALLBACK",
+                                    text="Gemini Live daily quota reached, keypad used",
+                                ),
+                            )
+                            await send_audio_frames(
+                                websocket,
+                                target_stream_sid,
+                                target_keypad,
+                                stop_event=stop_playback,
+                            )
+                            if not stop_playback.is_set():
+                                await send_mark(websocket, target_stream_sid, "keypad_prompt_end")
+                                nonlocal timeout_task
+                                timeout_task = asyncio.create_task(_handle_no_key_timeout())
+                            return
+
+                        # 3. Attempt to establish Gemini Live session with 3s timeout
+                        adapter = TwilioAudioAdapter(websocket, target_stream_sid)
+                        bridge = LiveBridge(
+                            call=target_call,
+                            lang=call_lang,
+                            audio_adapter=adapter,
+                            request=target_req,
+                            store=store,
+                            clock=clock,
+                            session_factory=_LIVE_SESSION_FACTORY,
+                        )
+
+                        try:
+                            await asyncio.wait_for(
+                                bridge.start(), timeout=LIVE_OPEN_TIMEOUT_SECONDS
+                            )
+                            nonlocal live_bridge, live_watcher_task
+                            live_bridge = bridge
+                            live_watcher_task = asyncio.create_task(
+                                _watch_live_session(
+                                    bridge,
+                                    target_stream_sid,
+                                    call_lang,
+                                    donor_name,
+                                    target_keypad,
+                                )
+                            )
+                            logger.info("Gemini Live session connected for call %s", call_id)
+                        except Exception as e:
+                            logger.warning(
+                                "Gemini Live session open failed or timed out (%s); keypad used",
+                                e,
+                            )
+                            await store.append_event(
+                                request_id,
+                                TimelineEvent(
+                                    id=f"evt-{uuid4().hex[:8]}",
+                                    request_id=request_id,
+                                    at=clock.now_iso(),
+                                    kind="LIVE_FALLBACK",
+                                    text="Gemini Live unavailable, keypad used",
+                                ),
+                            )
+                            # Keypad prompt fallback
+                            await send_audio_frames(
+                                websocket,
+                                target_stream_sid,
+                                target_keypad,
+                                stop_event=stop_playback,
+                            )
+                            if not stop_playback.is_set():
+                                await send_mark(websocket, target_stream_sid, "keypad_prompt_end")
+                                timeout_task = asyncio.create_task(_handle_no_key_timeout())
+
                     except Exception as e:
-                        logger.debug("Prompt playback interrupted or failed: %s", e)
+                        logger.debug("Opening/Live handover exception for call %s: %s", call_id, e)
 
                 if stream_sid:
                     prompt_playing_task = asyncio.create_task(
-                        _play_prompts_and_start_timeout(stream_sid, opening_audio, keypad_audio)
+                        _play_opening_and_hand_to_live(
+                            stream_sid,
+                            opening_audio,
+                            keypad_audio,
+                            lang,
+                            donor_alias,
+                            call_obj,
+                            req,
+                        )
                     )
                 continue
 
-            # C. DTMF keypress event
+            # C. Inbound media audio (forwarded to LiveBridge if active)
+            if event_type == "media":
+                if live_bridge and not live_bridge.is_closed:
+                    media_payload = data.get("media", {}).get("payload")
+                    if media_payload:
+                        try:
+                            raw_mulaw = base64.b64decode(media_payload)
+                            await live_bridge.send_input_chunk(raw_mulaw)
+                        except Exception as e:
+                            logger.debug("Media chunk forwarding error: %s", e)
+                continue
+
+            # D. DTMF keypress event (keypad overrides at any time)
             if event_type == "dtmf":
                 if not verified:
                     await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
@@ -293,6 +509,13 @@ async def twilio_media_stream_websocket(
                 digit = str(dtmf_info.get("digit", "")).strip()
                 if digit not in ("1", "2", "9"):
                     continue
+
+                # Close live session immediately on keypad press
+                if live_bridge:
+                    await live_bridge.close()
+                    live_bridge = None
+                if live_watcher_task and not live_watcher_task.done():
+                    live_watcher_task.cancel()
 
                 # Interrupt playback and cancel timeout
                 stop_playback.set()
@@ -379,40 +602,24 @@ async def twilio_media_stream_websocket(
                                         "at": ts,
                                     },
                                 )
-                                await record_audit(
-                                    tx,
-                                    actor_uid=donor_id,
-                                    role="donor",
-                                    action="opt-out",
-                                    target_id=donor_id,
-                                    before_status="ACTIVE",
-                                    after_status="WITHDRAWN",
-                                )
                             else:
-                                return call
-                        except IllegalTransition as e:
-                            logger.warning(
-                                "Illegal transition in stream for call %s: %s", call_id, e
-                            )
-                            return call
+                                return None
 
-                        updated_request = result.request
-                        if Intent.START_ROUND in result.side_effects:
-                            new_round = updated_request.round + 1
-                            updated_request = updated_request.model_copy(
-                                update={"round": new_round, "updated_at": ts}
-                            )
-                            should_dispatch_round = True
+                            if result.call:
+                                await tx.save_call(request_id, result.call)
+                            await tx.save_request(result.request)
+                            for event in result.timeline_events:
+                                await tx.append_event(request_id, event)
 
-                        await tx.save_request(updated_request)
-                        if result.call:
-                            await tx.save_call(request_id, result.call)
-                        for ev in result.timeline_events:
-                            await tx.append_event(request_id, ev)
-                        for oc in result.other_calls:
-                            await tx.save_call(request_id, oc)
+                            for other_call in result.other_calls:
+                                await tx.save_call(request_id, other_call)
 
-                        return result.call
+                            if Intent.START_ROUND in result.side_effects:
+                                should_dispatch_round = True
+
+                            return result.call
+                        except IllegalTransition:
+                            return None
 
                     return _handler
 
@@ -453,10 +660,14 @@ async def twilio_media_stream_websocket(
                 await websocket.close()
                 return
 
-            # D. Stop event
+            # E. Stop event
             if event_type == "stop":
                 logger.debug("Twilio stream stopped for call %s", call_id)
                 stop_playback.set()
+                if live_bridge:
+                    await live_bridge.close()
+                if live_watcher_task and not live_watcher_task.done():
+                    live_watcher_task.cancel()
                 if timeout_task and not timeout_task.done():
                     timeout_task.cancel()
                 if prompt_playing_task and not prompt_playing_task.done():
@@ -469,6 +680,10 @@ async def twilio_media_stream_websocket(
         logger.warning("Twilio stream exception for call %s: %s", call_id, e)
     finally:
         stop_playback.set()
+        if live_bridge:
+            await live_bridge.close()
+        if live_watcher_task and not live_watcher_task.done():
+            live_watcher_task.cancel()
         if timeout_task and not timeout_task.done():
             timeout_task.cancel()
         if prompt_playing_task and not prompt_playing_task.done():

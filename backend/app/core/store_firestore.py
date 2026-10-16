@@ -9,9 +9,22 @@ from google.cloud.firestore_v1.base_query import FieldFilter
 from app.core.config import get_settings
 from app.core.entities import Centre, Donor, Hospital
 from app.core.store import Store, TransactionStore
-from app.requests.models import BloodRequest, Call, TimelineEvent
+from app.requests.models import BloodRequest, Call, CallState, TimelineEvent
 
 T = TypeVar("T")
+
+
+def _sort_calls(calls: list[Call]) -> list[Call]:
+    """Sorts on-the-way donors by eta_minutes (unknown last), followed by other calls."""
+    return sorted(
+        calls,
+        key=lambda c: (
+            0 if c.state == CallState.ON_THE_WAY else 1,
+            c.eta_minutes is None if c.state == CallState.ON_THE_WAY else False,
+            c.eta_minutes or 0 if c.state == CallState.ON_THE_WAY else 0,
+            c.id,
+        ),
+    )
 
 
 async def _get_one_doc(transaction: AsyncTransaction, ref: Any) -> Any:
@@ -66,7 +79,7 @@ class FirestoreTransactionStore(TransactionStore):
         self._assert_can_read()
         calls_col = self.client.collection("requests").document(request_id).collection("calls")
         snaps = [snap async for snap in calls_col.stream(transaction=self.transaction)]
-        return [Call.model_validate(s.to_dict()) for s in snaps if s.exists]
+        return _sort_calls([Call.model_validate(s.to_dict()) for s in snaps if s.exists])
 
     async def get_donor(self, donor_id: str) -> Donor | None:
         self._assert_can_read()
@@ -385,7 +398,7 @@ class FirestoreStore(Store):
     async def list_calls(self, request_id: str) -> list[Call]:
         calls_col = self.client.collection("requests").document(request_id).collection("calls")
         snaps = [d async for d in calls_col.stream()]
-        return [Call.model_validate(d.to_dict()) for d in snaps if d.exists]
+        return _sort_calls([Call.model_validate(d.to_dict()) for d in snaps if d.exists])
 
     # Events
     async def append_event(self, request_id: str, event: TimelineEvent) -> None:

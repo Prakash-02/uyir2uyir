@@ -12,6 +12,7 @@ During medical emergencies, families frequently scramble at odd hours forwarding
 | Service | Used for | Code path |
 |---|---|---|
 | Gemini on Vertex AI | reads pasted messages | `backend/app/ai/gemini.py` |
+| Gemini Live API | real-time donor calls | `backend/app/voice/live_session.py` |
 | Firebase Hosting | High-performance frontend web application delivery with SPA rewrites & long cache | `firebase.json` |
 | Cloud Firestore | Multi-database persistence (`u2u-demo` / `u2u-live`) & live listeners | `frontend/src/api/http/live.ts`, `backend/app/core/store_firestore.py` |
 | Cloud Run | Scalable FastAPI modular monolith backend container | `backend/Dockerfile` |

@@ -29,7 +29,7 @@ interface BloodRequest {
 
 interface Call {
   id: string; requestId: string; donorAlias: string; bloodGroup: BloodGroup; lang: Lang;
-  state: CallState; round: number; etaMinutes: number|null; distanceKm: number;
+  state: CallState; round: number; etaMinutes: number|null; quote?: string|null; distanceKm: number;
   updatedAt: string;
 }
 

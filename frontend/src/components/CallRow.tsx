@@ -11,6 +11,7 @@ export interface CallRowProps {
   state: CallState
   distanceKm: number
   etaMinutes?: number | null
+  quote?: string | null
   round?: number
   action?: ReactNode
   className?: string
@@ -22,6 +23,7 @@ export function CallRow({
   state,
   distanceKm,
   etaMinutes = null,
+  quote = null,
   round,
   action,
   className,
@@ -61,6 +63,11 @@ export function CallRow({
               </span>
             </span>
           </div>
+          {quote && (
+            <div className="mt-1.5 text-xs text-[var(--muted)] italic bg-[var(--surface-muted)]/60 px-2 py-0.5 rounded border border-[var(--border)]/60 max-w-sm">
+              &ldquo;{quote}&rdquo;
+            </div>
+          )}
         </div>
       </div>
 

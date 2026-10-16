@@ -84,6 +84,7 @@ class Call(CamelModel):
     state: CallState
     round: int
     eta_minutes: int | None = None
+    quote: str | None = None
     distance_km: float
     updated_at: str
 

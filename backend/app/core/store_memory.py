@@ -4,9 +4,22 @@ from typing import Any, TypeVar
 
 from app.core.entities import Centre, Donor, Hospital
 from app.core.store import Store, TransactionStore
-from app.requests.models import BloodRequest, Call, TimelineEvent
+from app.requests.models import BloodRequest, Call, CallState, TimelineEvent
 
 T = TypeVar("T")
+
+
+def _sort_calls(calls: list[Call]) -> list[Call]:
+    """Sorts on-the-way donors by eta_minutes (unknown last), followed by other calls."""
+    return sorted(
+        calls,
+        key=lambda c: (
+            0 if c.state == CallState.ON_THE_WAY else 1,
+            c.eta_minutes is None if c.state == CallState.ON_THE_WAY else False,
+            c.eta_minutes or 0 if c.state == CallState.ON_THE_WAY else 0,
+            c.id,
+        ),
+    )
 
 
 class MemoryTransactionStore(TransactionStore):
@@ -53,7 +66,7 @@ class MemoryTransactionStore(TransactionStore):
         for (req_id, call_id), call in self._pending_calls.items():
             if req_id == request_id:
                 store_calls[call_id] = call.model_copy(deep=True)
-        return list(store_calls.values())
+        return _sort_calls(list(store_calls.values()))
 
     async def append_event(self, request_id: str, event: TimelineEvent) -> None:
         self._pending_events.append((request_id, event.model_copy(deep=True)))
@@ -332,7 +345,7 @@ class MemoryStore(Store):
     async def list_calls(self, request_id: str) -> list[Call]:
         async with self._lock:
             calls = self._calls.get(request_id, {})
-            return [c.model_copy(deep=True) for c in calls.values()]
+            return _sort_calls([c.model_copy(deep=True) for c in calls.values()])
 
     # Events
     async def append_event(self, request_id: str, event: TimelineEvent) -> None:
