@@ -1311,7 +1311,7 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/components/CallRow.tsx`
   - `frontend/src/features/centre/CentrePage.tsx`
   - `README.md`
-- **Commit Hash:** [Pending]
+- **Commit Hash:** eab95c4
 - **Human Review:** Verified Gemini Live bridge, audio conversion, safety guardrails, keypad override, and test suites.
 
 ---
