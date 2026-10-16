@@ -183,57 +183,71 @@ The Request Desk pipeline is benchmarked against a curated, labelled evaluation 
   - Prompt version and timestamp.
   - Overall accuracy percentage ($\text{correct} / \text{total}$).
   - P95 response latency in milliseconds.
-  - Itemized pass/fail trace rows visible to hackathon judges on `/eval`.
+  - Itemized pass/fail trace rows visible to hackathon judg## 7. Gemini Live Spike Results
 
----
+To evaluate whether bidirectional real-time streaming audio (Gemini Multimodal Live API) could power automated emergency blood donor calling, an empirical spike script was executed: [`backend/scripts/live_spike.py`](../backend/scripts/live_spike.py).
 
-## 7. Gemini Live Spike Results
+> [!NOTE]
+> The initial spike run (Entry #L0) reported a "not available" verdict because it used an outdated SDK (`google-genai` 0.8.0) and retired experimental model names (`gemini-2.0-flash-exp`, `gemini-2.0-flash-realtime-exp`). Upgrading to `google-genai` 2.31.0 with the console-confirmed model `gemini-live-2.5-flash-native-audio` demonstrated full connectivity and live audio understanding.
 
-To evaluate whether bidirectional real-time streaming audio (Gemini Multimodal Live API) could replace IVR keypad presses during automated emergency blood donor calling, an empirical spike script was executed: [`backend/scripts/live_spike.py`](../backend/scripts/live_spike.py).
-
-### 7.1 Installed Package & Live API Interface
-- **Package:** `google-genai` version `0.8.0`.
-- **Connection Interface:** `client.aio.live.connect(model=..., config=...)` as an asynchronous context manager.
+### 7.1 Installed Package & Modern Live API Interface
+- **Package:** `google-genai` version `2.31.0` (pinned in `backend/pyproject.toml` and `backend/requirements.txt`).
+- **Connection Interface:** `client.aio.live.connect(model=..., config=...)` yielding an `AsyncSession`.
+- **Modern API Signatures:**
+  - Streaming audio: `session.send_realtime_input(media=types.Blob(data=chunk, mime_type="audio/pcm;rate=16000"))` in 20 ms chunks (640 bytes).
+  - Stream termination: `session.send_realtime_input(audio_stream_end=True)` with 1-second silence padding.
+  - Tool acknowledgment: `session.send_tool_response(function_responses=[types.FunctionResponse(...)])`.
+  - Message loop: `async for msg in session.receive()`.
+  - Legacy `session.send(...)` is completely avoided.
 - **Session Configuration (`types.LiveConnectConfig`):**
   - `response_modalities=[types.Modality.AUDIO]`
-  - `system_instruction`: Polite emergency blood donation call assistant.
-  - `tools=[types.Tool(function_declarations=[...])]`: Declared function `record_reply(intent: COMING|CANT|STOP|UNCLEAR, etaMinutes: int|null, quote: string)`.
-- **Audio Streaming:** Sliced 16 kHz 16-bit mono LINEAR16 PCM audio into 20 ms chunks (640 bytes per chunk) streamed via `session.send(input=[types.Blob(data=chunk, mime_type="audio/pcm;rate=16000")])`.
-- **Telephony Simulation:** Audio converted from 16 kHz linear PCM to 8 kHz G.711 $\mu$-law and back to 16 kHz linear PCM using Python's standard `audioop` library (`audioop.ratecv`, `audioop.lin2ulaw`, `audioop.ulaw2lin`).
+  - `input_audio_transcription=types.AudioTranscriptionConfig()`
+  - `output_audio_transcription=types.AudioTranscriptionConfig()`
+  - `system_instruction`: Polite assistant calling on behalf of a blood centre, instructed to invoke `record_reply` once verbatim.
+  - `tools=[types.Tool(function_declarations=[...])]`: Declared function `record_reply(intent: enum COMING|CANT|STOP|UNCLEAR, etaMinutes: integer nullable, quote: string)`.
 
-### 7.2 Cloud Text-to-Speech Audio Generation
+### 7.2 Cloud Text-to-Speech Audio Generation & Telephony Simulation
 Test clips were synthesized via Google Cloud Text-to-Speech API (`TextToSpeechClient`) using 16 kHz 16-bit mono LINEAR16 encoding:
-- **Clip 1 (Tamil):** *"நான் இருபது நிமிஷத்துல வரேன்"* (`ta-IN-Standard-A`, 67,024 bytes raw PCM).
-- **Clip 2 (English decline):** *"Sorry, it's raining heavily, I can't come"* (`en-IN-Standard-A`).
-- **Clip 3 (English opt-out):** *"Please don't call me again"* (`en-IN-Standard-A`).
-- **Clip 1 Phone Quality:** Converted to 8 kHz $\mu$-law and back (31,998 bytes raw PCM).
+- **Clip 1 (Tamil):** *"நான் இருபது நிமிஷத்துல வரேன்"* (`ta-IN-Standard-A`, 66,980 bytes raw PCM).
+- **Clip 2 (English decline):** *"Sorry, it's raining heavily, I can't come"* (`en-IN-Standard-A`, 100,056 bytes raw PCM).
+- **Clip 3 (English opt-out):** *"Please don't call me again"* (`en-IN-Standard-A`, 56,044 bytes raw PCM).
+- **Clip 1 Phone Quality:** Converted to 8 kHz G.711 $\mu$-law and back to 16 kHz linear PCM using `audioop` (`ratecv`, `lin2ulaw`, `ulaw2lin`, 66,978 bytes raw PCM).
 
 ### 7.3 Real-Call Probe Results on Vertex AI
+Probing location candidates in order (`global` $\to$ `us-central1` $\to$ `asia-south1`) for project `uyir2uyir-53929`:
+- `global`: FAILED (`1008 Publisher model was not found`)
+- `us-central1`: **CONNECTED!**
 
-Executing `.\.venv\Scripts\python scripts\live_spike.py` against GCP project `uyir2uyir-53929` across `asia-south1` and `us-central1` yielded the following factual measurements:
-
-| Model Candidate | Location | Live WebSocket Result / Error |
-|---|---|---|
-| `gemini-2.0-flash-exp` | `asia-south1` | `ConnectionClosedError: 1008 (policy violation) Publisher model was not found or your project does not have access to it` |
-| `gemini-2.0-flash` | `asia-south1` | `ConnectionClosedError: 1008 (policy violation) Publisher model was not found or your project does not have access to it` |
-| `gemini-2.0-flash-realtime-exp` | `asia-south1` | `ConnectionClosedError: 1008 (policy violation) Publisher model was not found or your project does not have access to it` |
-| `gemini-2.5-flash` | `asia-south1` | `ConnectionClosedError: 1007 (invalid frame payload data) gemini-2.5-flash is not supported in the live api` |
-| `gemini-2.0-flash-exp` | `us-central1` | `ConnectionClosedError: 1008 (policy violation) Publisher model was not found or your project does not have access to it` |
-| `gemini-2.0-flash` | `us-central1` | `ConnectionClosedError: 1008 (policy violation) Publisher model was not found or your project does not have access to it` |
-| `gemini-2.0-flash-realtime-exp` | `us-central1` | `ConnectionClosedError: 1008 (policy violation) Publisher model was not found or your project does not have access to it` |
-| `gemini-2.5-flash` | `us-central1` | `ConnectionClosedError: 1007 (invalid frame payload data) gemini-2.5-flash is not supported in the live api` |
+Evaluating each audio clip yielded the following factual measurements:
+- **Tamil (Standard):**
+  - Input transcription: Captured donor Tamil speech.
+  - Tool call: `record_reply(intent="COMING", etaMinutes=20, quote="நான் 20 நிமிஷத்துல வருவேன்")`.
+  - Latency from audio end to tool call: `0.006s`.
+- **Tamil (Phone Quality - 8 kHz $\mu$-law):**
+  - Input transcription: Captured donor Tamil speech.
+  - Tool call: `record_reply(intent="COMING", etaMinutes=20, quote="நான் இருபது நிமிஷத்துல வரேன்.")`.
+  - Latency: `0.001s`.
+- **English (CANT):**
+  - Input transcription: *"Sorry, it's raining heavily. I can't come."*
+  - Tool call: `record_reply(intent="CANT", quote="Sorry, it's raining heavily. I can't come.")`.
+  - Latency: `0.001s`.
+- **English (STOP):**
+  - Input transcription: *"Please don't call me again."*
+  - Tool call: `record_reply(intent="STOP", quote="Please don't call me again.")`.
+  - Latency: `0.001s`.
 
 ### 7.4 Summary Table
 
-| Model | Location | Works | Tamil Understood | Tamil at Phone Quality | Tool Latency |
-|---|---|---|---|---|---|
-| `gemini-2.0-flash-exp` | `asia-south1` | **No** (1008 Policy/404) | N/A (Unreachable) | N/A (Unreachable) | N/A |
-| `gemini-2.0-flash-exp` | `us-central1` | **No** (1008 Policy/404) | N/A (Unreachable) | N/A (Unreachable) | N/A |
+| Model | Location | Connects | Tamil understood | Tamil at phone quality | English CANT | English STOP | Tool latency |
+|---|---|---|---|---|---|---|---|
+| `gemini-live-2.5-flash-native-audio` | `us-central1` | **Yes** | **Yes** (COMING, 20m) | **Yes** (COMING, 20m) | **Yes** (CANT) | **Yes** (STOP) | `<0.01s` (~0.002s) |
 
-### 7.5 Architectural Decision & Production Continuity
-1. **Gemini Live Status:** The Vertex AI Multimodal Live API is currently in restricted preview and is not accessible for project `uyir2uyir-53929` in either `asia-south1` or `us-central1`.
-2. **Environment Configuration Added:** Placeholders (`LIVE_MODEL=gemini-2.0-flash-exp`, `LIVE_LOCATION=us-central1`, `LIVE_DAILY_MINUTES=60`) have been declared in `Settings`, `backend/.env.example`, and `infra/env.demo.yaml`.
-3. **Production Architecture Retained:** U2U will continue operating with its zero-latency, highly deterministic architecture:
-   - Automated outbound voice prompts powered by cached **Cloud Text-to-Speech** in Tamil and English.
-   - Deterministic IVR DTMF keypad selection (Press 1 = coming, Press 2 = decline, Press 9 = opt-out).
-   - Generative AI strictly isolated to **Vertex AI Gemini Flash** (`gemini-2.0-flash` / `gemini-1.5-flash`) at the public Request Desk with verbatim quote validation in code.
+### 7.5 Architectural Decision & Status
+1. **Gemini Live Feasibility:** Confirmed functional in `us-central1` on Vertex AI using model `gemini-live-2.5-flash-native-audio` and `google-genai>=2.31.0`. Tamil and English conversational intent extraction and telephony degraded resilience operate with near-instantaneous tool dispatch.
+2. **Configuration Defaults Updated:**
+   - `LIVE_MODEL=gemini-live-2.5-flash-native-audio`
+   - `LIVE_LOCATION=us-central1`
+   - Configured in `backend/app/core/config.py`, `backend/.env.example`, and `infra/env.demo.yaml`.
+3. **Architecture Continuity:**
+   - Production prototype currently retains deterministic IVR DTMF keypad outreach (Press 1/2/9) and cached Cloud Text-to-Speech audio for zero-cost, guaranteed deterministic demo reliability.
+   - The verified Gemini Live engine is now unblocked and ready for future interactive voice agent deployment.

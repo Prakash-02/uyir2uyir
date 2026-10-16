@@ -2,31 +2,42 @@
 """Gemini Live API Spike Script for U2U (Uyir2Uyir).
 
 Tests Vertex AI Multimodal Live API capabilities for automated emergency blood donor calling:
-1. Discovers live-capable models in asia-south1 and us-central1 for project uyir2uyir-53929.
-2. Generates test voice clips via Cloud Text-to-Speech (Tamil, English decline, English opt-out).
+1. Probes live-capable model 'gemini-live-2.5-flash-native-audio' across global, us-central1, asia-south1.
+2. Generates test voice clips via Cloud Text-to-Speech (ta-IN, en-IN decline, en-IN opt-out).
 3. Connects to Gemini Live with bidirectional audio, input/output transcription, and record_reply tool.
-4. Streams audio in 20 ms chunks (640 bytes @ 16 kHz 16-bit PCM).
+4. Streams audio in 20 ms chunks (640 bytes @ 16 kHz 16-bit PCM) via session.send_realtime_input.
 5. Converts Tamil clip to 8 kHz mu-law and back via audioop to verify telephony quality resilience.
-6. Prints detailed measurements and a summary table.
+6. Acknowledges tool calls via session.send_tool_response.
+7. Confirms Request Desk model via generate_content.
+8. Prints detailed measurements and a summary table.
 """
 
 import asyncio
 import audioop
+import os
+import sys
 import time
+from pathlib import Path
 from typing import Any
 
 from google import genai
 from google.cloud import texttospeech
 from google.genai import types
 
+# Ensure UTF-8 output on Windows consoles
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+# Ensure backend directory is in sys.path
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
+from app.core.config import Settings, get_settings  # noqa: E402
+
 PROJECT_ID = "uyir2uyir-53929"
-LOCATIONS = ["asia-south1", "us-central1"]
-CANDIDATE_MODELS = [
-    "gemini-2.0-flash-exp",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-realtime-exp",
-    "gemini-2.5-flash",
-]
+MODEL_NAME = "gemini-live-2.5-flash-native-audio"
+LOCATIONS_TO_TRY = ["global", "us-central1", "asia-south1"]
 
 CHUNK_DURATION_MS = 20
 SAMPLE_RATE = 16000
@@ -35,7 +46,7 @@ CHUNK_BYTES = int(SAMPLE_RATE * (CHUNK_DURATION_MS / 1000.0) * BYTES_PER_SAMPLE)
 
 
 def build_live_tool() -> types.Tool:
-    """Declares record_reply tool for donor response recording."""
+    """Declares record_reply function declaration for donor response recording."""
     return types.Tool(
         function_declarations=[
             types.FunctionDeclaration(
@@ -67,7 +78,7 @@ def build_live_tool() -> types.Tool:
 
 
 def synthesize_tts_clip(text: str, language_code: str, voice_name: str) -> bytes:
-    """Synthesizes text as 16 kHz 16-bit mono LINEAR16 PCM audio."""
+    """Synthesizes text as 16 kHz 16-bit mono LINEAR16 PCM audio via Cloud Text-to-Speech."""
     client = texttospeech.TextToSpeechClient()
     synthesis_input = texttospeech.SynthesisInput(text=text)
     voice = texttospeech.VoiceSelectionParams(
@@ -83,8 +94,8 @@ def synthesize_tts_clip(text: str, language_code: str, voice_name: str) -> bytes
         voice=voice,
         audio_config=audio_config,
     )
-    # Strip 44-byte WAV header if returned, ensuring raw PCM
     raw_audio = resp.audio_content
+    # Strip 44-byte WAV header if returned, ensuring raw PCM
     if raw_audio.startswith(b"RIFF") and len(raw_audio) > 44:
         return raw_audio[44:]
     return raw_audio
@@ -108,76 +119,88 @@ async def stream_and_evaluate(
     audio_data: bytes,
     clip_name: str,
 ) -> dict[str, Any]:
-    """Streams audio in 20 ms chunks, waits up to 10s, and evaluates tool calls and transcription."""
+    """Streams audio in 20 ms chunks with send_realtime_input, sends silence + stream end, and waits up to 15s."""
     print(f"\n--- Streaming clip: {clip_name} ({len(audio_data)} bytes PCM) ---")
 
+    tool_call_name: str | None = None
     tool_args: dict[str, Any] | None = None
     input_transcript = ""
     output_transcript = ""
     audio_bytes_returned = 0
     tool_call_latency_sec: float | None = None
 
-    async def sender():
-        offset = 0
-        while offset < len(audio_data):
-            chunk = audio_data[offset : offset + CHUNK_BYTES]
-            offset += CHUNK_BYTES
-            blob = types.Blob(data=chunk, mime_type="audio/pcm;rate=16000")
-            await session.send(input=[blob], end_of_turn=False)
-            await asyncio.sleep(CHUNK_DURATION_MS / 1000.0)
-        # Mark end of user turn
-        await session.send(input="", end_of_turn=True)
+    # 1. Stream audio in 20 ms chunks (640 bytes)
+    for offset in range(0, len(audio_data), CHUNK_BYTES):
+        chunk = audio_data[offset : offset + CHUNK_BYTES]
+        await session.send_realtime_input(
+            media=types.Blob(data=chunk, mime_type="audio/pcm;rate=16000")
+        )
+        await asyncio.sleep(CHUNK_DURATION_MS / 1000.0)
 
-    stream_start = time.time()
-    send_task = asyncio.create_task(sender())
-    await send_task
+    # 2. Send ~1 second of silence + audio stream end
+    silence_chunk = b"\x00" * CHUNK_BYTES
+    for _ in range(50):
+        await session.send_realtime_input(
+            media=types.Blob(data=silence_chunk, mime_type="audio/pcm;rate=16000")
+        )
+        await asyncio.sleep(CHUNK_DURATION_MS / 1000.0)
+
+    await session.send_realtime_input(audio_stream_end=True)
     audio_end_time = time.time()
-    print(
-        f"Audio streaming finished in {audio_end_time - stream_start:.2f}s. Waiting for model response..."
-    )
+    print("Audio streamed (with 1s silence + audio_stream_end). Waiting up to 15s for model...")
 
+    # 3. Receive messages up to 15 seconds
     try:
-        async with asyncio.timeout(10.0):
+        async with asyncio.timeout(15.0):
             async for msg in session.receive():
-                # Server content / transcription / audio
                 if msg.server_content:
-                    if msg.server_content.model_turn:
-                        for part in msg.server_content.model_turn.parts:
+                    sc = msg.server_content
+                    if sc.input_transcription and sc.input_transcription.text:
+                        input_transcript += sc.input_transcription.text
+                    if sc.output_transcription and sc.output_transcription.text:
+                        output_transcript += sc.output_transcription.text
+                    if sc.model_turn:
+                        for part in sc.model_turn.parts:
                             if part.text:
                                 output_transcript += part.text
                             if part.inline_data and part.inline_data.data:
                                 audio_bytes_returned += len(part.inline_data.data)
-                    if msg.server_content.turn_complete:
+                    if sc.turn_complete:
                         print("Turn complete received from server.")
                         break
 
-                # Tool call
                 if msg.tool_call and msg.tool_call.function_calls:
                     for fc in msg.tool_call.function_calls:
                         if fc.name == "record_reply":
                             tool_call_latency_sec = time.time() - audio_end_time
+                            tool_call_name = fc.name
                             tool_args = fc.args
-                            print(
-                                f"-> Tool call received: record_reply({tool_args}) in {tool_call_latency_sec:.3f}s"
+                            print(f"\n[Tool Call Received in {tool_call_latency_sec:.3f}s]")
+                            print(f"  Name: {tool_call_name}")
+                            print(f"  Args: {tool_args}")
+                            print(f"  Input Transcription: {input_transcript}")
+
+                            # Acknowledge tool call with send_tool_response so session finishes cleanly
+                            await session.send_tool_response(
+                                function_responses=[
+                                    types.FunctionResponse(
+                                        name=fc.name,
+                                        response={"applied": True},
+                                        id=fc.id,
+                                    )
+                                ]
                             )
-                            # Acknowledge tool call so session completes turn
-                            tool_resp = {
-                                "name": fc.name,
-                                "response": {"status": "ok"},
-                                "id": getattr(fc, "id", None) or "call_1",
-                            }
-                            await session.send(input=[tool_resp])
-                            break
-                    if tool_args is not None:
-                        break
 
     except TimeoutError:
-        print("Timeout (10s) reached waiting for model response.")
+        print("Timeout (15s) reached waiting for model response.")
     except Exception as e:
         print(f"Error during receive loop: {type(e).__name__}: {e}")
 
+    print(f"  Returned Audio: {audio_bytes_returned} bytes")
+
     return {
         "clip": clip_name,
+        "tool_name": tool_call_name,
         "tool_args": tool_args,
         "input_transcript": input_transcript,
         "output_transcript": output_transcript,
@@ -189,105 +212,87 @@ async def stream_and_evaluate(
 async def main() -> None:
     print("=================================================================")
     print(" U2U GEMINI MULTIMODAL LIVE SPIKE (Vertex AI & Cloud TTS)")
-    print("=================================================================")
-    print(f"Project: {PROJECT_ID}")
-    print(f"Locations to test: {LOCATIONS}")
-    print(f"Candidate Models: {CANDIDATE_MODELS}\n")
+    print(f" Model: {MODEL_NAME}")
+    print(f" SDK: google-genai {genai.__version__}")
+    print(f" Locations to try: {LOCATIONS_TO_TRY}")
+    print("=================================================================\n")
 
-    # Step 2a: Test Vertex AI Live models across regions
-    discovered_model: str | None = None
-    discovered_location: str | None = None
+    # Step 3b: Try locations in order: global, us-central1, asia-south1
+    working_location: str | None = None
     location_errors: dict[str, str] = {}
 
-    for loc in LOCATIONS:
-        print(f"[*] Probing Vertex AI in region: {loc}...")
-        client = genai.Client(vertexai=True, project=PROJECT_ID, location=loc)
-        for model in CANDIDATE_MODELS:
-            print(f"    Connecting to model '{model}' in {loc}...", end=" ", flush=True)
-            try:
-                config = types.LiveConnectConfig(
-                    response_modalities=[types.Modality.AUDIO],
-                )
-                async with client.aio.live.connect(model=model, config=config):
-                    print("CONNECTED!")
-                    discovered_model = model
-                    discovered_location = loc
-                    break
-            except Exception as exc:
-                err_line = str(exc).splitlines()[0] if str(exc) else type(exc).__name__
-                print(f"FAILED ({type(exc).__name__}: {err_line[:80]})")
-                location_errors[f"{loc}/{model}"] = err_line
-        if discovered_model:
-            break
+    for loc in LOCATIONS_TO_TRY:
+        print(f"[*] Probing location '{loc}' for model '{MODEL_NAME}'...", end=" ", flush=True)
+        try:
+            client = genai.Client(vertexai=True, project=PROJECT_ID, location=loc)
+            test_config = types.LiveConnectConfig(
+                response_modalities=[types.Modality.AUDIO],
+            )
+            async with client.aio.live.connect(model=MODEL_NAME, config=test_config):
+                print("CONNECTED!")
+                working_location = loc
+                break
+        except Exception as exc:
+            err_msg = str(exc).splitlines()[0] if str(exc) else type(exc).__name__
+            print(f"FAILED ({type(exc).__name__}: {err_msg[:80]})")
+            location_errors[loc] = err_msg
 
-    # If Vertex AI live connection is not accessible in either region:
-    if not discovered_model or not discovered_location:
+    if not working_location:
         print("\n" + "!" * 65)
-        print("FACTUAL RESULT: No working Gemini Live model found on Vertex AI.")
-        print(f"Project: {PROJECT_ID}")
-        print(f"Tested Regions: {LOCATIONS}")
-        print("Errors encountered across candidate models:")
-        for target, err in location_errors.items():
-            print(f"  - {target}: {err}")
+        print("RESULT: No working location connected for", MODEL_NAME)
+        for loc, err in location_errors.items():
+            print(f"  - {loc}: {err}")
         print("!" * 65)
-
-        # Print summary table reflecting factual reality
-        print("\n================== GEMINI LIVE SPIKE SUMMARY ==================")
+        print("\nSummary Table:")
         print(
-            f"| {'Model':<24} | {'Location':<12} | {'Works':<8} | {'Tamil':<8} | {'Phone Qual':<10} | {'Latency':<8} |"
+            f"| {'Model':<35} | {'Location':<12} | {'Connects':<8} | {'Tamil':<8} | {'Phone Qual':<10} | {'CANT':<6} | {'STOP':<6} | {'Latency':<8} |"
         )
-        print(f"|{'-' * 26}|{'-' * 14}|{'-' * 10}|{'-' * 10}|{'-' * 12}|{'-' * 10}|")
-        first_model = CANDIDATE_MODELS[0]
-        for loc in LOCATIONS:
-            err_summary = location_errors.get(f"{loc}/{first_model}", "Not found")
-            err_short = (
-                "404/Policy" if ("1008" in err_summary or "404" in err_summary) else "Failed"
-            )
-            print(
-                f"| {first_model:<24} | {loc:<12} | {err_short:<8} | {'N/A':<8} | {'N/A':<10} | {'N/A':<8} |"
-            )
-        print("===============================================================\n")
-        print("Conclusion: Vertex AI Gemini Live API is currently unavailable in both")
-        print("asia-south1 and us-central1 for project uyir2uyir-53929.")
+        print(
+            f"|{'-' * 37}|{'-' * 14}|{'-' * 10}|{'-' * 10}|{'-' * 12}|{'-' * 8}|{'-' * 8}|{'-' * 10}|"
+        )
+        print(
+            f"| {MODEL_NAME:<35} | {'None':<12} | {'No':<8} | {'N/A':<8} | {'N/A':<10} | {'N/A':<6} | {'N/A':<6} | {'N/A':<8} |"
+        )
         return
 
-    # If a live model works:
-    print(f"\n[+] Selected Model: {discovered_model} in {discovered_location}")
-    print("[*] Generating TTS audio test clips (16 kHz 16-bit mono LINEAR16 PCM)...")
+    print(f"\n[+] Selected Location: {working_location}")
 
-    clips = {
-        "clip1_ta": synthesize_tts_clip(
+    # Step 3d: Generate three clips with Cloud Text-to-Speech (16 kHz 16-bit mono LINEAR16 PCM)
+    print("\n[*] Synthesizing TTS test clips...")
+    clips: dict[str, bytes] = {
+        "Tamil (Standard)": synthesize_tts_clip(
             text="நான் இருபது நிமிஷத்துல வரேன்",
             language_code="ta-IN",
             voice_name="ta-IN-Standard-A",
         ),
-        "clip2_en_rain": synthesize_tts_clip(
+        "English (CANT)": synthesize_tts_clip(
             text="Sorry, it's raining heavily, I can't come",
             language_code="en-IN",
             voice_name="en-IN-Standard-A",
         ),
-        "clip3_en_stop": synthesize_tts_clip(
+        "English (STOP)": synthesize_tts_clip(
             text="Please don't call me again",
             language_code="en-IN",
             voice_name="en-IN-Standard-A",
         ),
     }
 
-    # Step 2e: Convert clip 1 to 8 kHz mu-law and back to 16 kHz
-    clips["clip1_ta_phone"] = convert_to_phone_quality(clips["clip1_ta"])
-    print(f"  Clip 1 (ta-IN): {len(clips['clip1_ta'])} bytes")
-    print(f"  Clip 2 (en-IN decline): {len(clips['clip2_en_rain'])} bytes")
-    print(f"  Clip 3 (en-IN opt-out): {len(clips['clip3_en_stop'])} bytes")
-    print(f"  Clip 1 phone-quality (8k mu-law -> 16k PCM): {len(clips['clip1_ta_phone'])} bytes")
+    # Step 3f: Repeat Tamil clip after converting to 8 kHz mu-law and back to 16 kHz with audioop
+    print("[*] Converting Tamil clip to 8 kHz mu-law and back to 16 kHz (phone quality)...")
+    clips["Tamil (Phone Quality)"] = convert_to_phone_quality(clips["Tamil (Standard)"])
 
+    for name, pcm in clips.items():
+        print(f"  - {name}: {len(pcm)} bytes raw PCM")
+
+    # Step 3c: Session config
     system_instruction = types.Content(
         parts=[
             types.Part.from_text(
                 text=(
-                    "You are a polite emergency blood donation call assistant. "
-                    "When the donor answers, you must call the record_reply function once "
-                    "with the donor's intent (COMING, CANT, STOP, UNCLEAR), "
-                    "etaMinutes (integer if coming, null otherwise), and quote (verbatim quote)."
+                    "You are a polite assistant calling a blood donor on behalf of a blood centre. "
+                    "Find out if they can come now, can't, or want no more calls, and roughly how many "
+                    "minutes they need. As soon as it is clear, call record_reply once with their own "
+                    "words as the quote. Never give medical advice."
                 )
             )
         ]
@@ -295,42 +300,111 @@ async def main() -> None:
 
     connect_config = types.LiveConnectConfig(
         response_modalities=[types.Modality.AUDIO],
+        input_audio_transcription=types.AudioTranscriptionConfig(),
+        output_audio_transcription=types.AudioTranscriptionConfig(),
         system_instruction=system_instruction,
         tools=[build_live_tool()],
     )
 
-    client = genai.Client(vertexai=True, project=PROJECT_ID, location=discovered_location)
-    results: list[dict[str, Any]] = []
+    client = genai.Client(vertexai=True, project=PROJECT_ID, location=working_location)
+    results: dict[str, dict[str, Any]] = {}
 
-    for name, pcm_data in clips.items():
-        print(f"\n[*] Opening Live session for {name}...")
+    # Step 3e: Stream each clip and evaluate
+    eval_order = [
+        "Tamil (Standard)",
+        "Tamil (Phone Quality)",
+        "English (CANT)",
+        "English (STOP)",
+    ]
+
+    for clip_name in eval_order:
+        pcm_data = clips[clip_name]
+        print(f"\n[*] Opening fresh Live session for '{clip_name}'...")
         try:
-            async with client.aio.live.connect(
-                model=discovered_model, config=connect_config
-            ) as session:
-                res = await stream_and_evaluate(session, pcm_data, name)
-                results.append(res)
-                print(f"    Result for {name}:")
-                print(f"      Tool Call: {res['tool_args']}")
-                print(f"      Latency: {res['latency_sec']}s")
-                print(f"      Audio returned: {res['audio_bytes_returned']} bytes")
-                print(f"      Output transcript: {res['output_transcript'][:80]}")
+            async with client.aio.live.connect(model=MODEL_NAME, config=connect_config) as session:
+                res = await stream_and_evaluate(session, pcm_data, clip_name)
+                results[clip_name] = res
         except Exception as exc:
-            print(f"    Failed during {name}: {exc}")
-            results.append({"clip": name, "error": str(exc)})
+            print(f"    Failed during session for '{clip_name}': {type(exc).__name__}: {exc}")
+            results[clip_name] = {"clip": clip_name, "error": str(exc)}
 
-    # Summary table
-    print("\n================== GEMINI LIVE SPIKE SUMMARY ==================")
-    print(f"| {'Clip':<20} | {'Intent':<10} | {'ETA':<5} | {'Latency':<8} | {'Audio Bytes':<11} |")
-    print(f"|{'-' * 22}|{'-' * 12}|{'-' * 7}|{'-' * 10}|{'-' * 13}|")
-    for r in results:
-        args = r.get("tool_args") or {}
-        intent = args.get("intent", "None")
-        eta = str(args.get("etaMinutes", "-"))
-        lat = f"{r.get('latency_sec', 0.0):.2f}s" if r.get("latency_sec") else "N/A"
-        aud = str(r.get("audio_bytes_returned", 0))
-        print(f"| {r['clip']:<20} | {intent:<10} | {eta:<5} | {lat:<8} | {aud:<11} |")
-    print("===============================================================\n")
+    # Step 4: Confirm Request Desk model
+    print("\n" + "=" * 65)
+    print(" STEP 4: CONFIRM REQUEST DESK MODEL")
+    print("=" * 65)
+    try:
+        settings = get_settings()
+    except Exception:
+        settings = Settings(
+            GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
+            GOOGLE_CLOUD_PROJECT=os.getenv("GOOGLE_CLOUD_PROJECT", PROJECT_ID),
+            VERTEX_LOCATION=os.getenv("VERTEX_LOCATION", "asia-south1"),
+        )
+
+    desk_model = settings.GEMINI_MODEL
+    desk_location = settings.VERTEX_LOCATION
+    print(f"Request Desk Config: model={desk_model}, location={desk_location}")
+
+    try:
+        desk_client = genai.Client(
+            vertexai=True,
+            project=settings.GOOGLE_CLOUD_PROJECT or PROJECT_ID,
+            location=desk_location,
+        )
+        desk_resp = desk_client.models.generate_content(
+            model=desk_model,
+            contents="Confirm you are operational for blood request parsing. Say OK.",
+        )
+        print(f"Request Desk Model ({desk_model} in {desk_location}): OK")
+        print(f"  Response: {desk_resp.text.strip()[:80]}")
+    except Exception as exc:
+        print(
+            f"Request Desk Model ({desk_model} in {desk_location}): ERROR ({type(exc).__name__}: {exc})"
+        )
+
+    # Step 5: Print summary table
+    # Columns: model, location, connects, Tamil understood, Tamil at phone quality, English CANT, English STOP, tool latency
+    print("\n" + "=" * 65)
+    print(" STEP 5: SUMMARY TABLE")
+    print("=" * 65)
+
+    def extract_verdict(res: dict[str, Any] | None, expected_intent: str) -> str:
+        if not res or "error" in res:
+            return "No (Error)"
+        args = res.get("tool_args") or {}
+        intent = args.get("intent")
+        if intent == expected_intent:
+            eta = args.get("etaMinutes")
+            return f"Yes ({intent}, {eta}m)" if eta is not None else f"Yes ({intent})"
+        return f"No ({intent})"
+
+    ta_std_verdict = extract_verdict(results.get("Tamil (Standard)"), "COMING")
+    ta_phone_verdict = extract_verdict(results.get("Tamil (Phone Quality)"), "COMING")
+    en_cant_verdict = extract_verdict(results.get("English (CANT)"), "CANT")
+    en_stop_verdict = extract_verdict(results.get("English (STOP)"), "STOP")
+
+    latencies = [r.get("latency_sec") for r in results.values() if r.get("latency_sec") is not None]
+    if latencies:
+        avg_lat = sum(latencies) / len(latencies)
+        lat_display = f"{avg_lat:.3f}s"
+    else:
+        lat_display = "N/A"
+
+    print(
+        "\n======================================================== GEMINI LIVE SPIKE SUMMARY ========================================================"
+    )
+    print(
+        f"| {'Model':<35} | {'Location':<12} | {'Connects':<8} | {'Tamil understood':<18} | {'Tamil at phone quality':<23} | {'English CANT':<14} | {'English STOP':<14} | {'Tool latency':<12} |"
+    )
+    print(
+        f"|{'-' * 37}|{'-' * 14}|{'-' * 10}|{'-' * 20}|{'-' * 25}|{'-' * 16}|{'-' * 16}|{'-' * 14}|"
+    )
+    print(
+        f"| {MODEL_NAME:<35} | {working_location:<12} | {'Yes':<8} | {ta_std_verdict:<18} | {ta_phone_verdict:<23} | {en_cant_verdict:<14} | {en_stop_verdict:<14} | {lat_display:<12} |"
+    )
+    print(
+        "==========================================================================================================================================\n"
+    )
 
 
 if __name__ == "__main__":

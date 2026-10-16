@@ -27,7 +27,7 @@ class Settings(BaseSettings):
         description="Gemini model name, explicitly read from environment with no default in code",
     )
     LIVE_MODEL: str = Field(
-        default="gemini-2.0-flash-exp",
+        default="gemini-live-2.5-flash-native-audio",
         description="Gemini Live model name for experimental multimodal calling",
     )
     LIVE_LOCATION: str = Field(

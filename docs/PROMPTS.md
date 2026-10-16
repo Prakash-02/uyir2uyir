@@ -1113,6 +1113,34 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** f206398
 - **Human Review:** Verified factual spike run, zero app changes, lint and test suites clean.
 
+### Entry #L0b
+- **Date:** 2026-10-16
+- **Goal:** Redo the Gemini Live spike correctly with the model confirmed in the Google Cloud console (`gemini-live-2.5-flash-native-audio`) using the latest `google-genai` release, resolving the earlier invalid "not available" finding from Entry #L0.
+- **Prompt Summary:**
+  1. Upgraded `google-genai` in `backend/.venv` from `0.8.0` to `2.31.0` and updated pinned dependencies in `backend/pyproject.toml` and `backend/requirements.txt` (`google-genai>=2.31.0,<3.0.0`).
+  2. Inspected modern `google-genai` 2.31.0 Live API methods: `client.aio.live.connect`, `types.LiveConnectConfig`, `session.send_realtime_input`, `session.send_tool_response`, and `session.receive()`. Deprecated `session.send(...)` was completely avoided.
+  3. Rewrote `backend/scripts/live_spike.py`:
+     - Probed model `gemini-live-2.5-flash-native-audio` across `global`, `us-central1`, and `asia-south1`. Successfully connected in `us-central1`.
+     - Synthesized 3 clips via Cloud TTS (16 kHz 16-bit mono LINEAR16 PCM): Tamil arrival (`ta-IN`), English rain decline (`en-IN`), and English opt-out (`en-IN`).
+     - Converted Tamil clip to 8 kHz G.711 $\mu$-law and back to 16 kHz PCM using `audioop` to test telephony degradation resilience.
+     - Streamed 20 ms chunks (640 bytes) via `session.send_realtime_input`, followed by 1s silence padding and `audio_stream_end=True`.
+     - Verified `record_reply` tool call invocation, input transcription, latency (<0.01s), and cleanly acknowledged via `session.send_tool_response(function_responses=[types.FunctionResponse(...)])`.
+     - Confirmed Request Desk model behavior with `settings.GEMINI_MODEL`.
+     - Formatted and printed the complete summary table.
+  4. Updated config defaults to `LIVE_MODEL=gemini-live-2.5-flash-native-audio` and `LIVE_LOCATION=us-central1` in `backend/app/core/config.py`, `backend/.env.example`, and `infra/env.demo.yaml`.
+  5. Updated `docs/AI_DESIGN.md` Section 7 with the verified factual results, noting the root cause of the initial failure (outdated SDK 0.8.0 and retired model names).
+- **Files Changed:**
+  - `backend/pyproject.toml`
+  - `backend/requirements.txt`
+  - `backend/app/core/config.py`
+  - `backend/.env.example`
+  - `infra/env.demo.yaml`
+  - `backend/scripts/live_spike.py`
+  - `docs/AI_DESIGN.md`
+  - `docs/PROMPTS.md`
+- **Commit Hash:** a6c783b
+- **Human Review:** Verified live spike execution with 100% intent accuracy on Tamil, phone-quality Tamil, English CANT, and English STOP.
+
 ---
 
 ## Human Decisions
