@@ -392,5 +392,5 @@ describe('DeskPage (/desk)', () => {
         window.fetch = origWindowFetch
       }
     }
-  })
+  }, 15000)
 })

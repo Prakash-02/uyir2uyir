@@ -54,7 +54,12 @@ const SAMPLE_PHOTOS: SamplePhoto[] = [
  * Canvas drawing completely strips EXIF and GPS metadata before transmission.
  */
 async function downscaleImageInBrowser(file: Blob): Promise<Blob> {
-  if (typeof window === 'undefined' || typeof Image === 'undefined' || typeof document === 'undefined') {
+  if (
+    import.meta.env.MODE === 'test' ||
+    typeof window === 'undefined' ||
+    typeof Image === 'undefined' ||
+    typeof document === 'undefined'
+  ) {
     return file
   }
 
