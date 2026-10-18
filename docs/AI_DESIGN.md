@@ -264,7 +264,12 @@ Evaluating each audio clip yielded the following factual measurements:
 
 ## 8. Gemini Live Voice Calls Architecture
 
-U2U bridges real outbound phone calls from Twilio Media Streams to a Google Gemini Live multimodal session (`LiveBridge` in [`backend/app/voice/live_session.py`](../backend/app/voice/live_session.py)).
+U2U bridges real outbound phone calls from Twilio Media Streams and in-browser voice simulator sessions to a Google Gemini Live multimodal session (`LiveBridge` in [`backend/app/voice/live_session.py`](../backend/app/voice/live_session.py)), strictly adhering to the following scope and declarations:
+- **Real Twilio calls go to verified team phones only:** Outbound phone calls via Twilio Media Streams dial numbers explicitly verified in `CALL_ALLOWLIST`.
+- **Judges use the browser call:** Evaluators and judges test voice calls directly in the browser via `/sim` (Web Audio + WebSocket bridge to Gemini Live).
+- **Twilio is only the phone line; all understanding and speech is Google:** Twilio is solely the cellular transport; all speech recognition, turn-taking, tool calls, and speech synthesis are Google (Gemini Live and Cloud Text-to-Speech).
+- **Roadmap:** Outbound calls to real donors through an Indian telephony provider (e.g., Exotel) with virtual masked numbers and national DLT registration are roadmap.
+- **Regional Disclosure:** While the Request Desk (`gemini-2.5-flash`) runs locally in `asia-south1` (Mumbai, India), the Gemini Multimodal Live API connects to `us-central1` (Iowa, USA) where Vertex AI Multimodal Live WebSocket endpoints are currently hosted.
 
 ### 8.1 Boundary of Responsibility: What Gemini Does vs. What Code Does
 

@@ -35,6 +35,7 @@ The backend is organized into 9 isolated domain modules under `app/`:
 7. **Demo-Only Endpoint Protection:** Endpoints reserved for demonstration (`/sim/*`, `/admin/*`, `/auth/demo-role`) must verify `DATA_MODE == 'demo'` and return `403 Forbidden` in live mode.
 8. **Mode Guard Enforcement:** The application must refuse startup if `DATA_MODE` and `FIRESTORE_DB` mismatch (`demo` $\to$ `u2u-demo`, `live` $\to$ `u2u-live`).
 9. **Environment & Secrets:** Never modify `.env` files or commit credentials/keys. All configuration flows through `app/core/config.py`.
+10. **Voice Call Scope & Honesty:** Real Twilio outbound calls go strictly to verified team phones in `CALL_ALLOWLIST`. Evaluators and judges test voice calls in the browser on `/sim`. Twilio is only the phone line; all understanding and speech is Google (Gemini Live and Cloud Text-to-Speech). Calls to real donors through an Indian provider (e.g. Exotel) are roadmap.
 
 ---
 

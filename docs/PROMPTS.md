@@ -1368,6 +1368,54 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `docs/FRONTEND.md`
   - `docs/PROMPTS.md`
 
+### Entry #L5
+- **Date:** 2026-10-18
+- **Goal:** Make voice calls reliable on Cloud Run and make every document say the same thing about calls.
+- **Prompt Summary:**
+  1. Updated `infra/deploy_backend_demo.sh` and `infra/deploy_backend_demo.ps1`:
+     - Added `--timeout 300` for WebSocket media streaming.
+     - Added `--min-instances 1` to prevent cold starts during evaluation, with a clear script note to set back to 0 post-judging.
+     - Enforced `--no-cpu-throttling` and added `--concurrency 20`.
+     - Verified `LIVE_MODEL`, `LIVE_LOCATION`, `LIVE_DAILY_MINUTES`, `PUBLIC_BASE_URL` in pre-flight checks and included Twilio secrets (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`, `TWILIO_PHONE_NUMBER`, `CALL_ALLOWLIST`).
+  2. Scope consistency across all repository documentation and code comments matching `U2U_BRIEF.md` Section 9:
+     - Real Twilio calls go to verified team phones only (`CALL_ALLOWLIST`).
+     - Judges use the browser call on `/sim`.
+     - Twilio is only the phone line; all understanding and speech is Google (Gemini Live and Cloud TTS).
+     - Calls to real donors through an Indian provider (e.g. Exotel) are roadmap.
+     - Aligned `U2U_BRIEF.md`, `README.md`, `AGENTS.md`, `backend/AGENTS.md`, `backend/.env.example`, `backend/app/outreach/twilio_adapter.py`, `backend/app/outreach/twilio_router.py`, `backend/app/voice/twilio_stream.py`, `docs/ARCHITECTURE.md`, `docs/BACKEND.md`, `docs/AI_DESIGN.md`, and `docs/DEMO.md`.
+  3. `README.md` enhancements:
+     - Added "What is real in this demo" declaration box.
+     - Updated Google services table with Gemini Live and Cloud Text-to-Speech rows and code paths.
+     - Declared "Twilio is only the phone line; all understanding and speech is Google."
+     - Disclosed Gemini Live regional hosting (`us-central1` vs `asia-south1`).
+     - Added Acknowledgements section crediting Rapid Red and Care Circle.
+  4. Privacy and roadmap updates:
+     - Updated `docs/PRIVACY_SAFETY.md` with Call Privacy section (nothing recorded, only intent/eta/quote stored, live guardrails).
+     - Updated `docs/ROADMAP.md` detailing Indian voice provider (Exotel) with virtual masked numbers and basic phone support, transactional SMS after DLT registration, WhatsApp Business, and FCM push alerts.
+  5. Verification & Testing:
+     - Updated `docs/TESTING.md` with real test counts (127 frontend tests, 150 backend tests, 277 total passing tests, 200 Hypothesis runs) and manual voice call checks table (`CALL-MAN-01` to `CALL-MAN-07`).
+     - Verified all relative markdown links resolve across 22 documentation files.
+     - 150 backend tests passing, 127 frontend tests passing, Oxlint and Ruff clean.
+- **Files Changed:**
+  - `AGENTS.md`
+  - `README.md`
+  - `U2U_BRIEF.md`
+  - `backend/.env.example`
+  - `backend/AGENTS.md`
+  - `backend/app/outreach/twilio_adapter.py`
+  - `backend/app/outreach/twilio_router.py`
+  - `backend/app/voice/twilio_stream.py`
+  - `docs/AI_DESIGN.md`
+  - `docs/ARCHITECTURE.md`
+  - `docs/BACKEND.md`
+  - `docs/DEMO.md`
+  - `docs/PRIVACY_SAFETY.md`
+  - `docs/PROMPTS.md`
+  - `docs/ROADMAP.md`
+  - `docs/TESTING.md`
+  - `infra/deploy_backend_demo.ps1`
+  - `infra/deploy_backend_demo.sh`
+
 ---
 
 ## Human Decisions

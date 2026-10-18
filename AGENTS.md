@@ -73,9 +73,13 @@
 
 ---
 
-## 7. Mock Honesty
+## 7. Voice Call Scope & Honesty
 
-- Mock mode must never label or attribute its output as coming from Gemini, Twilio, or Cloud Text-to-Speech when running simulated handlers.
+- **Team allowlist only:** Real Twilio outbound calls go strictly to verified team phones in `CALL_ALLOWLIST`.
+- **Judges use the browser:** Evaluators and judges test voice calls directly in the browser on `/sim` (Web Audio + WebSocket bridge to Gemini Live).
+- **Twilio is only the phone line:** Twilio is strictly the cellular carrier; all understanding, natural language turn-taking, and speech synthesis are Google (Gemini Live and Cloud Text-to-Speech).
+- **Roadmap:** Calls to real donors through an Indian provider (e.g. Exotel) with virtual masked numbers are roadmap.
+- **Mock honesty:** Mock mode must never label or attribute its output as coming from Gemini, Twilio, or Cloud Text-to-Speech when running simulated handlers.
 
 ---
 

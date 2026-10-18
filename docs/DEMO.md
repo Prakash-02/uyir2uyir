@@ -110,6 +110,13 @@ Because emergency blood coordination spans multiple roles, U2U includes a zero-f
 
 Because external judges cannot receive cellular Twilio calls during evaluation, U2U allows anyone on the demo site to act as a donor and take an urgent ringing call directly in the browser over a two-way Web Audio + WebSocket bridge (`WS /sim/live/{callId}`), reusing the exact same Live bridge architecture, limits, and guardrails as live telephony:
 
+> [!NOTE]
+> **Voice Call Scope & Honesty:**
+> - **Real Twilio calls go to verified team phones only:** Outbound phone calls via Twilio Media Streams dial numbers explicitly verified in `CALL_ALLOWLIST`.
+> - **Judges use the browser call:** Evaluators and judges test voice calls directly in the browser via `/sim`.
+> - **Twilio is only the phone line:** Twilio acts strictly as the cellular transport; all understanding and speech is Google (Gemini Live and Cloud Text-to-Speech).
+> - **Calls to real donors through an Indian provider are roadmap:** In-country telephony via an Indian provider (e.g. Exotel) with virtual masked numbers and national DLT registration is roadmap.
+
 ```mermaid
 sequenceDiagram
     autonumber

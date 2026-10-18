@@ -596,7 +596,11 @@ def verify_quote(original_text: str, quote: Optional[str]) -> bool:
    - If `AppConfig.weatherAlert == True`, the audio appends:
      - English: *"If roads near you are unsafe because of rain, please press 2."*
      - Tamil: *"மழை காரணமாக உங்கள் அருகிலுள்ள சாலைகள் பாதுகாப்பற்றதாக இருந்தால், தயவுசெய்து 2-ஐ அழுத்தவும்."*
-4. **Simulator Mode:** In demo mode (`DATA_MODE=demo`), instead of initiating live Twilio calls, active calls transition to `RINGING` in Firestore and are picked up by the `/sim` interactive handset interface.
+4. **Voice Outreach Scope & Dual Dispatch:**
+   - **Real Twilio calls go to verified team phones only:** Outbound cellular calls via Twilio Media Streams dial numbers explicitly verified in `CALL_ALLOWLIST`.
+   - **Judges use the browser call:** Evaluators and judges test voice calls directly in the browser via `/sim` (Web Audio + WebSocket bridge to Gemini Live).
+   - **Twilio is only the phone line:** Twilio acts strictly as the cellular transport; all understanding, tool handling, and speech synthesis are Google (Gemini Live and Cloud Text-to-Speech).
+   - **Roadmap:** Outbound calls to real donors through an Indian telephony provider (e.g. Exotel) with virtual masked numbers and national DLT registration are roadmap.
 
 ---
 

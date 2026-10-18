@@ -23,7 +23,7 @@ echo "    Region:   ${REGION}"
 echo "    Service:  ${SERVICE_NAME}"
 echo "================================================================="
 
-# Pre-flight: verify infra/env.demo.yaml exists and GEMINI_MODEL is filled
+# Pre-flight: verify infra/env.demo.yaml exists and required settings are filled
 if [ ! -f "infra/env.demo.yaml" ]; then
   echo "❌ ERROR: infra/env.demo.yaml not found. Please create it before deploying."
   exit 1
@@ -33,6 +33,13 @@ if grep -q "YOUR_GEMINI_MODEL_HERE" infra/env.demo.yaml; then
   echo "❌ ERROR: Please edit infra/env.demo.yaml and set GEMINI_MODEL (e.g. gemini-2.5-flash) before deploying."
   exit 1
 fi
+
+for REQUIRED_VAR in LIVE_MODEL LIVE_LOCATION LIVE_DAILY_MINUTES PUBLIC_BASE_URL; do
+  if ! grep -q "^${REQUIRED_VAR}:" infra/env.demo.yaml; then
+    echo "❌ ERROR: ${REQUIRED_VAR} is missing from infra/env.demo.yaml."
+    exit 1
+  fi
+done
 
 # Step 1: Set GCP project
 echo "==> [1/7] Setting gcloud active project to ${PROJECT_ID}..."
@@ -123,7 +130,7 @@ done
 echo "==> [6/7] Deploying Cloud Run service ${SERVICE_NAME}..."
 
 SECRETS_LIST="LINK_SIGNING_KEY=LINK_SIGNING_KEY:latest,PHONE_KEY=PHONE_KEY:latest,INTERNAL_TOKEN=INTERNAL_TOKEN:latest"
-for OPT_SEC in TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_FROM_NUMBER CALL_ALLOWLIST; do
+for OPT_SEC in TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_FROM_NUMBER TWILIO_PHONE_NUMBER CALL_ALLOWLIST; do
   if gcloud secrets describe "${OPT_SEC}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
     SECRETS_LIST="${SECRETS_LIST},${OPT_SEC}=${OPT_SEC}:latest"
     gcloud secrets add-iam-policy-binding "${OPT_SEC}" \
@@ -133,6 +140,9 @@ for OPT_SEC in TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_FROM_NUMBER CALL_ALLO
   fi
 done
 
+# NOTE: --min-instances is set to 1 during hackathon judging to keep containers warm
+# for real-time WebSocket audio latency. Remember to set it back to 0 after judging
+# to eliminate idle compute costs!
 gcloud run deploy "${SERVICE_NAME}" \
   --source backend \
   --region "${REGION}" \
@@ -141,6 +151,7 @@ gcloud run deploy "${SERVICE_NAME}" \
   --no-cpu-throttling \
   --max-instances 3 \
   --min-instances 1 \
+  --concurrency 20 \
   --timeout 300 \
   --env-vars-file infra/env.demo.yaml \
   "--set-secrets=${SECRETS_LIST}" \

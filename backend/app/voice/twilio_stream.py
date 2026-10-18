@@ -13,7 +13,10 @@ Guarantees:
   - Live session fails to open within 3.0s or errors -> keypad prompt fallback.
   - Live session drops mid-call -> keypad prompt fallback.
   - 45s total or 3 donor turns without tool call -> UNCLEAR, fixed closing, ends call.
-- Zero audio or transcript written to disk or database.
+- Zero audio or transcript written to disk or database (processed ephemerally in RAM).
+- Scope: Real Twilio calls go to verified team phones only in CALL_ALLOWLIST;
+  judges use the browser call on /sim; Twilio is only the phone line (all AI is Google);
+  calls to real donors via an Indian provider (e.g. Exotel) are roadmap.
 """
 
 import asyncio

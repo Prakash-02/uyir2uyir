@@ -12,7 +12,7 @@ To maintain ethical safety, prevent clinical harm, and ensure regulatory complia
 
 1. **Real Donors or Patients:** All donor profiles, phone numbers, patient identifiers, and hospital fixtures are strictly simulated.
 2. **Automated WhatsApp or SMS Dispatch:** The prototype does not send automated outbound text messages or unsolicited broadcast messages.
-3. **Third-Party Telephony Vendors (e.g. Exotel):** Outbound telephony is restricted to Twilio allowlists for team demonstration and in-app simulated audio.
+3. **Third-Party Telephony Vendors to Real Donors (e.g. Exotel):** Real cellular calls are strictly restricted to verified team allowlists via Twilio for telephony architecture validation. Evaluators and judges test voice calls directly in the browser via `/sim`. Outbound calls to real donors through an Indian telephony provider (e.g., Exotel) are explicitly roadmap.
 4. **Live Weather API Feeds:** Emergency weather warnings (e.g. IMD orange alert) operate via an administrative simulation toggle (`POST /admin/settings/weather`), not live meteorological feeds.
 5. **CSV Donor Bulk Import:** Bulk uploading of unconsented third-party donor lists is strictly prohibited; only granular self-consented signups (`/join`) are supported.
 6. **Automated Medical Eligibility Decisions:** Algorithmic or AI-driven clearance of donor health is prohibited. All eligibility determinations remain with licensed human blood centre personnel.
@@ -73,20 +73,28 @@ flowchart LR
 
 ---
 
-## 3. The Clinical Pilot Pathway (Post-Hackathon)
+## 3. The Clinical Pilot Pathway & Outreach Channels (Post-Hackathon)
 
 Following the prototype phase, real-world deployment requires a rigorous clinical, ethical, and legal pilot framework:
 
-1. **Institutional Ethics & Clinical Governance:**
+1. **Indian Voice Telephony Provider (Exotel) & Basic Phone Support:**
+   - Transition to an enterprise Indian telephony vendor (e.g. Exotel) with TRAI-approved virtual CLI routing.
+   - **Virtual Number Masking:** Donors and blood centres never see each other's actual personal phone numbers; voice calls connect through ephemeral virtual proxies.
+   - **Basic Phone Equality:** Full DTMF keypad fallback (1 = Coming, 2 = Can't, 9 = Stop) ensures consented donors with basic feature phones (e.g. JioBharat, Nokia 105) receive equal emergency access without requiring smartphones or data packs.
+2. **Transactional SMS after National DLT Registration:**
+   - Pre-registration of transactional SMS templates and principal entity IDs on the Indian telecom Distributed Ledger Technology (DLT) platform (Vilpower/Smartping) under TRAI commercial communication rules.
+   - Automated dispatch of instantaneous SMS confirmations upon Press 1 / "I'm coming" containing centre name, Google Maps destination link, and patient emergency token.
+3. **Official WhatsApp Business Platform:**
+   - Verified green-tick WhatsApp Business API onboarding for participating blood centres.
+   - Safe transmission of the "Uyir chain" post-donation message from hospitals: *"Someone gave life to your family today. When you're ready, you can do the same."* with the `/join` link.
+   - Interactive quick-reply buttons allowing donors to confirm arrival status.
+4. **Push Alerts for Consented Mobile App Users:**
+   - Low-latency Firebase Cloud Messaging (FCM) push notifications for registered donors who install the mobile app, providing a silent, urgent visual prompt with one-tap accept before an automated phone call rings.
+5. **Institutional Ethics & Clinical Governance:**
    - Formal Institutional Review Board (IRB) review with partner medical institutions and accredited blood centres.
    - Clinical governance committee oversight to validate blood safety protocols [CITE SOURCE].
-2. **Official WhatsApp Business Platform Onboarding:**
-   - Onboarding via the verified WhatsApp Business API (green tick verification) to establish trusted institution identity for blood centre communications.
-3. **Telecommunication Regulatory Compliance (India):**
-   - Registration with TRAI (Telecom Regulatory Authority of India) under the 140-series commercial communication regulations for automated voice broadcasts [CITE SOURCE].
-   - National Do Not Call (NDNC) registry compliance and explicit opt-in cryptographic verification.
-4. **Data Protection & Healthcare Privacy:**
-   - Compliance with India's Digital Personal Data Protection Act (DPDPA) [CITE SOURCE].
+6. **Data Protection & Healthcare Privacy Compliance:**
+   - Full compliance with India's Digital Personal Data Protection Act (DPDPA 2023) [CITE SOURCE].
    - Exploration of voluntary ABHA (Ayushman Bharat Health Account) integration for voluntary donor health record verification.
-5. **Phase 1 Geographic Pilot:**
+7. **Phase 1 Geographic Pilot:**
    - Small-scale pilot limited to 2 accredited charitable blood centres in Chennai, Tamil Nadu, coordinating solely for rare blood group shortages (e.g. O-negative, Bombay blood group) before expanding to general emergency requests.

@@ -34,6 +34,13 @@ if ($envYaml -match "YOUR_GEMINI_MODEL_HERE") {
     exit 1
 }
 
+foreach ($reqVar in @("LIVE_MODEL", "LIVE_LOCATION", "LIVE_DAILY_MINUTES", "PUBLIC_BASE_URL")) {
+    if ($envYaml -notmatch "(?m)^${reqVar}:") {
+        Write-Host "❌ ERROR: $reqVar is missing from infra/env.demo.yaml." -ForegroundColor Red
+        exit 1
+    }
+}
+
 # Step 1: Set GCP active project
 Write-Host "==> [1/7] Setting gcloud active project to $ProjectId..." -ForegroundColor Cyan
 & gcloud config set project $ProjectId
@@ -135,7 +142,7 @@ foreach ($sec in $secretNames) {
 Write-Host "==> [6/7] Deploying Cloud Run service $ServiceName..." -ForegroundColor Cyan
 
 $secretsList = [System.Collections.Generic.List[string]]@("LINK_SIGNING_KEY=LINK_SIGNING_KEY:latest", "PHONE_KEY=PHONE_KEY:latest", "INTERNAL_TOKEN=INTERNAL_TOKEN:latest")
-foreach ($optSec in @("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER", "CALL_ALLOWLIST")) {
+foreach ($optSec in @("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER", "TWILIO_PHONE_NUMBER", "CALL_ALLOWLIST")) {
     $secExists = $false
     try {
         $null = & gcloud secrets describe $optSec --project=$ProjectId 2>&1
@@ -157,6 +164,9 @@ foreach ($optSec in @("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NU
 }
 $secretsArg = "--set-secrets=" + ($secretsList -join ",")
 
+# NOTE: --min-instances is set to 1 during hackathon judging to keep containers warm
+# for real-time WebSocket audio latency. Remember to set it back to 0 after judging
+# to eliminate idle compute costs!
 & gcloud run deploy $ServiceName `
     --source backend `
     --region $Region `
@@ -165,6 +175,7 @@ $secretsArg = "--set-secrets=" + ($secretsList -join ",")
     --no-cpu-throttling `
     --max-instances 3 `
     --min-instances 1 `
+    --concurrency 20 `
     --timeout 300 `
     --env-vars-file infra/env.demo.yaml `
     $secretsArg `

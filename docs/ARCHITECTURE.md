@@ -426,7 +426,11 @@ Cloud Scheduler executes an automated HTTP POST request every minute (`* * * * *
 
 ## 8. Telephony & Voice Outreach Architecture
 
-U2U implements a dual telephony dispatch architecture supporting simulated in-browser demonstration and real outbound carrier calls to allowlisted team numbers via Twilio Media Streams:
+U2U implements a dual telephony dispatch architecture supporting in-browser demonstration and real outbound carrier calls to allowlisted team numbers via Twilio Media Streams, aligned strictly with the following scope:
+- **Real Twilio calls go to verified team phones only:** Outbound telephony via Twilio Media Streams dials numbers explicitly verified in `CALL_ALLOWLIST`. No unconsented or public calls are made.
+- **Judges use the browser call:** Evaluators and judges test voice calls directly in the browser via `/sim` (Web Audio + WebSocket bridge to Gemini Live).
+- **Twilio is only the phone line:** Twilio acts strictly as the cellular transport and carrier; all natural language understanding, tool calls, and speech synthesis are Google (Gemini Live and Cloud Text-to-Speech).
+- **Calls to real donors through an Indian provider are roadmap:** In-country telephony via an Indian provider (e.g. Exotel) with virtual masked numbers and national DLT registration is roadmap.
 
 ```mermaid
 flowchart TD
@@ -485,7 +489,7 @@ flowchart TD
 Judges and evaluators can independently verify the implementation, test coverage, and live cloud deployment using the following commands:
 
 ### 9.1 Frontend Test Suite & Accessibility Audit
-Runs 115 unit, component, and accessibility tests across 19 test files with Vitest and `axe-core`:
+Runs 127 unit, component, and accessibility tests across 20 test files with Vitest and `axe-core`:
 ```bash
 cd frontend
 npm run lint
@@ -494,7 +498,7 @@ npm run build
 ```
 
 ### 9.2 Backend Test Suite & State Machine Invariants
-Runs 125 tests (plus 1 optional emulator test skipped when emulator host is unset) across 17 test suites, including 200 Hypothesis stateful property runs:
+Runs 150 tests (plus 1 optional emulator test skipped when emulator host is unset) across 20 test suites, including 200 Hypothesis stateful property runs:
 ```bash
 cd backend
 # On Windows PowerShell:

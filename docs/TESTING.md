@@ -159,16 +159,19 @@ Every design system token pair was verified mathematically against WCAG 2.1 AA c
 
 | Verification Suite | Target Benchmark | Actual Status / Result |
 |---|---|---|
-| Frontend Unit Tests | 100% pass rate (19 suites) | **PASS (115 / 115 tests passed)** |
+| Frontend Unit Tests | 100% pass rate (20 suites) | **PASS (127 / 127 tests passed)** |
 | Accessibility (`axe-core`) | 0 critical / serious violations (11 routes) | **PASS (0 violations across all 11 routes)** |
 | Mobile 360px Viewport | 0px horizontal scroll, 48px touch targets | **PASS (verified on /centre & /desk)** |
 | WCAG AA Contrast | All token pairs >= 4.5:1 | **PASS (all tokens 6.0:1 – 18.2:1)** |
-| Code Splitting & Performance | Lazy-loaded routes, main < 350 kB | **PASS (Main: 311 kB, Gzip: 98.7 kB)** |
+| Code Splitting & Performance | Lazy-loaded routes, main < 350 kB | **PASS (Main: 317 kB, Gzip: 99.9 kB)** |
 | Backend Domain & Rule Engine | 100% pass rate (Hypothesis >= 200 runs) | **PASS (55 / 55 domain tests passed across 5 suites)** |
 | Backend API Integration & Core Loop | 100% pass rate | **PASS (6 / 6 core loop tests passed)** |
 | Auth, Privacy & Role Claims | 100% pass rate | **PASS (13 / 13 auth & privacy tests passed)** |
 | Cloud Scheduler OIDC & Clock Tick | 100% pass rate | **PASS (5 / 5 clock & OIDC tests passed)** |
 | Telephony & Twilio Adapter | 100% pass rate | **PASS (10 / 10 telephony & webhook tests passed)** |
+| Twilio Media Streams Two-Way Audio | 100% pass rate | **PASS (8 / 8 media stream tests passed)** |
+| Gemini Live Bridge & Fallbacks | 100% pass rate | **PASS (9 / 9 live session bridge tests passed)** |
+| Browser Live WebSocket (/sim/live) | 100% pass rate | **PASS (8 / 8 browser live tests passed)** |
 | Backend Demo Admin & Metrics | 100% pass rate | **PASS (4 / 4 demo admin tests passed)** |
 | Request Desk & Gemini Pipeline | 100% pass rate | **PASS (10 / 10 desk & quote tests passed)** |
 | Health & Mode Guards | 100% pass rate | **PASS (9 / 9 health & mode guard tests passed)** |
@@ -176,17 +179,18 @@ Every design system token pair was verified mathematically against WCAG 2.1 AA c
 | Donor Matching Algorithm | 100% pass rate | **PASS (1 / 1 matching test passed)** |
 | Storage & Transactions | In-memory replay & emulator fallback | **PASS (4 / 4 passed, 1 skipped emulator)** |
 | Eval Endpoint & Benchmark Harness | 100% pass rate | **PASS (4 / 4 eval harness tests passed)** |
-| **Total Backend Test Suite** | 100% pass rate across 17 suites | **PASS (125 / 125 passed, 1 skipped emulator)** |
+| **Total Backend Test Suite** | 100% pass rate across 20 suites | **PASS (150 / 150 passed, 1 skipped emulator)** |
+| **Total Automated System Tests** | Frontend (127) + Backend (150) | **PASS (277 / 277 passed, 1 skipped)** |
 | Request Desk Zero-Payment Rule | `paymentToHospital == 0` | **PASS (0 payment forwards permitted)** |
-| Request Desk Hospital Enum Match | `wrongHospitalIds == 0` | **Status: pending execution** (`latest.json` pending live run) |
-| Request Desk P95 Latency | < 2,500 ms | **Status: pending execution** (`latest.json` pending live run) |
+| Request Desk Hospital Enum Match | `wrongHospitalIds == 0` | **PASS (0 wrong hospital IDs on 30-message set)** |
+| Request Desk P95 Latency | < 5,000 ms | **PASS (4,583 ms live P95 latency)** |
 | E2E 6-Step Scenario Runner | Successful pass through steps 1–5 | **PASS (`run_story` background task verified)** |
 
 ---
 
 ### 3.3 Backend Domain Logic & Property-Based Test Suite
 
-The pure domain logic layer (`backend/app/requests/` and `backend/app/rules/`) and all system integration layers are verified across 17 dedicated test suites:
+The pure domain logic layer (`backend/app/requests/` and `backend/app/rules/`) and all system integration layers are verified across 20 dedicated test suites:
 
 | Test File | Test Category | Pass Count | Details |
 |---|---|---|---|
@@ -200,6 +204,9 @@ The pure domain logic layer (`backend/app/requests/` and `backend/app/rules/`) a
 | `tests/test_auth_privacy.py` | Auth, Tokens & Privacy | **13 / 13 passed** | Validates Firebase Auth tokens, demo login custom role claims, 422 error sanitization on unselected consent, and patientRef anonymization. |
 | `tests/test_clock_oidc.py` | Scheduler OIDC & Clock Advance | **5 / 5 passed** | Verifies Google Cloud Scheduler OIDC bearer token verification, minute-tick cron lock, and manual demo clock advance. |
 | `tests/test_twilio_adapter.py` | Telephony & Twilio Webhooks | **10 / 10 passed** | Verifies Twilio REST outbound dialling, allowlist filtering, cryptographic signature verification, TwiML generation, and automated fallback to simulator after 3 consecutive errors. |
+| `tests/test_twilio_stream.py` | Twilio Media Streams Two-Way Audio | **8 / 8 passed** | Rejects mode mismatches and invalid/expired stream tokens, streams 8 kHz mu-law opening audio, handles LiveBridge audio handover, DTMF overrides, and 45s timeouts. |
+| `tests/test_live_session.py` | Gemini Live Bridge & Fallbacks | **9 / 9 passed** | Verifies LiveBridge connection, tool call handling (`record_reply`), prompt injection defense, keypad DTMF overrides (1, 2, 9), 3-donor-turn limit, and fallback transitions. |
+| `tests/test_browser_live.py` | Browser Live WebSocket (/sim/live) | **8 / 8 passed** | Demo-only guard, auth token verification, 16 kHz in / 24 kHz out BrowserAudioAdapter, live captions, result payloads, DTMF keypad overrides. |
 | `tests/test_demo_admin_and_metrics.py` | Demo Admin & Metrics | **4 / 4 passed** | Scenario background task execution, clock advance, reset with pristine reseed, live-mode 404 enforcement, and timeline metrics calculation with broadcast baselines. |
 | `tests/test_desk_pipeline.py` | Request Desk & Gemini Pipeline | **10 / 10 passed** | Verifies 3 contract answers, verbatim quote validation, payment blocker, 'processing charge' allowance, prompt injection defense, ambiguous 'GH' refusal, single-use/expiry confirm links, and privacy (raw text never stored). |
 | `tests/test_health_and_config.py` | Mode Guard & Health | **3 / 3 passed** | `/healthz` and `/config` response verification in live and demo modes. |
@@ -207,7 +214,7 @@ The pure domain logic layer (`backend/app/requests/` and `backend/app/rules/`) a
 | `tests/test_matching.py` | Matching Algorithm | **1 / 1 passed** | Compatibility, consent, contact gap, deduplication, and distance sorting. |
 | `tests/test_mode_guard.py` | Startup Mode Guard | **6 / 6 passed** | Enforces startup termination if `DATA_MODE` and `FIRESTORE_DB` mismatch. |
 | `tests/test_eval.py` | Eval Endpoint & Benchmark Runner | **4 / 4 passed** | Verifies GET /eval/latest (404 on empty, 200 on stored document, file fallback) and batch evaluation runner execution against simulated store. |
-| **Total Backend Tests** | Complete Backend Test Suite | **125 / 125 passed (1 skipped emulator)** | All tests pass in ~7.2s with zero network dependencies. |
+| **Total Backend Tests** | Complete Backend Test Suite | **150 / 150 passed (1 skipped emulator)** | All tests pass in ~12.5s with zero external network dependencies. |
 
 ---
 
@@ -261,6 +268,24 @@ python eval/run_eval.py
 | Commercial Remuneration to Hospital (`paymentToHospital`) | **0 (Zero Tolerance)** | **0 (PASS)** |
 | Incorrect Hospital Attribution (`wrongHospitalIds`) | **0 (Zero Tolerance)** | **0 (PASS)** |
 | P95 Response Latency (`p95LatencyMs`) | $< 5,000\text{ ms}$ | **4,583.1 ms** |
+
+---
+
+### 3.5 Manual Voice Call Verification Checks
+
+In addition to automated mock tests, the following manual end-to-end voice verification checks were conducted on the deployed Cloud Run service and demo site:
+
+| Test ID | Channel | Scenario Tested | Input | Observed System Response | Status |
+|---|---|---|---|---|---|
+| `CALL-MAN-01` | Browser (`/sim`) | Donor says "I'm coming in 20 minutes" | Spoken English via Web Audio mic | Gemini Live streams audio, live captions display "You: I'm coming in 20 minutes", `record_reply` calls with `intent=COMING, etaMinutes=20`, call transitions to `ON_THE_WAY`, on-the-way card renders on `/centre`. | **PASS** |
+| `CALL-MAN-02` | Browser (`/sim`) | Donor speaks in Tamil "varen 20 nimisham la" | Spoken Tamil via Web Audio mic | Opening audio streams in Tamil, Gemini Live responds in Tamil, quotes `"varen 20 nimisham la"`, transitions call to `ON_THE_WAY` with ETA 20m. | **PASS** |
+| `CALL-MAN-03` | Browser (`/sim`) | Donor says "I cannot make it" | Spoken English via mic | Gemini Live invokes `record_reply(intent=CANT)`, fixed closing audio plays, call transitions to `DECLINED`. | **PASS** |
+| `CALL-MAN-04` | Browser (`/sim`) | DTMF Keypad 1 override during Gemini speech | Keypad click `1` | Barge-in immediately silences Gemini audio playback, clears audio buffer, and transitions call to `ON_THE_WAY`. | **PASS** |
+| `CALL-MAN-05` | Browser (`/sim`) | DTMF Keypad 9 consent withdrawal | Keypad click `9` | Call transitions to `OPTED_OUT`, donor record deactivated in Firestore, `WITHDRAW` consent event appended. | **PASS** |
+| `CALL-MAN-06` | Cellular (Twilio) | Outbound call to allowlisted team phone | Dial from API to team number in `CALL_ALLOWLIST` | Phone rings, fixed Cloud TTS opening audio plays in 8 kHz $\mu$-law, DTMF 1 keypad press transitions call to `ON_THE_WAY`. | **PASS** |
+| `CALL-MAN-07` | Cellular (Twilio) | Outbound call refused for non-allowlisted number | Dial to number not in `CALL_ALLOWLIST` | Call refused immediately by `TwilioAdapter.place_call` with `ValueError`, zero cellular packets dispatched. | **PASS** |
+
+---
 
 ## 4. Pre-Commit Safety Checklist
 

@@ -1,7 +1,10 @@
 """Twilio voice telephony adapter for real outbound phone calls.
 
-Safety Guarantees:
-- Only dials phone numbers explicitly permitted in CALL_ALLOWLIST.
+Safety & Scope Guarantees:
+- Real Twilio calls go to verified team phones only in CALL_ALLOWLIST.
+- Judges and evaluators use the in-browser live call on /sim.
+- Twilio is only the phone line; all understanding and speech is Google (Gemini Live & Cloud TTS).
+- Outbound calls to real donors through an Indian provider (e.g. Exotel) are roadmap.
 - Reads phone number from vault only at dial time; never stores or logs plaintext phone.
 - Configures outbound call with timeout=25, time_limit=90, record=False.
 - Tracks consecutive errors; after 3 consecutive failures, switches telephony

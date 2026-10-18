@@ -10,6 +10,8 @@ Guarantees:
 - Rejects mode mismatches with 403 Forbidden.
 - Deduplicates webhooks using create-only on webhookEvents/{CallSid}_{event}.
 - Replies within 2 seconds.
+- Scope: Real Twilio calls go to verified team phones only in CALL_ALLOWLIST;
+  judges use the browser call on /sim; Twilio is only the phone line; Indian provider is roadmap.
 """
 
 import logging

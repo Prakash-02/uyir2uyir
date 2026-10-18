@@ -8,24 +8,34 @@
 ### Why
 During medical emergencies, families frequently scramble at odd hours forwarding unverified blood requests across messaging groups [CITE SOURCE]. U2U eliminates this despair by coordinating verified hospital needs directly with consented nearby donors in minutes without spam or financial exploitation [CITE SOURCE].
 
+> [!IMPORTANT]
+> ### What is real in this demo
+> - **Real Twilio calls to team phones:** Real phone calls ring verified team phones only (via strictly enforced `CALL_ALLOWLIST`), powered by Gemini Live multimodal sessions.
+> - **The same call in the browser:** Judges and evaluators can experience the exact same Live voice call directly in the browser on `/sim` with Gemini Live over Web Audio and WebSockets.
+> - **Real Gemini Request Desk:** Real Gemini Flash (`gemini-2.5-flash`) extracts entities from forwarded WhatsApp messages, with every quote validated word-for-word in deterministic code.
+> - **Real Firestore live updates:** Real-time listeners and multi-database isolation (`u2u-demo` / `u2u-live`).
+> - **Real Cloud Run & Firebase deploy:** Continuous Cloud Run container deployment with OIDC scheduler ticks and Firebase Hosting frontend delivery.
+> - **Simulated data:** All donors, hospitals, and patients in this prototype are simulated.
+
 ### Google Services
 | Service | Used for | Code path |
 |---|---|---|
-| Gemini on Vertex AI | reads pasted messages | `backend/app/ai/gemini.py` |
-| Gemini Live API | real-time donor calls | `backend/app/voice/live_session.py` |
-| Firebase Hosting | High-performance frontend web application delivery with SPA rewrites & long cache | `firebase.json` |
+| Gemini on Vertex AI | Reads and extracts forwarded blood requests with verbatim quote verification (`gemini-2.5-flash` in `asia-south1`) | `backend/app/ai/gemini.py`, `backend/app/desk/pipeline.py` |
+| Gemini Live API | Real-time two-way voice donor calls over WebSockets (`gemini-live-2.5-flash-native-audio` in `us-central1`) | `backend/app/voice/live_session.py`, `backend/app/voice/browser_stream.py`, `backend/app/voice/twilio_stream.py` |
+| Cloud Text-to-Speech | Opening and closing voice audio in Tamil and English (8 kHz $\mu$-law for phone, 24 kHz LINEAR16 for browser) | `backend/app/ai/tts.py` |
+| Firebase Hosting | High-performance frontend web application delivery with SPA rewrites & immutable asset cache | `firebase.json`, `.github/workflows/frontend.yml` |
 | Cloud Firestore | Multi-database persistence (`u2u-demo` / `u2u-live`) & live listeners | `frontend/src/api/http/live.ts`, `backend/app/core/store_firestore.py` |
-| Cloud Run | Scalable FastAPI modular monolith backend container | `backend/Dockerfile` |
+| Cloud Run | Scalable FastAPI modular monolith backend container | `backend/Dockerfile`, `infra/deploy_backend_demo.sh` |
 | Firebase Authentication | Anonymous demo logins, role-based identity & custom claims | `frontend/src/lib/firebase.ts`, `backend/app/auth/` |
-| Cloud Text-to-Speech | Cached Tamil and English voice audio synthesis for calls | `backend/app/ai/tts.py` |
 | Cloud Scheduler | 1-minute ticker for expiration and donor outreach rounds | `backend/app/clock/router.py` |
 | Secret Manager & Cloud Logging | Secure secret isolation and centralized audit logging | `backend/app/core/logging.py`, `infra/deploy_backend_demo.sh` |
 
 > [!NOTE]
-> **Core Declarations:**
-> - **All AI runs on Gemini on Vertex AI:** Generative entity extraction and translation run exclusively on Gemini Flash (`gemini-2.5-flash`). All decisions are validated verbatim in deterministic code.
-> - **Twilio is only the phone carrier:** Twilio (if used) is only the phone carrier to place calls and stream DTMF keypresses; no proprietary AI or vendor intelligence is used in telephony.
-> - **All data is simulated:** All donors, hospitals, patient IDs, and blood requests are simulated prototype data.
+> **Core Declarations & Scope:**
+> - **All AI runs on Gemini on Vertex AI:** Generative entity extraction and translation run exclusively on Gemini Flash (`gemini-2.5-flash`). Real-time voice conversations run on Gemini Live (`gemini-live-2.5-flash-native-audio`).
+> - **Twilio is only the phone line; all understanding and speech is Google:** Twilio is used solely as the cellular carrier line to reach allowlisted test phones; all turn-taking, tool calls, and speech are handled by Gemini Live and Cloud Text-to-Speech.
+> - **Regional Disclosure:** While the Request Desk (`gemini-2.5-flash`) runs locally in `asia-south1` (Mumbai, India), the Gemini Multimodal Live API connects to `us-central1` (Iowa, USA) where Vertex AI Multimodal Live WebSocket endpoints are currently hosted.
+> - **Roadmap:** Outbound calls to real donors through an Indian telephony provider (e.g., Exotel) with virtual masked numbers and national DLT registration are roadmap.
 
 ### Documentation Index
 - [U2U_BRIEF.md](U2U_BRIEF.md) — Single source of truth specification
@@ -264,6 +274,12 @@ Configured in [`.github/workflows/frontend.yml`](.github/workflows/frontend.yml)
 - [ ] Milestone 3: Backend FastAPI modular monolith with core domain models and rule engine.
 - [ ] Milestone 4: Gemini Flash extraction pipeline and Vertex AI integration.
 - [ ] Milestone 5: Full integration, automated eval harness, and production deployment.
+
+---
+
+## Acknowledgements
+
+U2U's emergency blood coordination design, matching rules, and community relay patterns were inspired by prior civic health initiatives and emergency coordination projects, including Rapid Red and Care Circle.
 
 ---
 

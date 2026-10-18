@@ -62,7 +62,7 @@ Request Desk answers (exactly three):
 - **Frontend.** `frontend/`: React + TypeScript + Vite on Firebase Hosting. Reads live data from Firestore (read only). All writes go through the API.
 - **Data:** Firestore, two named databases: `u2u-demo` and `u2u-live`. `DATA_MODE=demo|live` chooses one per deployment. Simulated records carry `is_simulated: true`.
 - **AI:** Gemini Flash on Vertex AI (asia-south1), temperature 0, JSON schema, hospital chosen from a fixed list or NONE, every field returned with its exact quote. Code drops any quote not found word for word. Gemini never decides status, match or validity.
-- **Calls:** Twilio voice calls to an allowlist of team phones (live call moment), in-app simulator otherwise. Cached Cloud Text-to-Speech audio in Tamil and English.
+- **Calls:** Real Twilio calls go to verified team phones only; judges use the browser call on `/sim`. Twilio is only the phone line; all understanding and speech is Google (Gemini Live and Cloud Text-to-Speech). In-country telephony via an Indian provider (e.g. Exotel) is roadmap.
 - **Other Google services:** Firebase Authentication (custom claims `role`, `hospitalId` or `centreId`, `env`), Secret Manager, Cloud Scheduler (1 minute tick), Cloud Logging.
 - **Privacy:** donors are shown as aliases ("Donor A7"). Staff see the last 4 digits at most. Pasted text is discarded after extraction. Consent is recorded per purpose.
 
@@ -222,4 +222,11 @@ The scenario runner plays steps 1 to 5.
 
 ## 8. Explicitly out of scope for the prototype
 
-Real donors or patients, SMS or WhatsApp sending, Exotel, live weather API, CSV donor import, automatic eligibility decisions, any medical advice, payments.
+Real donors or patients, SMS or WhatsApp sending, live weather API, CSV donor import, automatic eligibility decisions, any medical advice, payments. Telephony to real donors through an Indian provider (such as Exotel) is roadmap.
+
+## 9. Voice call scope and honesty
+
+- **Real Twilio calls go to verified team phones only:** Outbound phone calls via Twilio Media Streams are restricted to numbers explicitly verified in `CALL_ALLOWLIST`. No unconsented or public cellular calls are placed.
+- **Judges use the browser call:** External evaluators and judges experience the exact same Live voice call directly in the browser via `/sim`, using Web Audio (16 kHz capture, 24 kHz playback) and WebSocket `WS /sim/live/{callId}` to Gemini Live.
+- **Twilio is only the phone line:** Twilio acts strictly as the cellular transport and carrier; all intelligence, natural language understanding, turn-taking, and speech synthesis are Google (Gemini Live and Cloud Text-to-Speech).
+- **Calls to real donors through an Indian provider are roadmap:** In-country telephony via an Indian provider (e.g. Exotel) with virtual masked numbers and national DLT registration is explicitly deferred to post-pilot roadmap.

@@ -58,7 +58,23 @@ Voluntary blood donor registration requires explicit, granular, purpose-specific
 
 ---
 
-## 5. Instant Opt-Out: "Press 9 to Stop Calling"
+## 5. Voice Call Privacy & Safety Guardrails
+
+- **The Call Privacy Line — Zero Audio Storage:** Nothing is recorded. Outbound telephony streams and in-browser Web Audio streams are processed purely in ephemeral volatile memory. Zero audio clips, voice recordings, or conversational transcripts are written to disk, Cloud Storage, or Firestore.
+- **Minimal Structured State:** The database stores only the structured operational outcome necessary to coordinate the request:
+  - `intent`: `COMING` (Press 1 equivalent), `CANT` (Press 2 equivalent), `STOP` (Press 9 consent withdrawal), or `UNCLEAR`.
+  - `etaMinutes`: Arrival time estimate in minutes (integer, or `null`).
+  - `quote`: Verbatim quote of the donor's words (e.g. `"I will come in 20 minutes"`, or Tamil `"varen 20 nimisham la"`).
+  - `applied`: Boolean flag confirming deterministic state machine transition in Firestore.
+- **Real-Time Guardrails:**
+  - *Hard Duration Caps:* Calls are strictly bounded by a 45-second duration limit and a 3-turn donor conversation limit. If Gemini cannot determine clear intent within these bounds, the call safely terminates with state `UNCLEAR` and prompts the donor to use the keypad.
+  - *DTMF Keypad Always Active:* Telephone keypad digits (`1`, `2`, `9`) override Gemini Live at any instant, immediately aborting the AI session and executing deterministic domain logic.
+  - *No Medical Advice:* Gemini Live is governed by strict system instructions to never offer medical advice, evaluate donor eligibility, or discuss patient conditions.
+  - *Allowlist Enforcement:* Real outbound Twilio calls dial verified team phones only in `CALL_ALLOWLIST`. Evaluators and judges test voice calls directly in the browser via `/sim`. Twilio is only the carrier transport; in-country telephony through an Indian provider (e.g. Exotel) is roadmap.
+
+---
+
+## 6. Instant Opt-Out: "Press 9 to Stop Calling"
 
 Donor autonomy and protection from fatigue are core design requirements:
 
@@ -69,7 +85,7 @@ Donor autonomy and protection from fatigue are core design requirements:
 
 ---
 
-## 6. Retention, Vault & Data Lifecycles
+## 7. Retention, Vault & Data Lifecycles
 
 - **Active Emergency Window:** Blood requests remain active for a maximum expiration window configured by the hospital (typically 2 to 6 hours). Once expired, no further outreach calls are placed.
 - **Demo Mode Purge:** In `DATA_MODE=demo`, test databases are ephemeral and can be wiped and re-seeded at any time via `POST /admin/reset`.
@@ -79,7 +95,7 @@ Donor autonomy and protection from fatigue are core design requirements:
 
 ---
 
-## 7. Staff Authority Over Donor Acceptance
+## 8. Staff Authority Over Donor Acceptance
 
 To maintain safety and quality standards in blood transfusion services:
 - Neither the application nor the AI model can mark a donor as `ACCEPTED` or medically cleared.
