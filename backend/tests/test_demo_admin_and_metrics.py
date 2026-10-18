@@ -144,3 +144,106 @@ def test_metrics_staff_only_in_live_mode():
     # Clean up overrides
     app.dependency_overrides.clear()
     set_settings(None)
+
+
+def test_demo_telephony_auth_required(demo_client: TestClient):
+    """Verifies GET and POST /admin/demo/telephony require staff/admin actor."""
+    # 1. No auth -> 401
+    resp_get_anon = demo_client.get("/admin/demo/telephony")
+    assert resp_get_anon.status_code == 401
+
+    resp_post_anon = demo_client.post(
+        "/admin/demo/telephony", json={"adapter": "simulator"}
+    )
+    assert resp_post_anon.status_code == 401
+
+    # 2. Non-staff (hospital role) -> 403
+    resp_get_hosp = demo_client.get(
+        "/admin/demo/telephony", headers={"X-Demo-Role": "hospital"}
+    )
+    assert resp_get_hosp.status_code == 403
+
+    resp_post_hosp = demo_client.post(
+        "/admin/demo/telephony",
+        json={"adapter": "simulator"},
+        headers={"X-Demo-Role": "hospital"},
+    )
+    assert resp_post_hosp.status_code == 403
+
+    # 3. Staff -> 200 on GET
+    resp_get_staff = demo_client.get(
+        "/admin/demo/telephony", headers={"X-Demo-Role": "staff"}
+    )
+    assert resp_get_staff.status_code == 200
+    assert resp_get_staff.json()["adapter"] == "simulator"
+
+
+def test_demo_telephony_switch_and_validation():
+    """Verifies switching to Twilio returns 409 if config is missing/malformed and 200 if valid."""
+    # 1. Default demo settings (unconfigured Twilio) -> 409 on twilio switch
+    settings = Settings(
+        DATA_MODE="demo",
+        FIRESTORE_DB="u2u-demo",
+        GEMINI_MODEL="gemini-2.0-flash",
+        ALLOW_TEST_HEADER_AUTH=True,
+    )
+    app = create_app(settings=settings)
+    client = TestClient(app)
+
+    resp_conflict = client.post(
+        "/admin/demo/telephony",
+        json={"adapter": "twilio"},
+        headers={"X-Demo-Role": "staff"},
+    )
+    assert resp_conflict.status_code == 409
+    assert "Cannot switch to Twilio" in resp_conflict.json()["detail"]
+    assert "TWILIO_ACCOUNT_SID" in resp_conflict.json()["detail"]
+
+    # Switching to simulator works -> 200
+    resp_sim = client.post(
+        "/admin/demo/telephony",
+        json={"adapter": "simulator"},
+        headers={"X-Demo-Role": "staff"},
+    )
+    assert resp_sim.status_code == 200
+    assert resp_sim.json()["adapter"] == "simulator"
+
+    # 2. Valid Twilio settings -> 200 on twilio switch
+    valid_settings = Settings(
+        DATA_MODE="demo",
+        FIRESTORE_DB="u2u-demo",
+        GEMINI_MODEL="gemini-2.0-flash",
+        ALLOW_TEST_HEADER_AUTH=True,
+        TWILIO_ACCOUNT_SID="AC" + ("mock" * 8),
+        TWILIO_AUTH_TOKEN="mock_auth_token_for_tests_32ch",
+        TWILIO_FROM_NUMBER="+15550001234",
+        CALL_ALLOWLIST="+910000000000",
+    )
+    app_valid = create_app(settings=valid_settings)
+    client_valid = TestClient(app_valid)
+
+    resp_valid = client_valid.post(
+        "/admin/demo/telephony",
+        json={"adapter": "twilio"},
+        headers={"X-Demo-Role": "staff"},
+    )
+    assert resp_valid.status_code == 200
+    assert resp_valid.json()["adapter"] == "twilio"
+    set_settings(None)
+
+
+def test_demo_telephony_live_mode_404(live_client: TestClient):
+    """Verifies /admin/demo/telephony returns 404 in live data mode."""
+    # With staff auth in live mode -> 404
+    resp_get = live_client.get(
+        "/admin/demo/telephony", headers={"X-Demo-Role": "staff"}
+    )
+    assert resp_get.status_code == 404
+
+    resp_post = live_client.post(
+        "/admin/demo/telephony",
+        json={"adapter": "simulator"},
+        headers={"X-Demo-Role": "staff"},
+    )
+    assert resp_post.status_code == 404
+

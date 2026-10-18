@@ -204,13 +204,6 @@ async def require_staff_or_admin_actor(
     """Requires an authenticated staff or admin actor."""
     settings = get_settings()
     if actor.user_id == "anonymous":
-        if settings.ALLOW_TEST_HEADER_AUTH:
-            return Actor(
-                user_id="test-staff",
-                role="staff",
-                centre_id=DEMO_STORY_CENTRE_ID,
-                env=settings.DATA_MODE,
-            )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required.",

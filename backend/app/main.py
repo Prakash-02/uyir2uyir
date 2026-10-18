@@ -30,6 +30,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Configure structured JSON logging
     setup_logging()
 
+    # Log loud warning at startup if Twilio is unconfigured or malformed in demo mode
+    if current_settings.DATA_MODE == "demo":
+        twilio_errs = current_settings.twilio_config_errors
+        if twilio_errs:
+            import logging
+            logging.getLogger("u2u.startup").warning(
+                "Twilio telephony unconfigured in demo mode (missing or malformed: %s). Twilio calls will be rejected until configured.",
+                ", ".join(twilio_errs),
+            )
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         # Additional async initialization (e.g. clients) can be added here

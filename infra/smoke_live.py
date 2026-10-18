@@ -372,6 +372,25 @@ def test_security_smoke() -> None:
     record_result("Security", "POST /confirm with tampered token rejected", passed_confirm, f"HTTP {status} (expected 400/404)")
 
 
+    # 4. GET /admin/demo/telephony without auth -> 401
+    status, body, _ = http_request(
+        f"{BACKEND_URL}/admin/demo/telephony",
+        method="GET",
+    )
+    passed_get_tel = status == 401
+    record_result("Security", "GET /admin/demo/telephony without auth rejected", passed_get_tel, f"HTTP {status} (expected 401)")
+
+    # 5. POST /admin/demo/telephony without auth -> 401
+    status, body, _ = http_request(
+        f"{BACKEND_URL}/admin/demo/telephony",
+        method="POST",
+        data=json.dumps({"adapter": "simulator"}).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+    )
+    passed_post_tel = status == 401
+    record_result("Security", "POST /admin/demo/telephony without auth rejected", passed_post_tel, f"HTTP {status} (expected 401)")
+
+
 # ==============================================================================
 # f) Run the story on live Cloud Run
 # ==============================================================================
@@ -424,21 +443,25 @@ def test_story_smoke() -> None:
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
-    # Verify telephony settings before running story
-    telephony_status, telephony_body, _ = http_request(f"{BACKEND_URL}/admin/settings/telephony")
-    telephony_mode = "simulator"
+    # Verify telephony settings before running story with demo staff auth
+    telephony_status, telephony_body, _ = http_request(
+        f"{BACKEND_URL}/admin/demo/telephony",
+        method="GET",
+        headers=headers,
+    )
+    telephony_adapter = "unknown"
     if telephony_status == 200:
         try:
-            telephony_mode = json.loads(telephony_body).get("mode", "simulator")
+            telephony_adapter = json.loads(telephony_body).get("adapter", "simulator")
         except Exception:
             pass
 
-    is_simulator = telephony_mode == "simulator"
+    is_simulator = telephony_status == 200 and telephony_adapter == "simulator"
     record_result(
         "Telephony",
-        "Telephony mode is simulator (safe for demo story)",
+        "GET /admin/demo/telephony with demo staff auth is simulator",
         is_simulator,
-        f"mode={telephony_mode}",
+        f"HTTP {telephony_status}, adapter={telephony_adapter}",
     )
 
     # Trigger POST /admin/scenario/story/run

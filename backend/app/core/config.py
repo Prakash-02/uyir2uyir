@@ -95,6 +95,21 @@ class Settings(BaseSettings):
         """Parsed set of permitted phone numbers."""
         return {num.strip() for num in self.CALL_ALLOWLIST.split(",") if num.strip()}
 
+    @property
+    def twilio_config_errors(self) -> list[str]:
+        """Returns list of missing/malformed Twilio configuration keys without exposing values."""
+        errors: list[str] = []
+        sid = (self.TWILIO_ACCOUNT_SID or "").strip()
+        if not sid or not sid.startswith("AC"):
+            errors.append("TWILIO_ACCOUNT_SID")
+        from_num = (self.TWILIO_FROM_NUMBER or "").strip()
+        if not from_num:
+            errors.append("TWILIO_FROM_NUMBER")
+        allowlist = (self.CALL_ALLOWLIST or "").strip()
+        if not allowlist:
+            errors.append("CALL_ALLOWLIST")
+        return errors
+
 
 _current_settings: Settings | None = None
 

@@ -253,7 +253,11 @@ def test_second_concurrent_tick_does_nothing(client: TestClient):
 def test_weather_alert_setting_and_config(client: TestClient):
     """Verifies POST /admin/settings/weather updates config/app and GET /config reflects it."""
     # Toggle weather alert on
-    set_resp = client.post("/admin/settings/weather", json={"on": True})
+    set_resp = client.post(
+        "/admin/settings/weather",
+        json={"on": True},
+        headers={"X-Demo-Role": "staff"},
+    )
     assert set_resp.status_code == 200
     assert set_resp.json()["weatherAlert"] is True
 
@@ -263,7 +267,11 @@ def test_weather_alert_setting_and_config(client: TestClient):
     assert conf_resp.json()["weatherAlert"] is True
 
     # Toggle off
-    set_resp_off = client.post("/admin/settings/weather", json={"on": False})
+    set_resp_off = client.post(
+        "/admin/settings/weather",
+        json={"on": False},
+        headers={"X-Demo-Role": "staff"},
+    )
     assert set_resp_off.status_code == 200
     assert set_resp_off.json()["weatherAlert"] is False
 

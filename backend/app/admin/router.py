@@ -162,6 +162,14 @@ async def set_telephony_setting(
     _actor: Annotated[Actor, Depends(require_staff_or_admin_actor)],
 ) -> dict[str, Any]:
     """Switches telephony adapter between simulator and twilio."""
+    settings = get_settings()
+    if payload.adapter == "twilio":
+        twilio_errs = settings.twilio_config_errors
+        if twilio_errs:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Cannot switch to Twilio: missing or malformed configuration ({', '.join(twilio_errs)}).",
+            )
     store = get_store()
     clock = get_clock()
     now_iso = clock.now_iso()
@@ -179,7 +187,9 @@ async def set_telephony_setting(
 
 
 @router.get("/demo/telephony")
-async def get_demo_telephony_setting() -> dict[str, Any]:
+async def get_demo_telephony_setting(
+    _actor: Annotated[Actor, Depends(require_staff_or_admin_actor)],
+) -> dict[str, Any]:
     """Retrieves current telephony adapter configuration (demo mode only)."""
     settings = get_settings()
     if settings.DATA_MODE != "demo":
@@ -200,6 +210,7 @@ async def get_demo_telephony_setting() -> dict[str, Any]:
 @router.post("/demo/telephony")
 async def set_demo_telephony_setting(
     payload: TelephonySettingRequest,
+    _actor: Annotated[Actor, Depends(require_staff_or_admin_actor)],
 ) -> dict[str, Any]:
     """Switches telephony adapter between simulator and twilio (demo mode only)."""
     settings = get_settings()
@@ -208,6 +219,13 @@ async def set_demo_telephony_setting(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Demo endpoints are not available in live data mode.",
         )
+    if payload.adapter == "twilio":
+        twilio_errs = settings.twilio_config_errors
+        if twilio_errs:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Cannot switch to Twilio: missing or malformed configuration ({', '.join(twilio_errs)}).",
+            )
     store = get_store()
     clock = get_clock()
     now_iso = clock.now_iso()
@@ -222,3 +240,4 @@ async def set_demo_telephony_setting(
         "updatedAt": now_iso,
         "ok": True,
     }
+
