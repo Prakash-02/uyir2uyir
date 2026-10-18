@@ -185,9 +185,7 @@ def detect_payment_phrases(raw_text: str, gemini_phrases: list[str]) -> list[str
     return detected
 
 
-IMAGE_DISCLAIMER_EN = (
-    "A photo can be edited. We check it against the hospital's live requests, not how real it looks."
-)
+IMAGE_DISCLAIMER_EN = "A photo can be edited. We check it against the hospital's live requests, not how real it looks."
 IMAGE_DISCLAIMER_TA = (
     "புகைப்படங்கள் திருத்தப்படலாம். மருத்துவமனையின் நேரடி கோரிக்கைகளுடன் ஒப்பிட்டே நாங்கள் சரிபார்க்கிறோம், "
     "அது எவ்வளவு உண்மையானதாகத் தோன்றுகிறது என்பதைப் பார்த்து அல்ல."
@@ -276,7 +274,9 @@ async def _evaluate_desk_source(
 
     # Step d: Canonicalization & dictionaries
     norm_bg = normalize_blood_group(bg_raw_val) if bg_kept else None
-    norm_comp = normalize_component(comp_raw_val, source_text) if comp_kept else Component.UNSPECIFIED
+    norm_comp = (
+        normalize_component(comp_raw_val, source_text) if comp_kept else Component.UNSPECIFIED
+    )
 
     # Step e: Hospital ambiguity check
     hosp_map = {h.id: h for h in hospitals}
@@ -578,9 +578,7 @@ async def check_desk_image_pipeline(
 
     # Step e: Source text is transcript + "\n" + caption
     source_text = (
-        f"{extraction.transcript}\n{caption}".strip()
-        if caption.strip()
-        else extraction.transcript
+        f"{extraction.transcript}\n{caption}".strip() if caption.strip() else extraction.transcript
     )
 
     return await _evaluate_desk_source(

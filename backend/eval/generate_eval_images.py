@@ -17,9 +17,9 @@ IMAGES_DIR = Path(__file__).resolve().parent / "images"
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 # Colors matching WhatsApp dark mode phone screenshot
-BG_COLOR = (17, 27, 33)       # #111b21 WhatsApp dark background
-CARD_BG = (32, 44, 51)        # #202c33 Card background
-TEXT_COLOR = (233, 237, 239)   # #e9edef White/off-white text
+BG_COLOR = (17, 27, 33)  # #111b21 WhatsApp dark background
+CARD_BG = (32, 44, 51)  # #202c33 Card background
+TEXT_COLOR = (233, 237, 239)  # #e9edef White/off-white text
 MUTED_COLOR = (134, 150, 160)  # #8696a0 Muted timestamp / phone header text
 STATUS_COLOR = (180, 190, 195)
 ACCENT_GREEN = (0, 168, 132)  # WhatsApp green

@@ -487,7 +487,11 @@ async def run_image_evaluation(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run U2U Request Desk labelled evaluation.")
-    parser.add_argument("--images", action="store_true", help="Run image multimodal evaluation against eval/images/labels.jsonl")
+    parser.add_argument(
+        "--images",
+        action="store_true",
+        help="Run image multimodal evaluation against eval/images/labels.jsonl",
+    )
     parser.add_argument("--no-firestore", action="store_true", help="Skip saving to Firestore")
     parser.add_argument("--no-file", action="store_true", help="Skip saving to results file")
     args = parser.parse_args()

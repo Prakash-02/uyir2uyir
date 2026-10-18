@@ -299,9 +299,7 @@ class VertexGeminiExtractor:
         image_part = types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
         contents: list[Any] = [image_part]
         if caption.strip():
-            contents.append(
-                f"<message_caption>\n{caption.strip()}\n</message_caption>"
-            )
+            contents.append(f"<message_caption>\n{caption.strip()}\n</message_caption>")
 
         client = genai.Client(
             vertexai=True,

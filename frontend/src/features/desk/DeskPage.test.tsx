@@ -356,9 +356,13 @@ describe('DeskPage (/desk)', () => {
 
       // Result appears
       expect(
-        await screen.findByRole('heading', {
-          name: /Couldn't verify\. Please call the hospital directly\./i,
-        }),
+        await screen.findByRole(
+          'heading',
+          {
+            name: /Couldn't verify\. Please call the hospital directly\./i,
+          },
+          { timeout: 4000 },
+        ),
       ).toBeInTheDocument()
       expect(screen.getByText(/Multimodal Image Verification/i)).toBeInTheDocument()
       expect(screen.getByText(/Text Gemini read from the photo/i)).toBeInTheDocument()

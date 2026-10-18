@@ -146,7 +146,9 @@ async def test_quote_not_in_transcript_is_dropped():
                 patient_number=RawQuotedString(
                     value="IP-999", quote="IP-999 (Hallucinated)"
                 ),  # Not in transcript!
-                blood_group=RawQuotedString(value="O+", quote="O+ (Imagined)"),  # Not in transcript!
+                blood_group=RawQuotedString(
+                    value="O+", quote="O+ (Imagined)"
+                ),  # Not in transcript!
                 component=RawQuotedString(value=None, quote=None),
                 units=RawQuotedInt(value=2, quote="2 units (Hallucinated)"),  # Not in transcript!
                 payment_phrases=[],
