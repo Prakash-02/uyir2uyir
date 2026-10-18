@@ -2,11 +2,14 @@
 > Urgent blood requests relayed from verified hospitals to nearby consented donors via automated calls, with a public WhatsApp message verification desk.
 
 - **Live Demo:** [https://uyir2uyir-53929.web.app](https://uyir2uyir-53929.web.app)
-- **Video Walkthrough:** [Pending recording]
+- **Video Walkthrough:** [https://youtu.be/st-rt2ZDZVU](https://youtu.be/st-rt2ZDZVU)
 - **Status:** Prototype. All donors, hospitals and patients are simulated.
 
 ### Why
-During medical emergencies, families frequently scramble at odd hours forwarding unverified blood requests across messaging groups [CITE SOURCE]. U2U eliminates this despair by coordinating verified hospital needs directly with consented nearby donors in minutes without spam or financial exploitation [CITE SOURCE].
+During medical emergencies, families frequently scramble at odd hours forwarding unverified blood requests across messaging groups [^1]. U2U eliminates this despair by coordinating verified hospital needs directly with consented nearby donors in minutes without spam or financial exploitation [^2].
+
+[^1]: National Blood Transfusion Council (NBTC) / MoHFW, Government of India (*National Blood Policy*); World Health Organization (*Towards 100% Voluntary Blood Donation: A Global Framework for Action*), documenting acute shortages, reliance on emergency replacement donors, and unverified social media appeals.
+[^2]: Supreme Court of India ruling in *Common Cause v. Union of India* (AIR 1996 SC 929) banning commercial blood donation and paid donors, codified under the *Drugs and Cosmetics Rules, 1945* (Schedule F, Part XII-B) and National Blood Policy prohibiting remuneration.
 
 > [!IMPORTANT]
 > ### What is real in this demo

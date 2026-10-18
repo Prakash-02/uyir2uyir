@@ -94,7 +94,7 @@ Extracted values are mapped to canonical system types:
 - **Component:** `'WHOLE_BLOOD' | 'RED_CELLS' | 'PLATELETS_SDP' | 'PLATELETS_RDP' | 'PLASMA' | 'UNSPECIFIED'`
 
 ### Step 5: Financial Protection Check
-Exploitation of vulnerable families by predatory blood brokers is a known threat [CITE SOURCE]. The backend scans raw text and extracted tokens against a comprehensive dictionary of remuneration keywords (English and Tamil: e.g., *"paid donor"*, *"remuneration"*, *"charges apply"*, *"money offered"*, *"urgent cash"*, *"பணம்"*):
+Exploitation of vulnerable families by predatory blood brokers is a known threat (MoHFW / NBTC National Blood Policy, 2007; Supreme Court of India in *Common Cause v. Union of India*, 1996). The backend scans raw text and extracted tokens against a comprehensive dictionary of remuneration keywords (English and Tamil: e.g., *"paid donor"*, *"remuneration"*, *"charges apply"*, *"money offered"*, *"urgent cash"*, *"பணம்"*):
 - If payment wording is identified, the system **immediately blocks automated hospital alert generation**.
 - Prevents commercial donor solicitations from masquerading as voluntary hospital requests.
 

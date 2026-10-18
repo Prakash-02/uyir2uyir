@@ -9,11 +9,11 @@ This document outlines the strict privacy boundaries, data minimization protocol
 ## 1. Regulatory Boundary: Prototype, Not a Medical Device
 
 > [!IMPORTANT]
-> **Prototype Declaration:** U2U is an experimental research and coordination software prototype developed for the Google Cloud AI Builder Cup 2026. It is **not** a certified medical device, diagnostic apparatus, or clinical decision support software under the Central Drugs Standard Control Organisation (CDSCO), US FDA, or EU MDR regulations [CITE SOURCE].
+> **Prototype Declaration:** U2U is an experimental research and coordination software prototype developed for the Google Cloud AI Builder Cup 2026. It is **not** a certified medical device, diagnostic apparatus, or clinical decision support software under the Central Drugs Standard Control Organisation (CDSCO Medical Device Rules 2017), US FDA (21 CFR Part 820), or EU MDR (2017/745) regulations.
 
 - U2U does not diagnose medical conditions, evaluate blood compatibility, analyze clinical laboratory markers, or recommend medical treatments.
 - All blood matching logic in the software operates purely as an administrative contact relay based on declared donor blood groups.
-- All donor eligibility determinations, hemoglobin screenings, health questionnaires, and physical acceptance or deferral actions are conducted exclusively by licensed, authorized **blood centre staff** following national blood transfusion standards [CITE SOURCE].
+- All donor eligibility determinations, hemoglobin screenings, health questionnaires, and physical acceptance or deferral actions are conducted exclusively by licensed, authorized **blood centre staff** following national blood transfusion standards (Directorate General of Health Services / NBTC Standards for Blood Banks & Blood Transfusion Services).
 
 ---
 

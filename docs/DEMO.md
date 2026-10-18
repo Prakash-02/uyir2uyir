@@ -1,6 +1,8 @@
 # U2U Demonstration & Evaluation Guide
 
 > **Status:** built (Demo runner, simulated IVR handset, and scenario execution implemented)
+> - **Video Walkthrough (YouTube):** [https://youtu.be/st-rt2ZDZVU](https://youtu.be/st-rt2ZDZVU)
+> - **Live Demo:** [https://uyir2uyir-53929.web.app](https://uyir2uyir-53929.web.app)
 
 This guide documents the 6-step emergency dispatch scenario, the 2-minute judge walkthrough, and the demo environment access procedures for U2U (Uyir2Uyir).
 

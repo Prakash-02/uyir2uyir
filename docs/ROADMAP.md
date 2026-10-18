@@ -17,7 +17,7 @@ To maintain ethical safety, prevent clinical harm, and ensure regulatory complia
 5. **CSV Donor Bulk Import:** Bulk uploading of unconsented third-party donor lists is strictly prohibited; only granular self-consented signups (`/join`) are supported.
 6. **Automated Medical Eligibility Decisions:** Algorithmic or AI-driven clearance of donor health is prohibited. All eligibility determinations remain with licensed human blood centre personnel.
 7. **Medical Advice or Clinical Consultation:** The platform provides communication relay only; no diagnostic or clinical guidance is offered.
-8. **Financial Payments or Fees:** U2U processes zero financial transactions. Commercial transactions for blood are illegal under national blood safety laws [CITE SOURCE].
+8. **Financial Payments or Fees:** U2U processes zero financial transactions. Commercial transactions for blood are illegal under national blood safety laws (Supreme Court of India in *Common Cause v. Union of India*, 1996; *Drugs and Cosmetics Rules, 1945*, Schedule F, Part XII-B).
 
 ---
 
@@ -92,9 +92,9 @@ Following the prototype phase, real-world deployment requires a rigorous clinica
    - Low-latency Firebase Cloud Messaging (FCM) push notifications for registered donors who install the mobile app, providing a silent, urgent visual prompt with one-tap accept before an automated phone call rings.
 5. **Institutional Ethics & Clinical Governance:**
    - Formal Institutional Review Board (IRB) review with partner medical institutions and accredited blood centres.
-   - Clinical governance committee oversight to validate blood safety protocols [CITE SOURCE].
+   - Clinical governance committee oversight to validate blood safety protocols (National Blood Transfusion Council / DGHS Transfusion Medicine Standards).
 6. **Data Protection & Healthcare Privacy Compliance:**
-   - Full compliance with India's Digital Personal Data Protection Act (DPDPA 2023) [CITE SOURCE].
+   - Full compliance with India's Digital Personal Data Protection Act (DPDPA 2023, Ministry of Electronics & IT, Government of India).
    - Exploration of voluntary ABHA (Ayushman Bharat Health Account) integration for voluntary donor health record verification.
 7. **Phase 1 Geographic Pilot:**
    - Small-scale pilot limited to 2 accredited charitable blood centres in Chennai, Tamil Nadu, coordinating solely for rare blood group shortages (e.g. O-negative, Bombay blood group) before expanding to general emergency requests.
