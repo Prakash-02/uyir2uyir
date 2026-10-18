@@ -14,6 +14,7 @@ import type {
 import { evaluateCountingRule, isLateAccept } from './countingRule'
 import { MOCK_HOSPITALS, MOCK_CENTRES, MOCK_DONORS } from './fixtures'
 import { mockCheckDesk, mockCheckDeskImage } from './desk'
+import { REAL_EVAL_RESULTS } from './evalFixture'
 
 type Listener<T> = (data: T) => void
 type Unsubscribe = () => void
@@ -316,29 +317,7 @@ export class MockEngine {
   }
 
   public async getLatestEval(): Promise<EvalResult> {
-    return {
-      promptVersion: 'v1.4-gemini-2.5-flash',
-      runAt: new Date().toISOString(),
-      total: 50,
-      correct: 49,
-      paymentToHospital: 0,
-      wrongHospitalIds: 0,
-      p95LatencyMs: 840,
-      rows: [
-        { id: 'eval-01', expected: 'VERIFIED_MATCH', got: 'VERIFIED_MATCH', pass: true },
-        { id: 'eval-02', expected: 'VERIFIED_MATCH', got: 'VERIFIED_MATCH', pass: true },
-        { id: 'eval-03', expected: 'SENT_TO_HOSPITAL', got: 'SENT_TO_HOSPITAL', pass: true },
-        { id: 'eval-04', expected: 'SENT_TO_HOSPITAL', got: 'SENT_TO_HOSPITAL', pass: true },
-        { id: 'eval-05', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
-        { id: 'eval-06', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
-        { id: 'eval-07', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
-        { id: 'eval-08', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
-        { id: 'eval-09', expected: 'SENT_TO_HOSPITAL', got: 'SENT_TO_HOSPITAL', pass: true },
-        { id: 'eval-10', expected: 'VERIFIED_MATCH', got: 'VERIFIED_MATCH', pass: true },
-        { id: 'eval-11', expected: 'SENT_TO_HOSPITAL', got: 'SENT_TO_HOSPITAL', pass: true },
-        { id: 'eval-12', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
-      ],
-    }
+    return REAL_EVAL_RESULTS
   }
 
   public async checkDesk(text: string): Promise<DeskResult> {

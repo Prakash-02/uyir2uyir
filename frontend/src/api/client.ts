@@ -75,6 +75,14 @@ import { mockClient } from './mock'
 import { httpClient } from './http'
 
 /**
+ * Returns true if the build is running in production with mock client active.
+ * Used to render a prominent OFFLINE MOCK BUILD warning in the header.
+ */
+export function isOfflineMockBuild(): boolean {
+  return Boolean(import.meta.env.PROD && import.meta.env.VITE_API_MODE !== 'http')
+}
+
+/**
  * Returns the active ApiClient instance based on VITE_API_MODE (default: mock).
  * The UI screens never need to know whether mock or http mode is active.
  */
@@ -85,3 +93,4 @@ export function getApi(): ApiClient {
   }
   return mockClient
 }
+

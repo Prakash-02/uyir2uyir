@@ -98,6 +98,41 @@ async def run_story(
             if d.last_donation_date is not None:
                 await current_store.save_donor(d.model_copy(update={"last_donation_date": None}))
 
+        # Clear any pending confirm links left by earlier tests
+        if hasattr(current_store, "client") and hasattr(current_store.client, "collection"):
+            try:
+                confirm_stream = current_store.client.collection("confirmLinks").stream()
+                async for c_doc in confirm_stream:
+                    await c_doc.reference.delete()
+            except Exception:
+                pass
+        if hasattr(current_store, "_confirm_links") and isinstance(
+            current_store._confirm_links, dict
+        ):
+            current_store._confirm_links.clear()
+
+        # Ensure OPEN request for patient IP-101 is present for the Desk samples
+        ip101_req = BloodRequest(
+            id="req-sample-ip101",
+            hospital_id="hosp-sample-1",
+            hospital_name=hospital_name,
+            centre_id=centre_id,
+            centre_name=centre_name,
+            blood_group=BloodGroup.O_POS,
+            component=Component.RED_CELLS,
+            units_needed=2,
+            status=RequestStatus.OPEN,
+            accepted=0,
+            on_the_way=0,
+            round=1,
+            patient_ref="IP-101",
+            created_at=now_iso,
+            updated_at=now_iso,
+            expires_at=expires_iso,
+            is_simulated=True,
+        )
+        await current_store.save_request(ip101_req)
+
     # --- Step 1: Hospital raises request ---
     req = BloodRequest(
         id=req_id,

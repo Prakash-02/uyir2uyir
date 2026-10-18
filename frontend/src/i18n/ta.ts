@@ -105,11 +105,15 @@ export const ta: TranslationKeys = {
     },
   },
 
+  honestyDisclaimer:
+    'தானமளிப்பவர்கள், மருத்துவமனைகள் மற்றும் நோயாளிகள் மாதிரித் தரவு. ஜெமினி, கோரிக்கை மேசை சரிபார்ப்புகள் மற்றும் தொலைபேசி அழைப்புகள் உண்மையானவை.',
+
   // Footers
   footer: {
     prototype: 'கூகுள் கிளவுட் AI பில்டர் கப் 2026 க்கான மாதிரி · அனைத்து தரவுகளும் மாதிரியே', // REVIEW
     github: 'GitHub களஞ்சியம்', // REVIEW
     mandatory: 'Nobody may charge you for a donor.', // REVIEW
+    designSystem: 'வடிவமைப்பு அமைப்பு',
   },
 
   // Controls & common
@@ -316,6 +320,7 @@ export const ta: TranslationKeys = {
     timeToCovered: 'தேவையான கொடையாளர்கள் உறுதி செய்யப்பட்ட நேரம்', // REVIEW
     timeToFulfilled: 'இரத்தம் பெறப்பட்டு கோரிக்கை நிறைவேறிய நேரம்', // REVIEW
     baselinePrefix: 'பாரம்பரிய முறை: {minutes}நி (பொது அறிவிப்பு)', // REVIEW
+    assumedBaselineLabel: 'அனுமானிக்கப்பட்ட அடிப்படை · மாதிரி ஓட்டம்',
     faster: '{pct}% விரைவானது', // REVIEW
     callsPerAcceptedTitle: 'ஒரு கொடையாளருக்கான சராசரி அழைப்புகள்', // REVIEW
     callsPerAcceptedDesc:
@@ -332,6 +337,7 @@ export const ta: TranslationKeys = {
   // Evaluation Benchmarks
   eval: {
     sampleBadge: 'மாதிரி: உண்மையான பின்தள மதிப்பீட்டு ஓட்டத்தால் மாற்றப்படும்', // REVIEW
+    noResults: 'இதுவரை மதிப்பீட்டு முடிவுகள் எதுவும் வெளியிடப்படவில்லை',
     title: 'AI சரிபார்ப்பு மதிப்பீடுகள்', // REVIEW
     subtitle:
       'வாட்ஸ்அப் இரத்தக் கோரிக்கைகளில் ஜெமினி ஃப்ளாஷ் மாதிரியின் துல்லியம் மற்றும் பாதுகாப்புத் தரவுகளின் மதிப்பீடு.', // REVIEW

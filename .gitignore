@@ -3,6 +3,8 @@ dist/
 .env
 .env.*
 !.env.example
+!*.example
+!**/.env*.example
 *.local
 .firebase/
 __pycache__/

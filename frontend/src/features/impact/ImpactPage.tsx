@@ -53,6 +53,9 @@ export function ImpactPage() {
           <p className="text-sm sm:text-base text-[var(--muted)] mt-1 max-w-3xl">
             {t.impact.subtitle}
           </p>
+          <p className="text-xs sm:text-sm font-semibold text-[var(--primary)] mt-3 py-1 px-3 rounded-full bg-[var(--danger-tint)]/40 border border-[var(--primary)]/20 inline-block">
+            {t.honestyDisclaimer}
+          </p>
         </div>
       </div>
 
@@ -97,11 +100,16 @@ export function ImpactPage() {
               }
               baseline={
                 metrics.medianMinutesToFirstOnTheWay > 0
-                  ? `Baseline: ${metrics.baseline.toFirstOnTheWay}m (${calcFasterPct(
-                      metrics.medianMinutesToFirstOnTheWay,
-                      metrics.baseline.toFirstOnTheWay,
-                    )}% faster)`
-                  : `Baseline: ${metrics.baseline.toFirstOnTheWay}m (broadcast)`
+                  ? `${t.impact.assumedBaselineLabel}: ${metrics.baseline.toFirstOnTheWay}m (${t.impact.faster.replace(
+                      '{pct}',
+                      String(
+                        calcFasterPct(
+                          metrics.medianMinutesToFirstOnTheWay,
+                          metrics.baseline.toFirstOnTheWay,
+                        ),
+                      ),
+                    )})`
+                  : `${t.impact.assumedBaselineLabel}: ${metrics.baseline.toFirstOnTheWay}m`
               }
               trend="positive"
             />
@@ -116,11 +124,16 @@ export function ImpactPage() {
               }
               baseline={
                 metrics.medianMinutesToCovered > 0
-                  ? `Baseline: ${metrics.baseline.toCovered}m (${calcFasterPct(
-                      metrics.medianMinutesToCovered,
-                      metrics.baseline.toCovered,
-                    )}% faster)`
-                  : `Baseline: ${metrics.baseline.toCovered}m (broadcast)`
+                  ? `${t.impact.assumedBaselineLabel}: ${metrics.baseline.toCovered}m (${t.impact.faster.replace(
+                      '{pct}',
+                      String(
+                        calcFasterPct(
+                          metrics.medianMinutesToCovered,
+                          metrics.baseline.toCovered,
+                        ),
+                      ),
+                    )})`
+                  : `${t.impact.assumedBaselineLabel}: ${metrics.baseline.toCovered}m`
               }
               trend="positive"
             />
@@ -135,11 +148,16 @@ export function ImpactPage() {
               }
               baseline={
                 metrics.medianMinutesToFulfilled > 0
-                  ? `Baseline: ${metrics.baseline.toFulfilled}m (${calcFasterPct(
-                      metrics.medianMinutesToFulfilled,
-                      metrics.baseline.toFulfilled,
-                    )}% faster)`
-                  : `Baseline: ${metrics.baseline.toFulfilled}m (broadcast)`
+                  ? `${t.impact.assumedBaselineLabel}: ${metrics.baseline.toFulfilled}m (${t.impact.faster.replace(
+                      '{pct}',
+                      String(
+                        calcFasterPct(
+                          metrics.medianMinutesToFulfilled,
+                          metrics.baseline.toFulfilled,
+                        ),
+                      ),
+                    )})`
+                  : `${t.impact.assumedBaselineLabel}: ${metrics.baseline.toFulfilled}m`
               }
               trend="positive"
             />

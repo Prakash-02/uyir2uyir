@@ -29,9 +29,11 @@ Quality assurance for U2U is structured into six verification layers:
   npm run lint
   npm run build
   ```
+- **Results:** 144 unit and component tests passing cleanly across 21 test suites; zero lint errors or warnings.
 - **Coverage Areas:**
   - Rendering of all 9 routes (`/`, `/hospital`, `/centre`, `/desk`, `/confirm/:token`, `/join`, `/sim`, `/impact`, `/eval`).
   - Strict display of the orange `"SIMULATED DATA"` banner in demo mode.
+  - Production mock guard: `isOfflineMockBuild()` displays prominent red `"OFFLINE MOCK BUILD"` header badge if production bundle runs mock mode.
   - Form validation: required fields, blood group selection, unselected consent checkboxes.
   - Client-side mock layer fidelity (`mockClient.ts` mirrors $N+1$ rule).
   - Accessibility audit with `axe-core`: color contrast, 48px touch targets, ARIA live region declarations, absence of all-caps Tamil text.
@@ -42,6 +44,7 @@ Quality assurance for U2U is structured into six verification layers:
   cd backend
   pytest -v
   ```
+- **Results:** 162 passed, 1 skipped (optional emulator) across all pytest suites; zero lint/format errors.
 - **Coverage Areas:**
   - **Rule Engine (`backend/app/rules/`):**
     - Pause calculation: Outreach pauses when $\text{accepted} + \text{onTheWay} \ge N + 1$.

@@ -40,10 +40,18 @@ describe('ImpactPage (/impact)', () => {
     expect(screen.getByText(/Time to covered/i)).toBeInTheDocument()
     expect(screen.getByText(/Time to fulfilled/i)).toBeInTheDocument()
 
-    // 3. Baselines
-    expect(screen.getByText(/Baseline: 45m/i)).toBeInTheDocument()
-    expect(screen.getByText(/Baseline: 90m/i)).toBeInTheDocument()
-    expect(screen.getByText(/Baseline: 180m/i)).toBeInTheDocument()
+    // 3. Baselines with Assumed baseline label
+    expect(screen.getByText(/45m/i)).toBeInTheDocument()
+    expect(screen.getByText(/90m/i)).toBeInTheDocument()
+    expect(screen.getByText(/180m/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Assumed baseline · simulated run/i).length).toBe(3)
+
+    // Honesty disclaimer line
+    expect(
+      screen.getByText(
+        'Donors, hospitals and patients are simulated. Gemini, the Desk checks and the phone calls are real.',
+      ),
+    ).toBeInTheDocument()
 
     // 4. Secondary metrics
     expect(screen.getByText(/Calls per accepted donor/i)).toBeInTheDocument()

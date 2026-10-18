@@ -18,8 +18,8 @@ foreach ($file in ($stagedFiles -split "`r?`n")) {
     $trimmed = $file.Trim()
     if (-not $trimmed) { continue }
 
-    # Check 1: Sensitive .env files (except .env.example)
-    if (($trimmed -match '\.env($|\.)') -and ($trimmed -ne ".env.example")) {
+    # Check 1: Sensitive .env files (except *.example)
+    if (($trimmed -match '\.env($|\.)') -and (-not ($trimmed -match '\.example$'))) {
         Write-Host "  [ERROR] Prohibited file staged: $trimmed (never commit active .env files)" -ForegroundColor Red
         $failed = $true
     }

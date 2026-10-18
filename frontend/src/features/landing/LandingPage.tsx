@@ -36,6 +36,10 @@ export function LandingPage() {
           {t.summary}
         </p>
 
+        <p className="text-xs sm:text-sm font-semibold text-[var(--primary)] max-w-xl mx-auto py-1 px-3 rounded-full bg-[var(--danger-tint)]/40 border border-[var(--primary)]/20">
+          {t.honestyDisclaimer}
+        </p>
+
         {/* Quick Demo CTA */}
         <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
           <Link

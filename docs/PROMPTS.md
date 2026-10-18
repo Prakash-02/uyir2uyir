@@ -1510,6 +1510,68 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `frontend/src/features/desk/DeskPage.test.tsx`
   - `frontend/src/features/desk/DeskPage.tsx`
 
+### Entry #F1
+- **Date:** 2026-10-18
+- **Goal:** Live site must use the real backend; honesty, navigation, and live cloud test.
+- **Prompt Summary:**
+  1. Frontend Deploy Guard:
+     - Created `frontend/.env.production.example` listing all required production variables with placeholders.
+     - Updated `.gitignore` and `infra/check_staged_files.ps1` / `infra/check_staged_files.sh` to permit `.example` env files while strictly rejecting active `.env` and `.env.production.local` files.
+     - Created `infra/deploy_frontend.ps1` and `infra/deploy_frontend.sh` to validate `frontend/.env.production.local` (`VITE_API_MODE=http`, `VITE_API_BASE_URL` non-empty), execute `npm ci` and `npm run build`, verify `dist/assets` embeds `VITE_API_BASE_URL` and avoids silent mock fallbacks, and print `firebase deploy --only hosting` without running it.
+  2. No Silent Mock in Production:
+     - Exported `isOfflineMockBuild()` in `frontend/src/api/client.ts` returning true when `import.meta.env.PROD && import.meta.env.VITE_API_MODE !== 'http'`.
+     - In `frontend/src/components/AppShell.tsx`, rendered a prominent red `"OFFLINE MOCK BUILD"` header badge when true.
+     - Added comprehensive unit tests in `frontend/src/api/client.test.tsx`.
+  3. Eval Results on the Live Site:
+     - Created `backend/eval/publish_eval.py` to write `backend/eval/results/latest.json` to Firestore doc `config/evalLatest` in database `u2u-demo`.
+     - Grounded mock eval fixture in `frontend/src/api/mock/evalFixture.ts` matching real 30-case benchmark results (28/30, 93.3%, 0 payment leaks, 0 wrong hospital IDs, 4.58s p95).
+     - Updated `frontend/src/features/eval/EvalPage.tsx` to display `"No evaluation run published yet"` when results are absent and updated tests in `EvalPage.test.tsx`.
+  4. Demo Data for Samples:
+     - Updated `backend/scripts/seed.py` and `backend/app/clock/story.py` to seed OPEN request `req-sample-ip101` for patient IP-101 at Sample General Hospital, Chennai (O+, 2 units Red Cells) so Desk sample chips resolve to `VERIFIED_MATCH`.
+     - Automatically cleared pending desk confirm links left by previous tests.
+  5. Run the Story Real Backend Wiring:
+     - Updated `DemoBanner.tsx` in HTTP mode to auto-sign-in first-time visitors anonymously with demo staff role so they can trigger `/admin/scenario/story/run` with a friendly error if the backend is unreachable.
+     - Added tests for HTTP `runScenario`, `reset`, and `getLatestEval` in `frontend/src/api/http/http.test.ts`.
+  6. Honest Impact Page:
+     - Added disclaimer line on Landing and Impact pages: *"Donors, hospitals and patients are simulated. Gemini, the Desk checks and the phone calls are real."* in English and Tamil.
+     - Labelled all comparison baselines on Impact page as `"Assumed baseline · simulated run"` in English and Tamil.
+  7. Navigation:
+     - Removed Styleguide from desktop and mobile header navigation menus, kept `/styleguide` route active for accessibility audits, and added `"Design system"` link in the footer.
+  8. Docs, Tests and Commit:
+     - Updated `README.md`, `docs/FRONTEND.md`, `docs/TESTING.md` (162 backend tests count), and `docs/ROADMAP.md`.
+     - All 144 frontend tests (including axe-core audit across 11 routes) and 162 backend tests pass cleanly.
+- **Files Changed:**
+  - `.gitignore`
+  - `README.md`
+  - `backend/app/clock/story.py`
+  - `backend/eval/publish_eval.py`
+  - `backend/scripts/seed.py`
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `docs/ROADMAP.md`
+  - `docs/TESTING.md`
+  - `frontend/.env.production.example`
+  - `frontend/.gitignore`
+  - `frontend/src/App.test.tsx`
+  - `frontend/src/api/client.test.tsx`
+  - `frontend/src/api/client.ts`
+  - `frontend/src/api/http/http.test.ts`
+  - `frontend/src/api/mock/engine.ts`
+  - `frontend/src/api/mock/evalFixture.ts`
+  - `frontend/src/components/AppShell.tsx`
+  - `frontend/src/components/DemoBanner.tsx`
+  - `frontend/src/features/eval/EvalPage.test.tsx`
+  - `frontend/src/features/eval/EvalPage.tsx`
+  - `frontend/src/features/impact/ImpactPage.test.tsx`
+  - `frontend/src/features/impact/ImpactPage.tsx`
+  - `frontend/src/features/landing/LandingPage.tsx`
+  - `frontend/src/i18n/en.ts`
+  - `frontend/src/i18n/ta.ts`
+  - `infra/check_staged_files.ps1`
+  - `infra/check_staged_files.sh`
+  - `infra/deploy_frontend.ps1`
+  - `infra/deploy_frontend.sh`
+
 ---
 
 ## Human Decisions

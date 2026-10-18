@@ -430,6 +430,51 @@ async def seed() -> None:
     )
     print("  + Config: config/daily_calls initialized to 0")
 
+    # 6. Clear pending confirm links left by earlier tests
+    if hasattr(store, "client") and hasattr(store.client, "collection"):
+        try:
+            confirm_stream = store.client.collection("confirmLinks").stream()
+            async for c_doc in confirm_stream:
+                await c_doc.reference.delete()
+        except Exception:
+            pass
+    if hasattr(store, "_confirm_links") and isinstance(store._confirm_links, dict):
+        store._confirm_links.clear()
+    print("  + Cleared pending desk confirm links")
+
+    # 7. Seed OPEN request for patient IP-101 at Sample General Hospital
+    from datetime import UTC, datetime, timedelta
+
+    from app.requests.models import BloodRequest, Component, RequestStatus
+
+    now = datetime.now(UTC)
+    now_iso = now.isoformat()
+    expires_iso = (now + timedelta(hours=24)).isoformat()
+
+    sample_request = BloodRequest(
+        id="req-sample-ip101",
+        hospital_id=DEMO_STORY_HOSPITAL_ID,
+        hospital_name="Sample General Hospital, Chennai",
+        centre_id=DEMO_STORY_CENTRE_ID,
+        centre_name="Central Blood Bank, Egmore (Simulated)",
+        blood_group=BloodGroup.O_POS,
+        component=Component.RED_CELLS,
+        units_needed=2,
+        status=RequestStatus.OPEN,
+        accepted=0,
+        on_the_way=0,
+        round=1,
+        patient_ref="IP-101",
+        created_at=now_iso,
+        updated_at=now_iso,
+        expires_at=expires_iso,
+        is_simulated=True,
+    )
+    await store.save_request(sample_request)
+    print(
+        "  + Request: req-sample-ip101 seeded (IP-101 at Sample General Hospital, 2 units O+ RED_CELLS, OPEN)"
+    )
+
     print("[OK] Database seed completed successfully.")
 
 

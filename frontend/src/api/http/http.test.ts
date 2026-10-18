@@ -146,6 +146,65 @@ describe('HttpApiClient', () => {
     expect(result.answer).toBe('VERIFIED_MATCH')
     expect(result.footer).toBe('Nobody may charge you for a donor.')
   })
+
+  it('POSTs /admin/scenario/:id/run when runScenario is called', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    } as Response)
+
+    const onStep = vi.fn()
+    const result = await client.runScenario('story', onStep)
+    expect(result).toEqual({ ok: true })
+    expect(onStep).toHaveBeenCalledWith(1, 'Running scenario: story')
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/scenario/story/run'),
+      expect.objectContaining({
+        method: 'POST',
+      }),
+    )
+  })
+
+  it('POSTs /admin/reset when reset is called', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    } as Response)
+
+    const result = await client.reset()
+    expect(result).toEqual({ ok: true })
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/reset'),
+      expect.objectContaining({
+        method: 'POST',
+      }),
+    )
+  })
+
+  it('GETs /eval/latest when getLatestEval is called', async () => {
+    const mockEval = {
+      promptVersion: 'desk_extract_v2',
+      runAt: '2026-10-16T09:35:59.420455+00:00',
+      total: 30,
+      correct: 28,
+      paymentToHospital: 0,
+      wrongHospitalIds: 0,
+      p95LatencyMs: 4583.05,
+      rows: [],
+    }
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockEval,
+    } as Response)
+
+    const result = await client.getLatestEval()
+    expect(result).toEqual(mockEval)
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/eval/latest'),
+      expect.anything(),
+    )
+  })
 })
 
 describe('Firestore live subscriptions without configured credentials', () => {

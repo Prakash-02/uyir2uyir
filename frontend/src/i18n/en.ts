@@ -103,11 +103,15 @@ export const en = {
     },
   },
 
+  honestyDisclaimer:
+    'Donors, hospitals and patients are simulated. Gemini, the Desk checks and the phone calls are real.',
+
   // Footers
   footer: {
     prototype: 'Prototype for the Google Cloud AI Builder Cup 2026 · All data simulated',
     github: 'GitHub Repository',
     mandatory: 'Nobody may charge you for a donor.',
+    designSystem: 'Design system',
   },
 
   // Controls & common
@@ -314,6 +318,7 @@ export const en = {
     timeToCovered: 'Time to covered',
     timeToFulfilled: 'Time to fulfilled',
     baselinePrefix: 'Baseline: {minutes}m (broadcast)',
+    assumedBaselineLabel: 'Assumed baseline · simulated run',
     faster: '{pct}% faster',
     callsPerAcceptedTitle: 'Calls per accepted donor',
     callsPerAcceptedDesc: 'Average IVR calls placed per clinically accepted donor',
@@ -328,6 +333,7 @@ export const en = {
   // Evaluation Benchmarks
   eval: {
     sampleBadge: 'Sample: replaced by the real backend eval run',
+    noResults: 'No evaluation run published yet',
     title: 'AI Verification Benchmarks',
     subtitle:
       'Empirical safety and extraction metrics evaluating Gemini Flash against the labelled WhatsApp blood request dataset.',

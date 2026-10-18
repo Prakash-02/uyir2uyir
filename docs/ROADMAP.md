@@ -57,7 +57,7 @@ flowchart LR
 - **Status:** Complete
 - Scaffolded Python 3.12 FastAPI backend package structure across all modules.
 - Implemented deterministic $N+1$ rule engine, call state machines, and Firestore client adapters.
-- Built 125 backend tests verifying state transitions, invariants, and timeout expirations.
+- Built 162 backend tests verifying state transitions, invariants, and timeout expirations.
 
 ### Milestone 4: Gemini Flash Extraction Pipeline on Vertex AI
 - **Status:** Complete

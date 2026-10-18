@@ -20,8 +20,8 @@ FAILED=0
 while IFS= read -r file; do
   [ -z "$file" ] && continue
 
-  # Check 1: Sensitive .env files (except .env.example)
-  if [[ "$file" =~ \.env($|\.) ]] && [ "$file" != ".env.example" ]; then
+  # Check 1: Sensitive .env files (except *.example)
+  if [[ "$file" =~ \.env($|\.) ]] && [[ ! "$file" =~ \.example$ ]]; then
     echo "  [ERROR] Prohibited file staged: $file (never commit active .env files)"
     FAILED=1
   fi

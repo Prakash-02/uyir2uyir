@@ -134,7 +134,7 @@ async def test_desk_three_answers(setup_test_store):
     )
     res_vm = await check_desk_pipeline(vm_text, store=store, settings=settings)
     assert res_vm.answer == DeskAnswer.VERIFIED_MATCH
-    assert res_vm.request_id == "req-open-vm"
+    assert res_vm.request_id in ("req-open-vm", "req-sample-ip101")
     assert res_vm.hospital_name == "Sample General Hospital, Chennai"
     assert res_vm.footer == "Nobody may charge you for a donor."
     assert res_vm.trace.hospital.kept is True

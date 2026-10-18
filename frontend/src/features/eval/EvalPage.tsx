@@ -247,7 +247,14 @@ export function EvalPage() {
             </div>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div
+          role="status"
+          className="p-12 text-center border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--muted)] text-sm shadow-xs font-medium"
+        >
+          {t.eval.noResults}
+        </div>
+      )}
     </div>
   )
 }

@@ -432,3 +432,31 @@ Cumulative record of frontend updates and milestones:
   - Reduced simulated mock desk latency from 600ms to 10ms during test mode (`import.meta.env.MODE === 'test'`) eliminating runner latency and test timeouts.
 - **Status:** Complete. All 132 tests passing across 20 suites. Oxlint and build clean.
 
+### Entry #F1 — 2026-10-18
+- **Action:** Real backend integration in production, deploy guards, honesty labels, navigation refinement, and live cloud endpoint testing:
+  - **Frontend Deploy Guard (`infra/deploy_frontend.ps1`, `infra/deploy_frontend.sh`):**
+    - Enforced `frontend/.env.production.local` loading and validation (`VITE_API_MODE=http` and non-empty `VITE_API_BASE_URL`).
+    - Build validation inspecting `dist/assets` ensuring `VITE_API_BASE_URL` is baked into JS bundles and mock client cannot ship unnoticed.
+    - Created `frontend/.env.production.example` listing all required production variables with placeholders.
+  - **No Silent Mock in Production (`frontend/src/api/client.ts`, `AppShell.tsx`):**
+    - Added `isOfflineMockBuild()` returning true when `import.meta.env.PROD && import.meta.env.VITE_API_MODE !== 'http'`.
+    - Renders prominent red `"OFFLINE MOCK BUILD"` header badge when true. Added unit test in `client.test.tsx`.
+  - **Real AI Eval Results (`frontend/src/features/eval/EvalPage.tsx`, `MockEngine.ts`):**
+    - Created `backend/eval/publish_eval.py` to publish `latest.json` to Firestore doc `config/evalLatest` in `u2u-demo`.
+    - Replaced hardcoded sample fixture in `MockEngine.ts` with real 30-case benchmark results (28/30, 93.3%, 0 payment leaks, 0 wrong hospital IDs, 4.58s p95).
+    - If no eval results exist, renders `"No evaluation run published yet"` fallback instead of fake sample numbers.
+  - **Sample Request Seeding (`backend/scripts/seed.py`, `story.py`):**
+    - Seeded OPEN request `req-sample-ip101` for patient IP-101 at Sample General Hospital, Chennai (O+, 2 units Red Cells) so Desk sample chips resolve to `VERIFIED_MATCH`.
+    - Automatically cleans up stale desk confirm links left by previous tests.
+  - **Run the Story Real Backend Wiring (`DemoBanner.tsx`):**
+    - In HTTP mode, automatically signs in first-time visitors with anonymous Firebase Auth and demo staff role so they can trigger `/admin/scenario/story/run`.
+    - Added user-friendly network error message (`"Could not connect to backend. Please check network and try again."`).
+  - **Honest Labels & Disclaimers (`en.ts`, `ta.ts`, `LandingPage.tsx`, `ImpactPage.tsx`):**
+    - Added prominent honesty disclaimer on Landing and Impact pages: *"Donors, hospitals and patients are simulated. Gemini, the Desk checks and the phone calls are real."* in English and Tamil.
+    - Labelled all comparison baselines on Impact page as `"Assumed baseline · simulated run"`.
+  - **Navigation Cleanup (`AppShell.tsx`):**
+    - Removed `Styleguide` from desktop and mobile header navigation menus.
+    - Retained `/styleguide` route for accessibility audits and added a `"Design system"` link in the footer.
+- **Status:** Complete. 144 frontend tests passing across 21 suites, 162 backend tests passing, zero lint/build errors.
+
+

@@ -6,6 +6,7 @@ import { DemoRolePicker } from './DemoRolePicker'
 import { LangToggle } from './LangToggle'
 import { ThemeToggle } from './ThemeToggle'
 import { useT } from '../i18n/useT'
+import { isOfflineMockBuild } from '../api/client'
 import {
   Building2,
   HeartHandshake,
@@ -62,7 +63,6 @@ export function AppShell({
   const secondaryNavLinks = [
     { to: '/sim', label: t.nav.sim, icon: PhoneCall },
     { to: '/eval', label: t.nav.eval, icon: Binary },
-    { to: '/styleguide', label: t.nav.styleguide, icon: Palette },
   ]
 
   const allNavLinks = [...primaryNavLinks, ...secondaryNavLinks]
@@ -139,8 +139,17 @@ export function AppShell({
             })}
           </nav>
 
-          {/* Right Controls: Lang & Theme Toggles (48px tap targets) */}
+          {/* Right Controls: Offline Mock Badge, Lang & Theme Toggles (48px tap targets) */}
           <div className="flex items-center gap-2">
+            {isOfflineMockBuild() && (
+              <span
+                role="status"
+                data-testid="offline-mock-badge"
+                className="bg-[var(--danger)] text-white text-[11px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-xs select-none animate-pulse"
+              >
+                OFFLINE MOCK BUILD
+              </span>
+            )}
             <LangToggle />
             <ThemeToggle />
           </div>
@@ -182,6 +191,13 @@ export function AppShell({
             {t.footer.mandatory}
           </p>
           <div className="flex items-center justify-center gap-4 pt-2 text-xs">
+            <Link
+              to="/styleguide"
+              className="inline-flex items-center gap-1.5 text-[var(--muted)] hover:text-[var(--text)] transition-colors focus-visible:outline-3 focus-visible:outline-[var(--info)] rounded-xs py-1"
+            >
+              <Palette className="w-4 h-4" aria-hidden="true" />
+              <span>{t.footer.designSystem}</span>
+            </Link>
             <a
               href="https://github.com/Prakash-02/uyir2uyir"
               target="_blank"

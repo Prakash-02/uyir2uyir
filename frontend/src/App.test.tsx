@@ -45,4 +45,21 @@ describe('App smoke test & landing page', () => {
     expect(await screen.findByText(/Run the story/i)).toBeInTheDocument()
     expect(screen.getAllByText(/SIMULATED DATA/i).length).toBeGreaterThan(0)
   })
+
+  it('excludes Styleguide from header navigation and provides Design system in footer', async () => {
+    const { container } = render(<App />)
+    await screen.findByRole('heading', { name: /Uyir2Uyir/i, level: 1 })
+
+    // Header nav should not contain Styleguide link
+    const headerNav = container.querySelector('header nav')
+    expect(headerNav).not.toBeNull()
+    expect(headerNav?.querySelector('a[href="/styleguide"]')).toBeNull()
+
+    // Footer must contain the Design system link pointing to /styleguide
+    const footer = container.querySelector('footer')
+    expect(footer).not.toBeNull()
+    const designSystemLink = footer?.querySelector('a[href="/styleguide"]')
+    expect(designSystemLink).toBeInTheDocument()
+    expect(designSystemLink?.textContent).toMatch(/Design system/i)
+  })
 })

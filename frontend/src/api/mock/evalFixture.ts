@@ -1,0 +1,48 @@
+import type { EvalResult } from '../types'
+
+/**
+ * Real Gemini Flash Request Desk evaluation benchmark results.
+ * Grounded in backend/eval/results/latest.json (30 cases, 28 passed, 93.3% accuracy).
+ * Zero payment messages sent to hospital, zero wrong hospital IDs.
+ */
+export const REAL_EVAL_RESULTS: EvalResult = {
+  promptVersion: 'desk_extract_v2',
+  runAt: '2026-10-16T09:35:59.420455+00:00',
+  total: 30,
+  correct: 28,
+  paymentToHospital: 0,
+  wrongHospitalIds: 0,
+  p95LatencyMs: 4583.05,
+  rows: [
+    { id: 'msg-01', expected: 'VERIFIED_MATCH', got: 'VERIFIED_MATCH', pass: true },
+    { id: 'msg-02', expected: 'VERIFIED_MATCH', got: 'VERIFIED_MATCH', pass: true },
+    { id: 'msg-03', expected: 'SENT_TO_HOSPITAL', got: 'SENT_TO_HOSPITAL', pass: true },
+    { id: 'msg-04', expected: 'SENT_TO_HOSPITAL', got: 'SENT_TO_HOSPITAL', pass: true },
+    { id: 'msg-05', expected: 'SENT_TO_HOSPITAL', got: 'SENT_TO_HOSPITAL', pass: true },
+    { id: 'msg-06', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-07', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-08', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-09', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-10', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-11', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-12', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-13', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-14', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-15', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-16', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-17', expected: 'SENT_TO_HOSPITAL', got: 'NOT_VERIFIED', pass: false },
+    { id: 'msg-18', expected: 'SENT_TO_HOSPITAL', got: 'NOT_VERIFIED', pass: false },
+    { id: 'msg-19', expected: 'SENT_TO_HOSPITAL', got: 'SENT_TO_HOSPITAL', pass: true },
+    { id: 'msg-20', expected: 'SENT_TO_HOSPITAL', got: 'SENT_TO_HOSPITAL', pass: true },
+    { id: 'msg-21', expected: 'SENT_TO_HOSPITAL', got: 'SENT_TO_HOSPITAL', pass: true },
+    { id: 'msg-22', expected: 'SENT_TO_HOSPITAL', got: 'SENT_TO_HOSPITAL', pass: true },
+    { id: 'msg-23', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-24', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-25', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-26', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-27', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-28', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-29', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+    { id: 'msg-30', expected: 'NOT_VERIFIED', got: 'NOT_VERIFIED', pass: true },
+  ],
+}

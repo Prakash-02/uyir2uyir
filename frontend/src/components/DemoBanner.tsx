@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getApi } from '../api/client'
 import type { AppConfig } from '../api/types'
 import { useT } from '../i18n/useT'
+import { signInDemoRole } from '../lib/firebase'
 import { Play, RotateCcw } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -55,6 +56,24 @@ export function DemoBanner({
     // Step 4: Run the story navigates to /centre immediately so staff triage is visible live
     navigate('/centre')
     try {
+      // In http mode: auto-sign in first-time visitor with demo staff role so they can run the story
+      if (import.meta.env.VITE_API_MODE === 'http') {
+        const savedRole = typeof window !== 'undefined' ? localStorage.getItem('u2u_demo_role') : null
+        if (!savedRole) {
+          try {
+            await signInDemoRole('staff')
+          } catch (authErr) {
+            console.warn('Failed to auto-sign-in demo role:', authErr)
+            setStepProgress('Could not connect to backend. Please check network and try again.')
+            setTimeout(() => {
+              setStepProgress(null)
+              setIsRunning(false)
+            }, 4000)
+            return
+          }
+        }
+      }
+
       const api = getApi()
       await api.runScenario('story', (_stepNum, label) => {
         setStepProgress(label)
@@ -66,8 +85,11 @@ export function DemoBanner({
       }, 3000)
     } catch (err) {
       console.error('Failed to run scenario story:', err)
-      setStepProgress(null)
-      setIsRunning(false)
+      setStepProgress('Could not connect to backend. Please check network and try again.')
+      setTimeout(() => {
+        setStepProgress(null)
+        setIsRunning(false)
+      }, 4000)
     }
   }
 

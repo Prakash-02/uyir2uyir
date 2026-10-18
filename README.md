@@ -196,24 +196,23 @@ cd ..
 
 The U2U frontend deploys to **Firebase Hosting** with automatic SPA rewrites (`/index.html`) and long immutable cache headers for hashed bundle assets.
 
-#### Manual Build & Deploy:
+#### Guarded Build & Deploy:
 ```bash
-# 1. Build production bundle with HTTP mode
-cd frontend
-VITE_API_MODE=http \
-VITE_API_BASE_URL="https://u2u-api-demo-77691642972.asia-south1.run.app" \
-VITE_FIRESTORE_DB="u2u-demo" \
-VITE_FIREBASE_API_KEY="<WEB_API_KEY>" \
-VITE_FIREBASE_AUTH_DOMAIN="uyir2uyir-53929.firebaseapp.com" \
-VITE_FIREBASE_PROJECT_ID="uyir2uyir-53929" \
-VITE_FIREBASE_STORAGE_BUCKET="uyir2uyir-53929.firebasestorage.app" \
-VITE_FIREBASE_MESSAGING_SENDER_ID="77691642972" \
-VITE_FIREBASE_APP_ID="<WEB_APP_ID>" \
-npm run build
-cd ..
+# 1. Prepare production environment variables
+cp frontend/.env.production.example frontend/.env.production.local
+# Edit frontend/.env.production.local with your Cloud Run backend URL and Firebase Web credentials (gitignored)
 
-# 2. Deploy to Firebase Hosting
+# 2. Run the deploy guard script (PowerShell or Bash)
+# Validates VITE_API_MODE=http, checks VITE_API_BASE_URL, runs npm ci and npm run build,
+# and verifies dist/assets to prevent silent mock fallback.
+.\infra\deploy_frontend.ps1       # On Windows PowerShell
+./infra/deploy_frontend.sh        # On Linux / macOS / Git Bash
+
+# 3. Deploy the verified bundle to Firebase Hosting
 firebase deploy --only hosting
+
+# 4. Publish AI Eval benchmark results to Firestore (config/evalLatest in u2u-demo)
+python backend/eval/publish_eval.py
 ```
 
 #### Automated GitHub Actions CI/CD:
@@ -242,7 +241,7 @@ Configured in [`.github/workflows/frontend.yml`](.github/workflows/frontend.yml)
 
 ## Testing and Evaluation
 
-*(Status: built — 115 frontend tests passing, 125 backend tests passing, 200 Hypothesis stateful examples)*
+*(Status: built — 144 frontend tests passing, 162 backend tests passing, 200 Hypothesis stateful examples)*
 - **Frontend:** Vitest, Testing Library, and jsdom unit/component tests. Automated accessibility tests via `axe-core`.
 - **Backend:** Pytest integration tests across state-machine rules and API endpoints.
 - **Request Desk Evaluation:** Labelled test set evaluated against precision, recall, and safety rules (zero tolerance for payment leaks or hallucinated hospital IDs).

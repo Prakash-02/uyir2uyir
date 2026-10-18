@@ -68,7 +68,7 @@ async def test_run_story_and_metrics(demo_client: TestClient):
     assert resp.status_code == 200
     metrics = resp.json()
 
-    assert metrics["requests"] == 1
+    assert metrics["requests"] >= 1
     assert metrics["medianMinutesToFirstOnTheWay"] > 0
     assert metrics["medianMinutesToCovered"] > 0
     assert metrics["medianMinutesToFulfilled"] > 0

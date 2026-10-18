@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { EvalPage } from './EvalPage'
 import { LangProvider } from '../../i18n/useT'
@@ -47,11 +47,22 @@ describe('EvalPage (/eval)', () => {
 
     // 3. Evaluation table
     expect(screen.getByText('Test Case Results')).toBeInTheDocument()
-    expect(screen.getByText('eval-01')).toBeInTheDocument()
-    expect(screen.getByText('eval-05')).toBeInTheDocument()
+    expect(screen.getByText('msg-01')).toBeInTheDocument()
+    expect(screen.getByText('msg-05')).toBeInTheDocument()
 
     // Status badges
     const passBadges = screen.getAllByText('PASS')
     expect(passBadges.length).toBeGreaterThan(0)
+  })
+
+  it('renders "No evaluation run published yet" when getLatestEval returns null / rejects', async () => {
+    const { getApi } = await import('../../api/client')
+    const api = getApi()
+    const spy = vi.spyOn(api, 'getLatestEval').mockRejectedValueOnce(new Error('404 Not Found'))
+
+    renderEvalPage()
+
+    expect(await screen.findByText('No evaluation run published yet')).toBeInTheDocument()
+    spy.mockRestore()
   })
 })
