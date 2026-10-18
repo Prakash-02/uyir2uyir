@@ -12,15 +12,16 @@ During medical emergencies, families frequently scramble at odd hours forwarding
 > ### What is real in this demo
 > - **Real Twilio calls to team phones:** Real phone calls ring verified team phones only (via strictly enforced `CALL_ALLOWLIST`), powered by Gemini Live multimodal sessions.
 > - **The same call in the browser:** Judges and evaluators can experience the exact same Live voice call directly in the browser on `/sim` with Gemini Live over Web Audio and WebSockets.
-> - **Real Gemini Request Desk:** Real Gemini Flash (`gemini-2.5-flash`) extracts entities from forwarded WhatsApp messages, with every quote validated word-for-word in deterministic code.
+> - **Real Gemini Request Desk:** Real Gemini Flash (`gemini-2.5-flash`) extracts entities from forwarded WhatsApp text and uploaded photos, with every quote validated word-for-word in deterministic code. Photos are processed memory-only with EXIF/GPS stripped.
 > - **Real Firestore live updates:** Real-time listeners and multi-database isolation (`u2u-demo` / `u2u-live`).
 > - **Real Cloud Run & Firebase deploy:** Continuous Cloud Run container deployment with OIDC scheduler ticks and Firebase Hosting frontend delivery.
+> - **Automated Test Coverage:** 294 automated tests (132 frontend Vitest/axe-core + 162 backend pytest) passing cleanly.
 > - **Simulated data:** All donors, hospitals, and patients in this prototype are simulated.
 
 ### Google Services
 | Service | Used for | Code path |
 |---|---|---|
-| Gemini on Vertex AI | Reads and extracts forwarded blood requests with verbatim quote verification (`gemini-2.5-flash` in `asia-south1`) | `backend/app/ai/gemini.py`, `backend/app/desk/pipeline.py` |
+| Gemini on Vertex AI | Reads and extracts forwarded blood request text and photos with verbatim quote verification (`gemini-2.5-flash` in `asia-south1`) | `backend/app/ai/gemini.py`, `backend/app/desk/pipeline.py` |
 | Gemini Live API | Real-time two-way voice donor calls over WebSockets (`gemini-live-2.5-flash-native-audio` in `us-central1`) | `backend/app/voice/live_session.py`, `backend/app/voice/browser_stream.py`, `backend/app/voice/twilio_stream.py` |
 | Cloud Text-to-Speech | Opening and closing voice audio in Tamil and English (8 kHz $\mu$-law for phone, 24 kHz LINEAR16 for browser) | `backend/app/ai/tts.py` |
 | Firebase Hosting | High-performance frontend web application delivery with SPA rewrites & immutable asset cache | `firebase.json`, `.github/workflows/frontend.yml` |
@@ -78,7 +79,7 @@ U2U is built on the philosophy: *Life passes on. Freely. Safely. In time.*
    - Outreach **reopens** if dropouts reduce covered below $N$.
    - Request is **fulfilled** once $\text{accepted} \ge N$, standing down any other donors still en route.
 5. **Staff Acceptance:** Only registered blood centre staff decide whether an arriving donor is medically eligible to donate.
-6. **Public Request Desk:** Families paste forwarded WhatsApp messages. Gemini extracts hospital, patient, and blood component with exact source text quotes. Code validates quotes word-for-word before checking for verified matches or notifying hospital blood banks.
+6. **Public Request Desk:** Families paste forwarded WhatsApp messages or upload photos (screenshots, hospital slips, posters). Gemini extracts hospital, patient, and blood component with exact source text quotes. Code validates quotes word-for-word before checking for verified matches or notifying hospital blood banks. Photos are processed strictly in memory with EXIF and geolocation metadata stripped.
 
 ---
 

@@ -89,6 +89,8 @@ export interface DeskResult {
   requestId?: string;
   hospitalName?: string;
   trace: {
+    inputType?: 'text' | 'image';
+    transcript?: string;
     hospital: QuotedField<string>;
     patientNumber: QuotedField<string>;
     bloodGroup: QuotedField<BloodGroup>;

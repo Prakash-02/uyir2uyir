@@ -47,6 +47,7 @@ export interface ApiClient {
   cancelRequest(id: string): Promise<BloodRequest>
   getRequestStatus(id: string): Promise<PublicStatus>
   checkDesk(text: string): Promise<DeskResult>
+  checkDeskImage(file: Blob, caption?: string): Promise<DeskResult>
   getConfirmPreview(token: string): Promise<RequestPreview>
   confirmRequest(token: string, action: ConfirmAction): Promise<BloodRequest | { status: 'REJECTED' }>
   simPressKey(callId: string, key: SimKey): Promise<Call>

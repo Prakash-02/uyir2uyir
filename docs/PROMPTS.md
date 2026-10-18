@@ -1416,6 +1416,84 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `infra/deploy_backend_demo.ps1`
   - `infra/deploy_backend_demo.sh`
 
+### Entry #P1
+- **Date:** 2026-10-18
+- **Goal:** Entry #P1 — Request Desk: verify a WhatsApp photo (image upload)
+- **Prompt Summary:**
+  1. Safety & Data Privacy Guardrails:
+     - Staged-files check scripts (`infra/check_staged_files.sh` and `infra/check_staged_files.ps1`) updated to strictly fail if any file named `sample_Photo.*` is staged (protecting real person's PII).
+     - Copied two fictional sample photos (`sample_photo_unknown_hospital.jpg` and `sample_photo_registered_hospital.jpg`) into `frontend/public/samples/` and `backend/eval/images/`.
+     - Zero image persistence guarantee: Uploaded image bytes are processed strictly in volatile memory. Never written to Firestore, Cloud Storage, server disk, logs, or traces.
+  2. Backend Multi-Layer Ingestion & Gemini Multimodal Pipeline:
+     - Added `python-multipart` and `pillow` to `backend/requirements.txt` and `backend/pyproject.toml`.
+     - Implemented `backend/app/desk/image_input.py`: validates JPEG/PNG/WebP magic bytes (max 5 MB), checks <= 40 megapixels, applies EXIF orientation, and re-encodes to quality 85 JPEG (longest side <= 1600 px) to strip all EXIF/GPS metadata.
+     - Created `backend/prompts/desk_extract_image_v1.md` prompt for multimodal Gemini Flash.
+     - Added `extract_from_image` to `GeminiExtractor` protocol, `VertexGeminiExtractor`, and deterministic `MockGeminiExtractor` (SHA-256 matched on sample photos).
+     - Refactored `backend/app/desk/pipeline.py` with shared `_evaluate_desk_source` running quote checks, dictionary normalization, hospital verification, payment blocking, and dedup against `source_text = transcript + "\n" + caption`.
+     - Appended mandatory EN + Tamil photo disclaimer: *"A photo can be edited. We check it against the hospital's live requests, not how real it looks. (புகைப்படங்கள் திருத்தப்படலாம்...)"*. Fixed footer: *"Nobody may charge you for a donor."*
+     - Exposed `POST /desk/check-image` endpoint in `backend/app/desk/router.py`.
+  3. Frontend Public Request Desk (`/desk`) Upload Tab:
+     - Added dual tabs "Paste text" | "Upload photo" with bilingual translations in `en.ts` and `ta.ts`.
+     - Drop zone, file picker, clipboard paste (Ctrl+V) listener, browser canvas downscaler (max 1600 px JPEG quality 0.85 stripping EXIF), preview thumbnail with Remove button, caption input, and "Check photo" primary button.
+     - Added sample photo chips ("Photo: unknown hospital", "Photo: registered hospital") executing verification immediately.
+     - Updated `TracePanel.tsx` rendering *"Text Gemini read from the photo"* with highlighted kept quotes.
+  4. Testing & Multimodal Evaluation Benchmark:
+     - Authored 12 backend unit tests in `backend/tests/test_desk_image.py` covering magic bytes, >5MB, EXIF removal, quote verification, payment traps, prompt injection, NO_REQUEST_TEXT, and store privacy assertion. All 162 backend tests pass (1 skipped emulator).
+     - Authored 10 frontend unit tests in `DeskPage.test.tsx`. All 132 frontend tests pass across 20 suites.
+     - Created synthetic evaluation images generator `backend/eval/generate_eval_images.py` and 6 synthetic images (`sent_to_hospital.png`, `payment_trap.png`, `prompt_injection.png`, `blurry_low_res.png`, `tanglish_request.png`, `tamil_request.png` using Nirmala UI font).
+     - Updated `backend/eval/run_eval.py` with `--images` flag and `run_image_evaluation`.
+     - Executed live image evaluation once against real Gemini-2.5-flash on Vertex AI:
+       - **Total Test Cases:** 8
+       - **Correct Answers:** 8 (100.0%)
+       - **Safety Gate 1 (`paymentToHospital`):** 0 (PASS)
+       - **Safety Gate 2 (`wrongHospitalIds`):** 0 (PASS)
+       - **P95 Latency:** 4596.2 ms
+       - Results saved to `backend/eval/results/latest_images.json`.
+- **Files Changed:**
+  - `AGENTS.md`
+  - `README.md`
+  - `backend/app/ai/gemini.py`
+  - `backend/app/desk/image_input.py`
+  - `backend/app/desk/models.py`
+  - `backend/app/desk/pipeline.py`
+  - `backend/app/desk/router.py`
+  - `backend/eval/generate_eval_images.py`
+  - `backend/eval/images/blurry_low_res.png`
+  - `backend/eval/images/labels.jsonl`
+  - `backend/eval/images/payment_trap.png`
+  - `backend/eval/images/prompt_injection.png`
+  - `backend/eval/images/sample_photo_registered_hospital.jpg`
+  - `backend/eval/images/sample_photo_unknown_hospital.jpg`
+  - `backend/eval/images/sent_to_hospital.png`
+  - `backend/eval/images/tamil_request.png`
+  - `backend/eval/images/tanglish_request.png`
+  - `backend/eval/results/latest_images.json`
+  - `backend/eval/run_eval.py`
+  - `backend/prompts/desk_extract_image_v1.md`
+  - `backend/pyproject.toml`
+  - `backend/requirements.txt`
+  - `backend/tests/test_desk_image.py`
+  - `docs/AI_DESIGN.md`
+  - `docs/FRONTEND.md`
+  - `docs/PRIVACY_SAFETY.md`
+  - `docs/PROMPTS.md`
+  - `docs/TESTING.md`
+  - `frontend/public/samples/sample_photo_registered_hospital.jpg`
+  - `frontend/public/samples/sample_photo_unknown_hospital.jpg`
+  - `frontend/src/api/client.ts`
+  - `frontend/src/api/http/index.ts`
+  - `frontend/src/api/mock/desk.ts`
+  - `frontend/src/api/mock/engine.ts`
+  - `frontend/src/api/mock/index.ts`
+  - `frontend/src/api/types.ts`
+  - `frontend/src/components/TracePanel.tsx`
+  - `frontend/src/features/desk/DeskPage.test.tsx`
+  - `frontend/src/features/desk/DeskPage.tsx`
+  - `frontend/src/i18n/en.ts`
+  - `frontend/src/i18n/ta.ts`
+  - `infra/check_staged_files.ps1`
+  - `infra/check_staged_files.sh`
+
 ---
 
 ## Human Decisions

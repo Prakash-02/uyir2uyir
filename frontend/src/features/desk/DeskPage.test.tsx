@@ -191,4 +191,182 @@ describe('DeskPage (/desk)', () => {
       api.checkDesk = origCheckDesk
     }
   })
+
+  it('switches between Paste text and Upload photo tabs', async () => {
+    renderDeskPage()
+
+    const textTab = screen.getByRole('tab', { name: /Paste text/i })
+    const photoTab = screen.getByRole('tab', { name: /Upload photo/i })
+
+    expect(textTab).toHaveAttribute('aria-selected', 'true')
+    expect(photoTab).toHaveAttribute('aria-selected', 'false')
+    expect(screen.getByLabelText(/Paste the message you received/i)).toBeInTheDocument()
+
+    // Switch to photo tab
+    await act(async () => {
+      fireEvent.click(photoTab)
+    })
+
+    expect(photoTab).toHaveAttribute('aria-selected', 'true')
+    expect(textTab).toHaveAttribute('aria-selected', 'false')
+    expect(
+      screen.getByText(/Drag & drop a photo, paste \(Ctrl\+V\), or choose a file/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/We don't keep your photo\. Only the details we read are checked\./i),
+    ).toBeInTheDocument()
+  })
+
+  it('handles file selection, shows preview thumbnail, and removes photo', async () => {
+    // Mock URL.createObjectURL and revokeObjectURL
+    const origCreateObjectURL = URL.createObjectURL
+    const origRevokeObjectURL = URL.revokeObjectURL
+    URL.createObjectURL = () => 'blob:mock-url-preview'
+    URL.revokeObjectURL = () => {}
+
+    try {
+      renderDeskPage()
+
+      // Switch to photo tab
+      const photoTab = screen.getByRole('tab', { name: /Upload photo/i })
+      await act(async () => {
+        fireEvent.click(photoTab)
+      })
+
+      const fileInput = screen.getByLabelText(/Upload blood request photo/i) as HTMLInputElement
+      const dummyFile = new File(['mock content'], 'test_slip.jpg', { type: 'image/jpeg' })
+
+      await act(async () => {
+        fireEvent.change(fileInput, { target: { files: [dummyFile] } })
+      })
+
+      // Thumbnail preview and remove button appear
+      expect(await screen.findByText(/Photo Ready \(EXIF stripped\)/i)).toBeInTheDocument()
+      expect(screen.getByAltText(/Uploaded blood request preview/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Optional caption or forwarded note/i)).toBeInTheDocument()
+
+      // Click remove photo
+      const removeBtns = screen.getAllByRole('button', { name: /Remove photo/i })
+      await act(async () => {
+        fireEvent.click(removeBtns[0])
+      })
+
+      // Back to drop zone
+      expect(
+        screen.getByText(/Drag & drop a photo, paste \(Ctrl\+V\), or choose a file/i),
+      ).toBeInTheDocument()
+    } finally {
+      URL.createObjectURL = origCreateObjectURL
+      URL.revokeObjectURL = origRevokeObjectURL
+    }
+  })
+
+  it('handles image paste from clipboard', async () => {
+    const origCreateObjectURL = URL.createObjectURL
+    const origRevokeObjectURL = URL.revokeObjectURL
+    URL.createObjectURL = () => 'blob:mock-pasted-url'
+    URL.revokeObjectURL = () => {}
+
+    try {
+      renderDeskPage()
+
+      const dummyFile = new File(['clipboard content'], 'pasted.png', { type: 'image/png' })
+      const pasteEvent = new Event('paste', { bubbles: true, cancelable: true }) as unknown as ClipboardEvent
+      Object.defineProperty(pasteEvent, 'clipboardData', {
+        value: {
+          items: [
+            {
+              type: 'image/png',
+              getAsFile: () => dummyFile,
+            },
+          ],
+        },
+      })
+
+      await act(async () => {
+        window.dispatchEvent(pasteEvent)
+      })
+
+      // Automatically switched to photo tab with preview
+      expect(await screen.findByText(/Photo Ready \(EXIF stripped\)/i)).toBeInTheDocument()
+    } finally {
+      URL.createObjectURL = origCreateObjectURL
+      URL.revokeObjectURL = origRevokeObjectURL
+    }
+  })
+
+  it('displays error message when an invalid file or oversized image is provided', async () => {
+    renderDeskPage()
+
+    // Switch to photo tab
+    const photoTab = screen.getByRole('tab', { name: /Upload photo/i })
+    await act(async () => {
+      fireEvent.click(photoTab)
+    })
+
+    const fileInput = screen.getByLabelText(/Upload blood request photo/i)
+    // Create oversized file (>5 MB)
+    const bigFile = new File([new Uint8Array(6 * 1024 * 1024)], 'huge.jpg', {
+      type: 'image/jpeg',
+    })
+
+    await act(async () => {
+      fireEvent.change(fileInput, { target: { files: [bigFile] } })
+    })
+
+    expect(
+      screen.getByText(/Please upload a JPG, PNG or WebP photo under 5 MB\./i),
+    ).toBeInTheDocument()
+  })
+
+  it('handles clicking sample photo chips and displays image verification result', async () => {
+    const origCreateObjectURL = URL.createObjectURL
+    const origRevokeObjectURL = URL.revokeObjectURL
+    URL.createObjectURL = () => 'blob:mock-sample-url'
+    URL.revokeObjectURL = () => {}
+
+    // Mock global fetch for sample images
+    const origFetch = globalThis.fetch
+    globalThis.fetch = async (input: RequestInfo | URL) => {
+      const urlStr = String(input)
+      if (urlStr.includes('sample_photo')) {
+        return new Response(new Blob(['fake-sample-bytes'], { type: 'image/jpeg' }), {
+          status: 200,
+          headers: { 'Content-Type': 'image/jpeg' },
+        })
+      }
+      return origFetch(input)
+    }
+
+    try {
+      renderDeskPage()
+
+      // Switch to photo tab
+      const photoTab = screen.getByRole('tab', { name: /Upload photo/i })
+      await act(async () => {
+        fireEvent.click(photoTab)
+      })
+
+      const sampleUnknownBtn = screen.getByRole('button', { name: /Photo: unknown hospital/i })
+      expect(sampleUnknownBtn).toBeInTheDocument()
+
+      await act(async () => {
+        fireEvent.click(sampleUnknownBtn)
+      })
+
+      // Result appears
+      expect(
+        await screen.findByRole('heading', {
+          name: /Couldn't verify\. Please call the hospital directly\./i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/Multimodal Image Verification/i)).toBeInTheDocument()
+      expect(screen.getByText(/Text Gemini read from the photo/i)).toBeInTheDocument()
+      expect(screen.getByText('Nobody may charge you for a donor.')).toBeInTheDocument()
+    } finally {
+      URL.createObjectURL = origCreateObjectURL
+      URL.revokeObjectURL = origRevokeObjectURL
+      globalThis.fetch = origFetch
+    }
+  })
 })

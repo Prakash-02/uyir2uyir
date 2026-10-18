@@ -319,3 +319,47 @@ U2U bridges real outbound phone calls from Twilio Media Streams and in-browser v
 - **Stored Data Parity:** Only the validated 120-character donor `quote` and `etaMinutes` are persisted on the `Call` document in Firestore/memory.
 - **Anonymized Timeline Events:** Timeline events never disclose phone numbers or donor identity (e.g., *"Donor A3 talked to Gemini: COMING, about 20 min, 'varen 20 nimisham la'"*).
 
+---
+
+## 9. Multimodal Request Desk: WhatsApp Photo Verification
+
+Families often receive blood requests as an image (screenshot of a WhatsApp forward, hospital slip, or poster) rather than plaintext. The Request Desk provides a multimodal upload endpoint `POST /desk/check-image` that extends the same three answers (`VERIFIED_MATCH`, `SENT_TO_HOSPITAL`, `NOT_VERIFIED`) with identical safety and quote validation rules.
+
+### 9.1 Multi-Layer Ingestion & Privacy Pipeline
+
+| Pipeline Step | Module | Implementation & Security Rule |
+|---|---|---|
+| **Magic Bytes & Size Validation** | `backend/app/desk/image_input.py` | Validates file header magic bytes for JPEG (`FF D8 FF`), PNG (`89 50 4E 47`), and WebP (`RIFF....WEBP`). Rejects images $> 5\text{ MB}$. |
+| **Pillow Sanitization & EXIF Strip** | `backend/app/desk/image_input.py` | Rejects images $> 40\text{ megapixels}$ (decompression bomb defense). Normalizes EXIF orientation via `ImageOps.exif_transpose`, downscales longest side to $\le 1600\text{ px}$, and re-encodes to JPEG at quality 85. **All EXIF and GPS geolocation metadata are completely stripped.** |
+| **Strict Memory-Only Processing** | Pipeline Architecture | The image is **never stored**: not on disk, not in Cloud Storage, not in Firestore, not in traces, and not in logs. Processed ephemeral in volatile RAM only. |
+| **Single Gemini Multimodal Call** | `backend/app/ai/gemini.py` | Exactly one call to `gemini-2.5-flash` (`temperature: 0.0`, `thinking_budget: 0`, prompt `desk_extract_image_v1.md`, strict JSON schema with hospital table and dynamic ID enum). Image passed as an inline `image/jpeg` Part. |
+| **Shared Code Verification** | `backend/app/desk/pipeline.py` | Model returns full image text as `transcript` and classification `image_kind`. Shared code evaluates `source_text = transcript + "\n" + caption`. Every field quote is checked verbatim against `source_text`. |
+| **Non-Request & Payment Traps** | `backend/app/desk/pipeline.py` | `image_kind == "NO_REQUEST_TEXT"` or empty transcript $\to$ `NOT_VERIFIED` ("We couldn't read a blood request in this photo. Please call the hospital."). Payment words in transcript block hospital routing. |
+| **Dedup & Trace** | `backend/app/desk/pipeline.py` | SHA-256 fingerprint of normalized source text (never image bytes). Trace shows transcript with highlighted quotes, discarded after request. |
+| **Mandatory Photo Disclaimer** | `backend/app/desk/pipeline.py` | Appended to every image response: *"A photo can be edited. We check it against the hospital's live requests, not how real it looks. (புகைப்படங்கள் திருத்தப்படலாம். மருத்துவமனையின் நேரடி கோரிக்கைகளுடன் ஒப்பிட்டே நாங்கள் சரிபார்க்கிறோம், அது எவ்வளவு உண்மையானதாகத் தோன்றுகிறது என்பதைப் பார்த்து அல்ல.)"* Footer remains: *"Nobody may charge you for a donor."* |
+
+### 9.2 Image Extraction Prompt Schema (`desk_extract_image_v1`)
+
+```json
+{
+  "transcript": "string (ALL text visible in the image, copied exactly, original script/language, line breaks kept; ignore phone status bar)",
+  "image_kind": "TEXT_MESSAGE_SCREENSHOT | HOSPITAL_SLIP_OR_FORM | POSTER | NO_REQUEST_TEXT",
+  "hospital": { "value": "hosp-sample-1 | NONE", "quote": "string | null" },
+  "patient_number": { "value": "string | null", "quote": "string | null" },
+  "blood_group": { "value": "string | null", "quote": "string | null" },
+  "component": { "value": "string | null", "quote": "string | null" },
+  "units": { "value": "integer | null", "quote": "string | null" },
+  "payment_phrases": ["string"]
+}
+```
+
+### 9.3 Evaluation Benchmark Results (`latest_images.json`)
+
+Evaluated on 8 test cases (including fictional sample photos and dark-card WhatsApp images):
+- **Total Test Cases:** 8
+- **Correct Answers:** 8 (100.0%)
+- **Zero-Tolerance Safety Gate 1 (`paymentToHospital`):** 0 (PASS)
+- **Zero-Tolerance Safety Gate 2 (`wrongHospitalIds`):** 0 (PASS)
+- **P95 Latency:** 4596.2 ms
+
+

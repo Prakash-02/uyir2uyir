@@ -1,4 +1,5 @@
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import Field
 
@@ -24,6 +25,8 @@ class ConfirmAction(StrEnum):
 
 
 class DeskTrace(CamelModel):
+    input_type: Literal["text", "image"] = "text"
+    transcript: str | None = None
     hospital: QuotedField[str] = Field(default_factory=QuotedField)
     patient_number: QuotedField[str] = Field(default_factory=QuotedField)
     blood_group: QuotedField[BloodGroup] = Field(default_factory=QuotedField)

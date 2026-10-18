@@ -13,7 +13,7 @@ import type {
 } from '../types'
 import { evaluateCountingRule, isLateAccept } from './countingRule'
 import { MOCK_HOSPITALS, MOCK_CENTRES, MOCK_DONORS } from './fixtures'
-import { mockCheckDesk } from './desk'
+import { mockCheckDesk, mockCheckDeskImage } from './desk'
 
 type Listener<T> = (data: T) => void
 type Unsubscribe = () => void
@@ -349,6 +349,30 @@ export class MockEngine {
     }))
 
     return mockCheckDesk(text, {
+      openRequests: openReqs,
+      generateConfirmToken: (hospName) => {
+        const token = `token-${Date.now()}`
+        this.confirmTokens.set(token, {
+          hospitalName: hospName,
+          bloodGroup: 'O+',
+          component: 'RED_CELLS',
+          unitsNeeded: 2,
+          patientRefMasked: 'IP-••••',
+          expiresAt: new Date(Date.now() + 7200000).toISOString(),
+        })
+        return token
+      },
+    })
+  }
+
+  public async checkDeskImage(file: Blob, caption = ''): Promise<DeskResult> {
+    const openReqs = Array.from(this.requests.values()).map((r) => ({
+      id: r.id,
+      hospitalName: r.hospitalName,
+      patientRef: r.patientRef,
+    }))
+
+    return mockCheckDeskImage(file, caption, {
       openRequests: openReqs,
       generateConfirmToken: (hospName) => {
         const token = `token-${Date.now()}`

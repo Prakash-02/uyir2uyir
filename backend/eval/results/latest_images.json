@@ -1,0 +1,59 @@
+{
+  "promptVersion": "desk_extract_image_v1",
+  "runAt": "2026-10-18T15:17:34.182372+00:00",
+  "total": 8,
+  "correct": 8,
+  "paymentToHospital": 0,
+  "wrongHospitalIds": 0,
+  "p95LatencyMs": 4596.23,
+  "rows": [
+    {
+      "id": "img-01",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "img-02",
+      "expected": "VERIFIED_MATCH",
+      "got": "VERIFIED_MATCH",
+      "pass": true
+    },
+    {
+      "id": "img-03",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "SENT_TO_HOSPITAL",
+      "pass": true
+    },
+    {
+      "id": "img-04",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "img-05",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "img-06",
+      "expected": "NOT_VERIFIED",
+      "got": "NOT_VERIFIED",
+      "pass": true
+    },
+    {
+      "id": "img-07",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "SENT_TO_HOSPITAL",
+      "pass": true
+    },
+    {
+      "id": "img-08",
+      "expected": "SENT_TO_HOSPITAL",
+      "got": "SENT_TO_HOSPITAL",
+      "pass": true
+    }
+  ]
+}

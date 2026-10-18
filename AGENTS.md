@@ -102,6 +102,8 @@
   1. Run `git status`
   2. Run `git diff --cached --name-only`
   3. Abort the commit immediately if any `.env` file other than `.env.example`, or any credential/key file (`*.json`, `*-key.json`, `service-account*.json`), is staged.
+  4. Abort the commit immediately if any file named `sample_Photo.*` is staged (this contains real person's PII and must never enter the repo).
+  5. Run `infra/check_staged_files.sh` (or `infra/check_staged_files.ps1`).
 
 ---
 

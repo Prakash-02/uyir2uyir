@@ -36,6 +36,10 @@ export class MockApiClient implements ApiClient {
     return mockEngine.checkDesk(text)
   }
 
+  public async checkDeskImage(file: Blob, caption = ''): Promise<DeskResult> {
+    return mockEngine.checkDeskImage(file, caption)
+  }
+
   public async getConfirmPreview(token: string): Promise<RequestPreview> {
     return mockEngine.getConfirmPreview(token)
   }

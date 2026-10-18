@@ -220,3 +220,119 @@ export async function mockCheckDesk(
     },
   }
 }
+
+export async function mockCheckDeskImage(
+  file: Blob,
+  caption = '',
+  context: DeskCheckContext,
+): Promise<DeskResult> {
+  await new Promise((resolve) => setTimeout(resolve, 600))
+
+  const fileName = (file as File).name || ''
+  const size = file.size
+  const isUnknownSample =
+    fileName.includes('unknown') ||
+    (size >= 100000 && size <= 106000) ||
+    caption.toLowerCase().includes('demo care')
+
+  const disclaimer =
+    "A photo can be edited. We check it against the hospital's live requests, not how real it looks. (புகைப்படங்கள் திருத்தப்படலாம். மருத்துவமனையின் நேரடி கோரிக்கைகளுடன் ஒப்பிட்டே நாங்கள் சரிபார்க்கிறோம், அது எவ்வளவு உண்மையானதாகத் தோன்றுகிறது என்பதைப் பார்த்து அல்ல.)"
+
+  if (isUnknownSample) {
+    return {
+      answer: 'NOT_VERIFIED',
+      message: `Couldn't verify. Please call the hospital directly. ${disclaimer}`,
+      footer: 'Nobody may charge you for a donor.',
+      trace: {
+        inputType: 'image',
+        transcript:
+          "🩸 Urgent Need: Any +ve group\nPatient name: Arun Kumar\nDemo Care Hospital Tambaram Selaiyur\nUrgent Any blood needed for operation tomorrow morning (23 Sept 2026)\nContact: +91 90000 00001\n(Patient's grandfather)\nPlease share with Frnds and fam\nSAMPLE · fictional data",
+        hospital: {
+          value: null,
+          quote: 'Demo Care Hospital Tambaram Selaiyur',
+          kept: false,
+        },
+        patientNumber: { value: null, quote: null, kept: false },
+        bloodGroup: { value: null, quote: null, kept: false },
+        component: { value: null, quote: null, kept: false },
+        units: { value: null, quote: null, kept: false },
+        paymentPhrases: [],
+        geminiChoice:
+          "Mock extractor (not Gemini): Read photo text. Hospital 'Demo Care Hospital Tambaram Selaiyur' is not registered. 'Any +ve' is not a single blood group.",
+        codeDecision:
+          'NOT_VERIFIED: Hospital not recognized. No single blood group specified.',
+      },
+    }
+  }
+
+  const registeredTranscript =
+    "🩸 Urgent Need: O+ve, 2 units\nPatient name: Arun Kumar\nIP No: IP-101\nSample General Hospital, Chennai\nRed cells needed for operation tomorrow morning\nContact: +91 90000 00001\n(Patient's grandfather)\nPlease share with Frnds and fam\nSAMPLE · fictional data"
+
+  const matchedHospital =
+    MOCK_HOSPITALS.find((h) =>
+      h.name.toLowerCase().includes('sample general hospital'),
+    ) || MOCK_HOSPITALS[0]
+
+  const matchingReq = context.openRequests.find(
+    (r) =>
+      r.hospitalName.toLowerCase() === matchedHospital.name.toLowerCase() &&
+      r.patientRef &&
+      r.patientRef.toLowerCase() === 'ip-101',
+  )
+
+  if (matchingReq) {
+    return {
+      answer: 'VERIFIED_MATCH',
+      message: `Verified hospital request. Match confirmed with active hospital order. ${disclaimer}`,
+      requestId: matchingReq.id,
+      hospitalName: matchedHospital.name,
+      footer: 'Nobody may charge you for a donor.',
+      trace: {
+        inputType: 'image',
+        transcript: registeredTranscript,
+        hospital: {
+          value: matchedHospital.name,
+          quote: 'Sample General Hospital, Chennai',
+          kept: true,
+        },
+        patientNumber: { value: 'IP-101', quote: 'IP-101', kept: true },
+        bloodGroup: { value: 'O+', quote: 'O+ve', kept: true },
+        component: { value: 'RED_CELLS', quote: 'Red cells', kept: true },
+        units: { value: 2, quote: '2 units', kept: true },
+        paymentPhrases: [],
+        geminiChoice: `Mock extractor (not Gemini): Read photo text. Extracted "${matchedHospital.name}", patient "IP-101", O+ve, 2 units, Red cells.`,
+        codeDecision:
+          'VERIFIED_MATCH: Exact patient reference IP-101 matches active order at Sample General Hospital, Chennai.',
+      },
+    }
+  }
+
+  const demoToken = context.generateConfirmToken
+    ? context.generateConfirmToken(matchedHospital.name)
+    : `token-${Date.now()}`
+
+  return {
+    answer: 'SENT_TO_HOSPITAL',
+    message: `Sent to hospital blood bank. Pending hospital verification. ${disclaimer}`,
+    hospitalName: matchedHospital.name,
+    demoConfirmToken: demoToken,
+    footer: 'Nobody may charge you for a donor.',
+    trace: {
+      inputType: 'image',
+      transcript: registeredTranscript,
+      hospital: {
+        value: matchedHospital.name,
+        quote: 'Sample General Hospital, Chennai',
+        kept: true,
+      },
+      patientNumber: { value: 'IP-101', quote: 'IP-101', kept: true },
+      bloodGroup: { value: 'O+', quote: 'O+ve', kept: true },
+      component: { value: 'RED_CELLS', quote: 'Red cells', kept: true },
+      units: { value: 2, quote: '2 units', kept: true },
+      paymentPhrases: [],
+      geminiChoice: `Mock extractor (not Gemini): Found hospital "${matchedHospital.name}". No active patient reference match.`,
+      codeDecision:
+        'SENT_TO_HOSPITAL: Hospital recognized. One-tap alert generated for blood bank confirmation.',
+    },
+  }
+}

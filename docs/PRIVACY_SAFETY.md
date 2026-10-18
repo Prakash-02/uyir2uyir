@@ -23,10 +23,18 @@ U2U adheres to rigorous data minimization principles:
 
 | Category | Kept in Persistence | Discarded Immediately / Never Kept |
 |---|---|---|
-| **Public Desk Inputs** | Verification decision (`VERIFIED_MATCH`, `SENT_TO_HOSPITAL`, or `NOT_VERIFIED`), extracted entities if valid | **Raw forwarded message text is purged from memory immediately** after extraction. Sender phone numbers, chat logs, and forwarded metadata are never stored. |
+| **Public Desk Inputs (Text)** | Verification decision (`VERIFIED_MATCH`, `SENT_TO_HOSPITAL`, or `NOT_VERIFIED`), extracted entities if valid | **Raw forwarded message text is purged from memory immediately** after extraction. Sender phone numbers, chat logs, and forwarded metadata are never stored. |
+| **Public Desk Inputs (Photos)** | Verification decision and extracted entities matching verified quotes | **Uploaded photo bytes are processed in memory only and immediately discarded.** Never written to Firestore, Cloud Storage, server disk, logs, or traces. All EXIF and GPS geolocation metadata are stripped via browser canvas and backend Pillow re-encoding. |
 | **Patient Information** | Internal hospital reference (`patientRef`), units needed, requested blood component | Patient full legal names, diagnoses, ward/bed locations, medical history, and clinical records are **never collected or stored**. |
 | **Donor Information** | System alias (e.g. `"Donor A7"`), declared blood group, area/pin, preferred language (`en`/`ta`), consent timestamps | Raw plaintext phone numbers are kept in encrypted outreach vaults only; never stored alongside names in plaintext. |
 | **Voice Records** | Structured call states (`RINGING`, `ON_THE_WAY`, `ACCEPTED`, `DEFERRED`), round number, ETA | Voice audio recordings of donor calls are **never captured or recorded**. |
+
+### 2.1 Photo Upload Privacy & Metadata Stripping
+When users upload a photo or screenshot on the Request Desk (`POST /desk/check-image`):
+1. **Client-Side Canvas Downscaling:** In the browser, the image is drawn onto an HTML5 canvas scaled to a maximum bounding box of 1600 px and exported as JPEG (quality 0.85). This canvas re-render completely strips camera, device, and GPS metadata before transmission.
+2. **Server-Side Re-encoding:** In `backend/app/desk/image_input.py`, magic bytes are validated, decompression bombs ($> 40\text{ MP}$) are blocked, EXIF orientation is transposed into raw pixels, and the image is re-encoded to JPEG at quality 85. Any remaining EXIF or geolocation tags are eliminated.
+3. **Zero Persistence Guarantee:** The image bytes exist purely in ephemeral memory while the Gemini Flash multimodal call executes. The file is never saved to local disk, never uploaded to Google Cloud Storage or Firestore, and omitted from the audit trace.
+4. **Fictional Sample Photos:** All sample photos (`sample_photo_unknown_hospital.jpg` and `sample_photo_registered_hospital.jpg`) are synthetic mock screenshots created specifically for testing and demonstration. No real person's PII, photo, or medical record is ever permitted in the codebase (enforced by `infra/check_staged_files.ps1`).
 
 ---
 

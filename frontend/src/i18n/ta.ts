@@ -254,6 +254,20 @@ export const ta: TranslationKeys = {
     errorGeneric: 'தற்போது சரிபார்க்க இயலவில்லை. தயவுசெய்து மருத்துவமனையை அழைக்கவும்.', // REVIEW: Native speaker verify
     mandatoryFooterEn: 'Nobody may charge you for a donor.',
     mandatoryFooterTa: 'இரத்த தானத்திற்கு யாரும் உங்களிடம் கட்டணம் வசூலிக்கக் கூடாது.',
+    tabText: 'உரையை ஒட்டவும்',
+    tabPhoto: 'புகைப்படத்தை பதிவேற்றவும்',
+    dropZoneTitle: 'புகைப்படத்தை இழுத்து விடவும், ஒட்டவும் (Ctrl+V) அல்லது கோப்பைத் தேர்ந்தெடுக்கவும்',
+    dropZoneHint: '5 MB-க்கு குறைவான JPEG, PNG, அல்லது WebP',
+    choosePhotoButton: 'புகைப்படத்தைத் தேர்ந்தெடுக்கவும்',
+    photoPrivacyNote: 'உங்கள் புகைப்படத்தை நாங்கள் சேமிப்பதில்லை. நாங்கள் படிக்கும் விவரங்கள் மட்டுமே சரிபார்க்கப்படுகின்றன.',
+    removePhotoButton: 'புகைப்படத்தை அகற்று',
+    captionLabel: 'விருப்ப குறிப்பு அல்லது பகிரப்பட்ட உரை',
+    captionPlaceholder: 'எ.கா. புகைப்படத்துடன் பெறப்பட்ட கூடுதல் விவரங்கள்...',
+    checkPhotoButton: 'புகைப்படத்தை சரிபார்க்கவும்',
+    samplePhotoUnknown: 'புகைப்படம்: தெரியாத மருத்துவமனை',
+    samplePhotoRegistered: 'புகைப்படம்: பதிவுசெய்யப்பட்ட மருத்துவமனை',
+    errorInvalidPhoto: 'தயவுசெய்து 5 MB-க்கு குறைவான JPG, PNG அல்லது WebP புகைப்படத்தைப் பதிவேற்றவும்.',
+    transcriptTitle: 'புகைப்படத்திலிருந்து ஜெமினி படித்த உரை',
     reviewLink: 'இரத்த வங்கியில் பார்க்கவும் (டெமோ)', // REVIEW: Native speaker verify
   },
   // Donor join & consent screen

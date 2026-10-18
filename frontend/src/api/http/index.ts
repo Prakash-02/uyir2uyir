@@ -47,8 +47,9 @@ async function request<T>(
 
   try {
     const token = await getAuthToken()
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers as Record<string, string> | undefined),
     }
@@ -126,6 +127,18 @@ export class HttpApiClient implements ApiClient {
     return request<DeskResult>('/desk/check', {
       method: 'POST',
       body: JSON.stringify({ text }),
+    })
+  }
+
+  public async checkDeskImage(file: Blob, caption = ''): Promise<DeskResult> {
+    const formData = new FormData()
+    formData.append('image', file, 'upload.jpg')
+    if (caption) {
+      formData.append('text', caption)
+    }
+    return request<DeskResult>('/desk/check-image', {
+      method: 'POST',
+      body: formData,
     })
   }
 

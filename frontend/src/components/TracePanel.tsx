@@ -170,19 +170,21 @@ export function TracePanel({
             </div>
           </div>
 
-          {/* The Pasted Text with Kept Quotes Highlighted */}
-          {rawText && (
+          {/* The Pasted Text or Image Transcript with Kept Quotes Highlighted */}
+          {(trace.transcript || rawText) && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] font-mono">
-                  Forwarded Message with Verified Quotes
+                  {trace.inputType === 'image' || trace.transcript
+                    ? 'Text Gemini read from the photo'
+                    : 'Forwarded Message with Verified Quotes'}
                 </h4>
                 <span className="text-[11px] text-[var(--muted)]">
                   Kept quotes highlighted in green
                 </span>
               </div>
               <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] font-sans text-xs sm:text-sm leading-relaxed text-[var(--text)] whitespace-pre-wrap break-words shadow-2xs">
-                {renderHighlightedText(rawText, keptQuotes)}
+                {renderHighlightedText(trace.transcript || rawText || '', keptQuotes)}
               </div>
             </div>
           )}

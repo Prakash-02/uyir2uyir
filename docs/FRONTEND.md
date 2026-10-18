@@ -404,3 +404,23 @@ Cumulative record of frontend updates and milestones:
   - When the deployment secret is unconfigured, CI cleanly tests and builds with 100% green checkmark, while automated deployments trigger seamlessly once the repository secret is configured.
 - **Status:** Complete. Vitest (127 tests), Oxlint, and build clean.
 
+### Entry #P1 — 2026-10-18
+- **Action:** Implemented Multimodal WhatsApp Photo Verification on the Request Desk (`/desk`):
+  - **Tabs Layout:** Added dual tabs above the input card: "Paste text" | "Upload photo" (with full Tamil translations "உரையை ஒட்டவும்" | "புகைப்படத்தைப் பதிவேற்றவும்").
+  - **Photo Tab UX:**
+    - Drag & drop dropzone with click-to-choose (`input accept="image/jpeg,image/png,image/webp"`).
+    - Clipboard paste (Ctrl+V) listener that automatically detects image data from clipboard, activates the photo tab, and displays preview thumbnail.
+    - Client-side canvas downscaling (`downscaleImageInBrowser`) scaling images down to max 1600 px JPEG at quality 0.85 (stripping all device, camera, and GPS metadata before transmission).
+    - Thumbnail preview with Remove button, optional forwarded caption box (max 2,000 characters), and "Check photo" primary button.
+    - Privacy reassurance banner: *"We don't keep your photo. Only the details we read are checked."*
+    - Accessible: labelled drop zone, keyboard operable, focus states, errors announced via `aria-live`.
+  - **Sample Photo Chips:**
+    - "Photo: unknown hospital" (`sample_photo_unknown_hospital.jpg` from `/samples/`): Triggers check and verifies `NOT_VERIFIED` (Demo Care Hospital is unregistered).
+    - "Photo: registered hospital" (`sample_photo_registered_hospital.jpg` from `/samples/`): Triggers check and verifies `VERIFIED_MATCH` against active IP-101 order.
+  - **Trace Panel Integration:**
+    - Updated `TracePanel.tsx` to handle `inputType="image"`, rendering *"Text Gemini read from the photo"* with highlighted kept quotes.
+  - **Internationalization:** Added bilingual dictionary keys across `en.ts` and `ta.ts`.
+  - **API Client & Mock Engine:** Updated canonical `checkDeskImage` in `src/api/client.ts`, `src/api/http/index.ts` (multipart/form-data upload), and `src/api/mock/desk.ts`.
+  - **Testing & Verification:** Added 5 new Vitest unit tests in `DeskPage.test.tsx` verifying tab switching, file selection, clipboard paste, remove button, invalid/oversized file errors, and sample photo chips.
+- **Status:** Complete. All 132 frontend tests pass across 20 suites. Oxlint clean (0 warnings, 0 errors). Production build clean.
+
