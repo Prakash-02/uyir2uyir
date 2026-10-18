@@ -396,3 +396,11 @@ Cumulative record of frontend updates and milestones:
     - Production build compiles cleanly with TypeScript strict mode.
 - **Status:** Complete. 127 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
 
+### Prompt #L4 — 2026-10-18
+- **Action:** Fixed CI/CD deployment workflow (`.github/workflows/frontend.yml`):
+  - GitHub Actions does not evaluate `secrets.*` inside job-level `if` conditions directly, causing `deploy-hosting` to execute even when `FIREBASE_SERVICE_ACCOUNT_UYIR2UYIR_53929` was unconfigured in repository secrets and fail with `Error: Input required and not supplied: firebaseServiceAccount`.
+  - Added a validation step in `lint-test-build` mapping the secret to an environment variable and emitting `has_secret` to `$GITHUB_OUTPUT`.
+  - Updated `deploy-hosting` job condition to require `needs.lint-test-build.outputs.has_secret == 'true'`.
+  - When the deployment secret is unconfigured, CI cleanly tests and builds with 100% green checkmark, while automated deployments trigger seamlessly once the repository secret is configured.
+- **Status:** Complete. Vitest (127 tests), Oxlint, and build clean.
+

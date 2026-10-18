@@ -1349,6 +1349,25 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
      - `frontend/src/features/sim/SimPage.test.tsx`: 11 tests verifying keypad presence, mock mode button hiding, and response states.
      - Full test suites: 150 backend tests passed (1 skipped), 127 frontend tests passed across 20 files. Linters: 0 errors.
 
+### Entry #L4
+- **Date:** 2026-10-18
+- **Goal:** Fix GitHub Actions workflow deployment error `Error: Input required and not supplied: firebaseServiceAccount`.
+- **Prompt Summary:**
+  1. Root cause:
+     - In GitHub Actions expressions, the `secrets` context cannot be evaluated in job-level conditionals (`if:`). The expression `secrets.FIREBASE_SERVICE_ACCOUNT_... != ''` evaluated truthy, causing the `deploy-hosting` job to execute even when the repository secret was not yet provisioned in GitHub settings.
+     - `action-hosting-deploy` then aborted with `Error: Input required and not supplied: firebaseServiceAccount`.
+  2. Resolution:
+     - Updated `.github/workflows/frontend.yml` to inspect the secret inside the `lint-test-build` job by passing it via environment variable `FIREBASE_SERVICE_ACCOUNT` and writing `has_secret` to `$GITHUB_OUTPUT`.
+     - Configured `deploy-hosting` conditional to check `needs.lint-test-build.outputs.has_secret == 'true'`.
+     - When the secret is omitted, `deploy-hosting` is cleanly skipped and the CI workflow finishes with a green checkmark.
+     - When the secret is configured, `deploy-hosting` triggers automated deployment seamlessly.
+  3. Verification:
+     - Frontend test suite (127 tests in Vitest), oxlint (0 errors), and production build verified cleanly.
+- **Files Changed:**
+  - `.github/workflows/frontend.yml`
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+
 ---
 
 ## Human Decisions

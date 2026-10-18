@@ -19,6 +19,8 @@ jobs:
   lint-test-build:
     name: Lint, Test & Build Frontend
     runs-on: ubuntu-latest
+    outputs:
+      has_secret: ${{ steps.check-secret.outputs.has_secret }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -48,10 +50,21 @@ jobs:
         env:
           VITE_API_MODE: mock
 
+      - name: Check if Firebase Hosting secret is configured
+        id: check-secret
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_UYIR2UYIR_53929 }}
+        run: |
+          if [ -n "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "has_secret=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_secret=false" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy-hosting:
     name: Deploy to Firebase Hosting
     needs: lint-test-build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.FIREBASE_SERVICE_ACCOUNT_UYIR2UYIR_53929 != ''
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint-test-build.outputs.has_secret == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
