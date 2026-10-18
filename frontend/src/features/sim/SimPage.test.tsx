@@ -161,4 +161,23 @@ describe('SimPage (/sim)', () => {
       expect(screen.queryByText('Thank you for telling us.')).not.toBeInTheDocument()
     })
   })
+
+  it('hides the Live button and displays "Live call needs the real backend" in mock mode', async () => {
+    renderSimPage()
+
+    // In default mock mode, Live button should NOT be rendered
+    expect(screen.queryByRole('button', { name: /Answer with your voice \(Gemini Live\)/i })).not.toBeInTheDocument()
+
+    // Explanation pill should be present
+    expect(await screen.findByText(/Live call needs the real backend/i)).toBeInTheDocument()
+  })
+
+  it('ensures the keypad stays rendered and accessible during an active call', async () => {
+    renderSimPage()
+
+    // Keypad digits 1, 2, and 9 must be present and visible
+    expect(await screen.findByRole('button', { name: /Digit 1: I'm coming/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Digit 2: I can't/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Digit 9: Stop calling me/i })).toBeInTheDocument()
+  })
 })

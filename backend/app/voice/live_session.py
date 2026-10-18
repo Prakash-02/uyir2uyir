@@ -237,6 +237,107 @@ class TwilioAudioAdapter:
         await self.flush()
 
 
+class BrowserAudioAdapter:
+    """Audio adapter for browser Web Audio WebSocket clients.
+
+    - Inbound: 16 kHz 16-bit linear PCM from the browser (no rate conversion).
+    - Outbound: 24 kHz linear PCM from Gemini Live directly to the browser as {"type":"audio","pcm24k":"<base64>"}.
+    - User interruption: sends {"type":"clear"} to the browser.
+    - Live transcripts: sends {"type":"transcript","who":"donor|gemini","text":"..."}.
+    - Tool result: sends {"type":"result","intent":"...","etaMinutes":...,"quote":"...","applied":...}.
+    - Fallback & ended: sends {"type":"fallback","reason":"..."} and {"type":"ended"}.
+    """
+
+    def __init__(self, websocket: WebSocket) -> None:
+        self.websocket = websocket
+        self._session: Any = None
+        self.frames_sent = 0
+
+    def set_session(self, session: Any) -> None:
+        self._session = session
+
+    async def send_input_chunk(self, raw_chunk: bytes) -> None:
+        """Forwards 16 kHz 16-bit linear PCM directly to Gemini Live session."""
+        if not self._session or not raw_chunk:
+            return
+        try:
+            await self._session.send_realtime_input(
+                media=types.Blob(data=raw_chunk, mime_type="audio/pcm;rate=16000")
+            )
+        except Exception as e:
+            logger.debug("BrowserAudioAdapter send_input_chunk error: %s", e)
+
+    async def send_output_audio(self, pcm_24k: bytes) -> None:
+        """Sends 24 kHz linear PCM from Gemini to browser as base64."""
+        if not pcm_24k:
+            return
+        try:
+            b64_audio = base64.b64encode(pcm_24k).decode("ascii")
+            msg = {
+                "type": "audio",
+                "pcm24k": b64_audio,
+            }
+            await self.websocket.send_text(json.dumps(msg))
+            self.frames_sent += 1
+        except Exception as e:
+            logger.debug("BrowserAudioAdapter send_output_audio error: %s", e)
+
+    async def handle_interrupted(self) -> None:
+        """Sends clear event to browser to purge pending audio queue."""
+        try:
+            await self.websocket.send_text(json.dumps({"type": "clear"}))
+        except Exception as e:
+            logger.debug("BrowserAudioAdapter handle_interrupted error: %s", e)
+
+    async def send_transcript(self, who: str, text: str) -> None:
+        """Sends real-time in-memory transcription line to browser."""
+        try:
+            await self.websocket.send_text(
+                json.dumps({"type": "transcript", "who": who, "text": text})
+            )
+        except Exception as e:
+            logger.debug("BrowserAudioAdapter send_transcript error: %s", e)
+
+    async def send_result(
+        self, intent: str, eta_minutes: int | None, quote: str, applied: bool
+    ) -> None:
+        """Sends record_reply tool result to browser."""
+        try:
+            await self.websocket.send_text(
+                json.dumps(
+                    {
+                        "type": "result",
+                        "intent": intent,
+                        "etaMinutes": eta_minutes,
+                        "quote": quote,
+                        "applied": applied,
+                    }
+                )
+            )
+        except Exception as e:
+            logger.debug("BrowserAudioAdapter send_result error: %s", e)
+
+    async def send_fallback(self, reason: str) -> None:
+        """Sends fallback notification to browser."""
+        try:
+            await self.websocket.send_text(json.dumps({"type": "fallback", "reason": reason}))
+        except Exception as e:
+            logger.debug("BrowserAudioAdapter send_fallback error: %s", e)
+
+    async def send_ended(self) -> None:
+        """Sends ended message to browser."""
+        try:
+            await self.websocket.send_text(json.dumps({"type": "ended"}))
+        except Exception as e:
+            logger.debug("BrowserAudioAdapter send_ended error: %s", e)
+
+    async def flush(self) -> None:
+        pass
+
+    async def close(self) -> None:
+        pass
+
+
 class LiveBridge:
     """Manages a Gemini Multimodal Live session attached to a donor call."""
 
@@ -335,10 +436,20 @@ class LiveBridge:
                     in_tx = getattr(sc, "input_transcription", None)
                     if in_tx and getattr(in_tx, "text", None):
                         self.input_transcripts.append(in_tx.text)
+                        send_tx = getattr(self.audio_adapter, "send_transcript", None)
+                        if send_tx is not None and callable(send_tx):
+                            res = send_tx("donor", in_tx.text)
+                            if asyncio.iscoroutine(res):
+                                await res
 
                     out_tx = getattr(sc, "output_transcription", None)
                     if out_tx and getattr(out_tx, "text", None):
                         self.output_transcripts.append(out_tx.text)
+                        send_tx = getattr(self.audio_adapter, "send_transcript", None)
+                        if send_tx is not None and callable(send_tx):
+                            res = send_tx("gemini", out_tx.text)
+                            if asyncio.iscoroutine(res):
+                                await res
 
                     mt = getattr(sc, "model_turn", None)
                     if mt and getattr(mt, "parts", None):
@@ -578,6 +689,17 @@ class LiveBridge:
             "applied": applied,
             "sayThis": say_this,
         }
+
+        send_res_fn = getattr(self.audio_adapter, "send_result", None)
+        if send_res_fn is not None and callable(send_res_fn):
+            res = send_res_fn(
+                intent=intent,
+                eta_minutes=eta_minutes,
+                quote=quote,
+                applied=applied,
+            )
+            if asyncio.iscoroutine(res):
+                await res
 
         # 4. Respond to tool call
         call_id_param = getattr(fc, "id", None) or "record_reply_call"

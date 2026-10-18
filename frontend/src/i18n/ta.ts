@@ -220,6 +220,20 @@ export const ta: TranslationKeys = {
     responseLateAccept: 'நன்றி, எங்களிடம் ஏற்கனவே போதுமான கொடையாளர்கள் உள்ளனர்.', // REVIEW
     openHospital: 'மருத்துவமனைப் பக்கத்தைத் திறக்கவும்', // REVIEW
     runStory: 'செயல்முறை ஓட்டத்தை இயக்கவும்', // REVIEW
+    demoLabel: 'டெமோ: நன்கொடையாளர் தொலைபேசியில் ஒலிக்கும் அதே அழைப்பு.', // REVIEW
+    answerVoice: 'குரல் மூலம் பதிலளிக்கவும் (Gemini Live)', // REVIEW
+    useKeypad: 'விசைப்பலகையைப் பயன்படுத்தவும்', // REVIEW
+    liveCallNeedsBackend: 'நேரலை அழைப்பிற்கு உண்மையான பின்தளம் தேவை', // REVIEW
+    micBlocked: 'மைக்ரோஃபோன் அணுகல் தடுக்கப்பட்டது, தயவுசெய்து விசைப்பலகையைப் பயன்படுத்தவும்', // REVIEW
+    micExplanation: 'Gemini Live உடன் பேச பிரவுசர் மைக்ரோஃபோன் அனுமதி தேவை.', // REVIEW
+    listening: 'கேட்கிறது…', // REVIEW
+    geminiSpeaking: 'Gemini பேசுகிறது…', // REVIEW
+    endCall: 'அழைப்பை முடிக்கவும்', // REVIEW
+    you: 'நீங்கள்', // REVIEW
+    gemini: 'Gemini', // REVIEW
+    geminiUnderstoodPrefix: 'Gemini புரிந்துகொண்டது:', // REVIEW
+    notClear: 'தெளிவாக இல்லை, தயவுசெய்து விசைப்பலகையைப் பயன்படுத்தவும்', // REVIEW
+    fallback: 'Gemini தற்போது கிடைக்கவில்லை, தயவுசெய்து விசைப்பலகையைப் பயன்படுத்தவும்.', // REVIEW
   },
   // Request Desk screen
   desk: {

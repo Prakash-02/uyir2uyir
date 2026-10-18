@@ -145,10 +145,14 @@ foreach ($optSec in @("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NU
     }
     if ($secExists) {
         $secretsList.Add("${optSec}=${optSec}:latest")
+        $prevEap = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
         & gcloud secrets add-iam-policy-binding $optSec `
             --project=$ProjectId `
             --member="serviceAccount:$SaApi" `
-            --role="roles/secretmanager.secretAccessor" 2>&1 | Out-Null
+            --role="roles/secretmanager.secretAccessor" `
+            --quiet
+        $ErrorActionPreference = $prevEap
     }
 }
 $secretsArg = "--set-secrets=" + ($secretsList -join ",")

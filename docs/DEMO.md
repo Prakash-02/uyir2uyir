@@ -103,3 +103,73 @@ Because emergency blood coordination spans multiple roles, U2U includes a zero-f
    - **Impact Dashboard:** Access to `/impact` to review computed timeline metrics.
    - **AI Evaluation:** Access to `/eval` to inspect Gemini extraction accuracy and safety benchmarks.
 4. **Resetting Demo State:** At any point, clicking **"Reset demo"** in the top banner issues a `POST /admin/reset` call, wiping in-memory states and restoring pristine scenario fixtures.
+
+---
+
+## 4. Browser Live Call with Gemini (Judge Hands-On Experience)
+
+Because external judges cannot receive cellular Twilio calls during evaluation, U2U allows anyone on the demo site to act as a donor and take an urgent ringing call directly in the browser over a two-way Web Audio + WebSocket bridge (`WS /sim/live/{callId}`), reusing the exact same Live bridge architecture, limits, and guardrails as live telephony:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor J as Judge (as Donor)
+    participant B as Browser (Web Audio)
+    participant S as U2U Backend (WS /sim/live/{callId})
+    participant G as Gemini Live (2.5 Native Audio)
+
+    J->>B: 1. Click "Answer with your voice (Gemini Live)"
+    B->>S: 2. WS connect & {"type":"auth", "idToken":...}
+    S->>B: 3. {"type":"audio", "pcm24k":...} (Cloud TTS 24kHz opening)
+    B-->>J: 4. Speaker plays bilingual urgent opening
+    J->>B: 5. Speak reply into microphone (English or Tamil)
+    B->>S: 6. 16kHz linear PCM audio chunks (40ms)
+    S->>G: 7. Real-time audio stream
+    G->>S: 8. Gemini Live calls record_reply(intent, quote, etaMinutes)
+    S->>S: 9. Code verifies quote, validates transition in transaction
+    S->>B: 10. {"type":"result", "intent":..., "etaMinutes":..., "quote":...}
+    S->>B: 11. Closing audio + {"type":"ended"}
+    B-->>J: 12. Result card: "Gemini understood: I'm coming · about 20 min"
+```
+
+### Exact Steps for Judges:
+
+1. **Open the Simulator:**
+   - Click **"Donor Simulator"** (`/sim`) in the navigation bar.
+   - Verify the top card displays the prominent reassurance label:
+     `"Demo: the same call that rings on a donor's phone."`
+2. **Select an Active Ringing Call:**
+   - If no calls are ringing, click **"Run the story"** or visit `/hospital` to raise a blood request.
+   - Select an incoming ringing call from the left list (e.g., `Donor A1` for O+ Red Cells).
+3. **Answering with Voice:**
+   - Click the primary crimson button: **"Answer with your voice (Gemini Live)"**.
+   - If prompted by your browser, grant microphone access. (A clear privacy note explains that audio is processed live and never stored).
+   - If mic access is denied, a helpful message explains: *"Microphone blocked, please use the keypad"*.
+4. **Listening & Speaking:**
+   - Hear the crisp 24 kHz Cloud TTS opening: *"A patient at Kauvery Hospital needs O+ Red cells..."*
+   - Once the opening completes, the **"Listening..."** indicator with a pulsating icon appears.
+   - Speak your response naturally in English or Tamil:
+     - **English:** *"I'm coming, I can be there in about 20 minutes."*
+     - **Tamil:** *"நான் வரேன், ஒரு 20 நிமிஷத்துல வந்துடுவேன்"* (*"Naan varen, oru 20 nimishathula vandhuduven"*).
+5. **Real-Time Live Captions:**
+   - Watch live captions appear in the captions log labelled **You** and **Gemini** (`aria-live="polite"`).
+   - Notice that conversational speech is never stored, maintaining strict donor privacy.
+6. **Barge-in & Interruption:**
+   - Interrupt Gemini at any point by speaking into the microphone. Audio playback stops instantly via Web Audio queue clearing.
+7. **Keypad DTMF Fallback / Override:**
+   - The telephone keypad (1 "I'm coming", 2 "I can't", 9 "Stop calling me") remains visible at all times.
+   - Pressing any key immediately overrides the AI session, applies the deterministic transition, and terminates the call.
+8. **Result Card Verification:**
+   - Upon completion, an assertive result card announces:
+     `"Gemini understood: I'm coming · about 20 min · 'varen 20 nimisham la'"`
+   - If unclear: *"Not clear, please use the keypad."*
+   - If Gemini is unreachable: *"Gemini isn't available right now, please use the keypad."*
+9. **Verify Blood Centre Live Triage:**
+   - Switch to **"Blood Centre"** (`/centre`) in the navigation bar.
+   - In the active request view, locate the on-the-way donor.
+   - Verify that the donor row displays the new **ETA chip** (`20m away`) and the verbatim **quote** beneath the donor alias, sorted automatically by ETA.
+
+![Browser Live Call with Gemini](images/live-call.png)
+*Browser Live Call with Gemini on `/sim`: Judges can answer directly through their microphone, speaking in Tamil or English, and inspect real-time transcription, result card, and keypad override.*
+
+

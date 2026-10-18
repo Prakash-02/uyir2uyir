@@ -18,8 +18,12 @@ import {
   Play,
   RotateCcw,
   Sparkles,
+  Mic,
+  Volume2,
+  PhoneOff,
 } from 'lucide-react'
 import clsx from 'clsx'
+import { useLiveCall } from './live'
 
 interface AnsweredResponse {
   callId: string
@@ -86,6 +90,10 @@ export function SimPage() {
 
   // 3. Find the currently active ringing call
   const activeCall = ringingCalls.find((c) => c.id === selectedCallId) ?? ringingCalls[0] ?? null
+  const liveCall = useLiveCall(activeCall?.id ?? null)
+  const isMockMode =
+    import.meta.env.VITE_API_MODE !== 'http' &&
+    !(typeof window !== 'undefined' && window.location.search.includes('live=1'))
 
   // 4. Subscribe to the associated BloodRequest to resolve hospitalName, centreName, component
   useEffect(() => {
@@ -106,9 +114,43 @@ export function SimPage() {
   const bloodGroup = selectedRequest?.bloodGroup || activeCall?.bloodGroup || 'O+'
   const component = selectedRequest?.component || 'RED_CELLS'
 
+  const resetLiveCall = liveCall.resetCall
+
+  // Reset live call when selected call changes
+  useEffect(() => {
+    resetLiveCall()
+  }, [activeCall?.id, resetLiveCall])
+
+  const liveResultAnswer: AnsweredResponse | null =
+    liveCall.state.result?.applied && activeCall
+      ? {
+          callId: activeCall.id,
+          donorAlias: activeCall.donorAlias,
+          key: (liveCall.state.result.intent === 'COMING'
+            ? '1'
+            : liveCall.state.result.intent === 'CANT'
+              ? '2'
+              : '9') as SimKey,
+          state: (liveCall.state.result.intent === 'COMING'
+            ? 'ON_THE_WAY'
+            : liveCall.state.result.intent === 'CANT'
+              ? 'DECLINED'
+              : 'OPTED_OUT') as CallState,
+          centreName,
+        }
+      : null
+
+  const activeResponse = answeredResponse || liveResultAnswer
+
   // 5. Handle DTMF Keypress (1, 2, 9)
   const handlePressKey = async (key: SimKey) => {
     if (!activeCall || isPressing) return
+
+    // If live call is connected, notify server over WebSocket too
+    if (liveCall.state.status === 'connected') {
+      liveCall.sendKey(key)
+    }
+
     setIsPressing(true)
     setActivePressedKey(key)
 
@@ -308,7 +350,7 @@ export function SimPage() {
             </div>
 
             {/* If no call is available and not in response state */}
-            {!activeCall && !answeredResponse ? (
+            {!activeCall && !activeResponse ? (
               <div className="my-auto text-center space-y-4 py-12">
                 <div className="w-16 h-16 rounded-full bg-[var(--border)]/20 text-[var(--muted)] flex items-center justify-center mx-auto">
                   <PhoneCall className="w-8 h-8 opacity-40" aria-hidden="true" />
@@ -322,7 +364,7 @@ export function SimPage() {
                   </p>
                 </div>
               </div>
-            ) : answeredResponse ? (
+            ) : activeResponse ? (
               /* 4. Response Screen After Pressing a Key */
               <div
                 role="status"
@@ -331,15 +373,15 @@ export function SimPage() {
               >
                 {/* Result Icon */}
                 <div className="mx-auto flex justify-center">
-                  {answeredResponse.state === 'LATE_ACCEPT' ? (
+                  {activeResponse.state === 'LATE_ACCEPT' ? (
                     <div className="w-16 h-16 rounded-full bg-[var(--info-tint)] text-[var(--info)] flex items-center justify-center border border-[var(--info)]/30">
                       <Heart className="w-8 h-8 fill-current" aria-hidden="true" />
                     </div>
-                  ) : answeredResponse.key === '1' ? (
+                  ) : activeResponse.key === '1' ? (
                     <div className="w-16 h-16 rounded-full bg-[var(--success-tint)] text-[var(--success)] flex items-center justify-center border border-[var(--success)]/30">
                       <CheckCircle2 className="w-8 h-8" aria-hidden="true" />
                     </div>
-                  ) : answeredResponse.key === '2' ? (
+                  ) : activeResponse.key === '2' ? (
                     <div className="w-16 h-16 rounded-full bg-[var(--border)]/40 text-[var(--muted)] flex items-center justify-center border border-[var(--border)]">
                       <XCircle className="w-8 h-8" aria-hidden="true" />
                     </div>
@@ -352,14 +394,14 @@ export function SimPage() {
 
                 {/* Donor Identifier Tag */}
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--border)]/30 text-xs font-mono text-[var(--muted)]">
-                  <span>{answeredResponse.donorAlias}</span>
+                  <span>{activeResponse.donorAlias}</span>
                   <span>·</span>
-                  <span>Key {answeredResponse.key} pressed</span>
+                  <span>Key {activeResponse.key} pressed</span>
                 </div>
 
                 {/* Verbatim Responses as Specified in Step 4 */}
                 <div className="space-y-3 px-2">
-                  {answeredResponse.state === 'LATE_ACCEPT' ? (
+                  {activeResponse.state === 'LATE_ACCEPT' ? (
                     <div className="space-y-1">
                       <p className="font-heading font-bold text-xl sm:text-2xl text-[var(--text)] leading-snug">
                         Thank you, we already have enough donors.
@@ -368,10 +410,10 @@ export function SimPage() {
                         Your willingness to help is deeply appreciated. Outreach was paused because enough volunteers responded first.
                       </p>
                     </div>
-                  ) : answeredResponse.key === '1' ? (
+                  ) : activeResponse.key === '1' ? (
                     <div className="space-y-2">
                       <p className="font-heading font-bold text-xl sm:text-2xl text-[var(--text)] leading-snug">
-                        Thank you. Please go to {answeredResponse.centreName}.
+                        Thank you. Please go to {activeResponse.centreName}.
                       </p>
                       <p className="text-xs sm:text-sm text-[var(--muted)]">
                         The blood centre staff will screen you upon arrival.
@@ -381,7 +423,7 @@ export function SimPage() {
                       <div className="pt-2">
                         <a
                           href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                            answeredResponse.centreName,
+                            activeResponse.centreName,
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -393,7 +435,7 @@ export function SimPage() {
                         </a>
                       </div>
                     </div>
-                  ) : answeredResponse.key === '2' ? (
+                  ) : activeResponse.key === '2' ? (
                     <div className="space-y-1">
                       <p className="font-heading font-bold text-xl sm:text-2xl text-[var(--text)] leading-snug">
                         Thank you for telling us.
@@ -420,6 +462,7 @@ export function SimPage() {
                     variant="secondary"
                     onClick={() => {
                       setAnsweredResponse(null)
+                      liveCall.resetCall()
                     }}
                     className="text-xs min-h-[42px] px-4 py-2"
                   >
@@ -429,8 +472,13 @@ export function SimPage() {
                 </div>
               </div>
             ) : (
-              /* 2 & 3. Incoming Call Active Screen: Script + Keypad */
-              <div className="space-y-5 my-auto animate-fade-in">
+              /* 2 & 3. Incoming Call Active Screen: Script + Live Voice / Keypad */
+              <div className="space-y-4 my-auto animate-fade-in">
+                {/* Demo Label: Rule 5 */}
+                <p className="text-xs text-center font-medium text-[var(--muted)]">
+                  {t.sim.demoLabel}
+                </p>
+
                 {/* Caller Information */}
                 <div className="text-center space-y-1 pb-2 border-b border-[var(--border)]/60">
                   <div className="flex items-center justify-center gap-2">
@@ -471,8 +519,140 @@ export function SimPage() {
                   </p>
                 </div>
 
-                {/* 3. The Keypad: 1 "I'm coming", 2 "I can't", 9 "Stop calling me" */}
-                <div className="pt-2">
+                {/* Live Call Voice Controls or Mock Mode Pill */}
+                {isMockMode ? (
+                  /* Rule 7: Mock mode hides live button and displays explanation note */
+                  <div className="p-2.5 rounded-xl bg-[var(--border)]/20 border border-[var(--border)] text-center text-xs text-[var(--muted)]">
+                    {t.sim.liveCallNeedsBackend}
+                  </div>
+                ) : (
+                  <div className="space-y-2 pt-1">
+                    {/* Primary Button: Answer with your voice (Gemini Live) */}
+                    {liveCall.state.status === 'idle' || liveCall.state.status === 'error' ? (
+                      <div className="space-y-2">
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            variant="primary"
+                            onClick={liveCall.startCall}
+                            className="w-full text-xs font-bold min-h-[44px] flex items-center justify-center gap-2"
+                            aria-label={t.sim.answerVoice}
+                          >
+                            <Mic className="w-4 h-4 shrink-0" aria-hidden="true" />
+                            <span>{t.sim.answerVoice}</span>
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => {
+                              document.getElementById('sim-keypad-section')?.scrollIntoView({ behavior: 'smooth' })
+                            }}
+                            className="w-full text-xs min-h-[44px] whitespace-nowrap"
+                          >
+                            {t.sim.useKeypad}
+                          </Button>
+                        </div>
+                        {/* Mic permission explanation or blocked message */}
+                        {liveCall.state.micPermission === 'denied' ? (
+                          <p role="alert" className="text-xs font-semibold text-[var(--danger)] text-center">
+                            {t.sim.micBlocked}
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-[var(--muted)] text-center">
+                            {t.sim.micExplanation}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      /* Live Call in progress: listening indicator, live captions, end call button */
+                      <div className="space-y-3 p-3.5 rounded-2xl bg-[var(--bg)] border border-[var(--border)] shadow-xs">
+                        {/* Listening / Speaking Indicator */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 text-xs font-bold text-[var(--info)]">
+                            {liveCall.state.isSpeaking ? (
+                              <>
+                                <Volume2 className="w-4 h-4 animate-bounce text-[var(--primary)]" aria-hidden="true" />
+                                <span>{t.sim.geminiSpeaking}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Mic className="w-4 h-4 animate-pulse text-[var(--primary)]" aria-hidden="true" />
+                                <span>{t.sim.listening}</span>
+                              </>
+                            )}
+                          </div>
+                          <Button
+                            variant="secondary"
+                            onClick={liveCall.endCall}
+                            className="text-xs min-h-[36px] px-3 py-1 text-[var(--danger)] hover:bg-[var(--danger-tint)]"
+                            aria-label={t.sim.endCall}
+                          >
+                            <PhoneOff className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+                            <span>{t.sim.endCall}</span>
+                          </Button>
+                        </div>
+
+                        {/* Live captions labelled You and Gemini (aria-live polite) */}
+                        {liveCall.state.transcripts.length > 0 && (
+                          <div
+                            role="log"
+                            aria-live="polite"
+                            aria-label="Live conversation captions"
+                            className="max-h-36 overflow-y-auto space-y-1.5 p-2.5 rounded-xl bg-[var(--surface)] border border-[var(--border)] text-xs"
+                          >
+                            {liveCall.state.transcripts.map((item) => (
+                              <div key={item.id} className="text-xs space-y-0.5">
+                                <span className="font-bold text-[10px] tracking-wider uppercase text-[var(--muted)]">
+                                  {item.who === 'donor' ? t.sim.you : t.sim.gemini}:
+                                </span>
+                                <p className="text-[var(--text)] italic">&ldquo;{item.text}&rdquo;</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Result Card: aria-live assertive */}
+                {liveCall.state.result && (
+                  <div
+                    role="status"
+                    aria-live="assertive"
+                    className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--border)] text-center space-y-1 shadow-xs animate-fade-in"
+                  >
+                    {liveCall.state.result.intent === 'COMING' ? (
+                      <p className="text-xs sm:text-sm font-semibold text-[var(--text)]">
+                        {t.sim.geminiUnderstoodPrefix} I'm coming · about {liveCall.state.result.etaMinutes ?? 20} min · &lsquo;{liveCall.state.result.quote || 'varen'}&rsquo;
+                      </p>
+                    ) : liveCall.state.result.intent === 'CANT' ? (
+                      <p className="text-xs sm:text-sm font-semibold text-[var(--text)]">
+                        {t.sim.geminiUnderstoodPrefix} I can't
+                      </p>
+                    ) : liveCall.state.result.intent === 'STOP' ? (
+                      <p className="text-xs sm:text-sm font-semibold text-[var(--text)]">
+                        {t.sim.geminiUnderstoodPrefix} Stop calling me
+                      </p>
+                    ) : (
+                      <p className="text-xs sm:text-sm font-semibold text-[var(--warning)]">
+                        {t.sim.notClear}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Fallback Notice */}
+                {liveCall.state.fallbackReason && (
+                  <div
+                    role="alert"
+                    aria-live="assertive"
+                    className="p-3 rounded-xl bg-[var(--warning-tint)] border border-[var(--warning)]/30 text-[var(--warning)] text-xs text-center font-medium"
+                  >
+                    {t.sim.fallback}
+                  </div>
+                )}
+
+                {/* 3. The Keypad: 1 "I'm coming", 2 "I can't", 9 "Stop calling me" (always visible) */}
+                <div id="sim-keypad-section" className="pt-2">
                   <Keypad
                     onPressKey={handlePressKey}
                     disabled={isPressing}

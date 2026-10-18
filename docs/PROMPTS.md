@@ -1314,6 +1314,41 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
 - **Commit Hash:** eab95c4
 - **Human Review:** Verified Gemini Live bridge, audio conversion, safety guardrails, keypad override, and test suites.
 
+### Entry #L3
+- **Date:** 2026-10-18
+- **Goal:** Let anyone on the demo site take a ringing call on /sim by talking to Gemini through the microphone, reusing the L2 bridge, because judges can't receive Twilio calls.
+- **Prompt Summary:**
+  1. Backend WebSocket endpoint `WS /sim/live/{callId}` in `backend/app/voice/browser_stream.py`:
+     - Demo-only guard (`DATA_MODE == "demo"`, immediately closed if `live`).
+     - Handshake: Expects `{"type": "auth", "idToken": "..."}` as the first message, verifies Firebase ID token using `verify_id_token()`, and ensures the call is in `RINGING` state.
+     - Inbound messages from browser: `{"type": "audio", "pcm16k": "<base64>"}`, `{"type": "key", "digit": "1|2|9"}`, and `{"type": "end"}`.
+     - Outbound messages to browser: `{"type": "audio", "pcm24k": "<base64>"}`, `{"type": "transcript", "who": "donor|gemini", "text": "..."}`, `{"type": "result", "intent": ..., "etaMinutes": ..., "quote": ..., "applied": ...}`, `{"type": "clear"}`, `{"type": "fallback", "reason": ...}`, and `{"type": "ended"}`.
+  2. `BrowserAudioAdapter` in `backend/app/voice/live_session.py`:
+     - Inbound 16 kHz 16-bit linear PCM from browser passed directly to Gemini Live without conversion.
+     - Outbound 24 kHz linear PCM from Gemini Live passed directly to browser.
+     - Opening and closing clips stream 24 kHz LINEAR16 TTS audio.
+     - Reuses same guardrails, timeouts (45s duration limit, 3 donor turns), tool handling (`record_reply`), and keypad overrides (1, 2, 9).
+  3. Frontend Web Audio & Live Stack in `frontend/src/features/sim/live/`:
+     - `audio.ts`: Tap-to-create/resume `AudioContext` (iOS Safari compliant), `PcmPlaybackQueue` (24 kHz linear PCM queue with instant queue clearing upon barge-in), microphone capture via `AudioWorklet` downsampling to 16 kHz 40 ms chunks with `ScriptProcessorNode` fallback.
+     - `reducer.ts`: Pure state reducer handling all server actions (`START_CONNECTING`, `CONNECTED`, `MIC_GRANTED`, `MIC_DENIED`, `SERVER_AUDIO`, `SERVER_TRANSCRIPT`, `SERVER_CLEAR`, `SERVER_RESULT`, `SERVER_FALLBACK`, `SERVER_ENDED`, `ERROR`, `RESET`).
+     - `useLiveCall.ts`: React WebSocket hook resolving `wss://` in production, managing auth handshakes, audio streaming, DTMF key sending, and cleanup.
+  4. Simulator UI in `frontend/src/features/sim/SimPage.tsx`:
+     - Top card label: `"Demo: the same call that rings on a donor's phone."`
+     - Primary button `"Answer with your voice (Gemini Live)"` and secondary button `"Use keypad"`.
+     - Microphone explanation and blocked alert (`"Microphone blocked, please use the keypad"`).
+     - Active call view: Listening / speaking indicator, real-time live captions labelled **You** and **Gemini** (`aria-live="polite"`), End call button, and always-visible telephone Keypad (1, 2, 9).
+     - Result card (`aria-live="assertive"`): `"Gemini understood: I'm coming · about 20 min · 'varen 20 nimisham la'"` or `"Not clear, please use the keypad"`.
+     - Fallback notice: `"Gemini isn't available right now, please use the keypad."`
+     - Mock mode guard: Hides the Live button and displays `"Live call needs the real backend"`.
+  5. Blood Centre & i18n:
+     - Verified `/centre` on-the-way rows display ETA chip (`20m away`) and quote under donor alias, sorted automatically by ETA.
+     - Added bilingual translations in `frontend/src/i18n/en.ts` and `frontend/src/i18n/ta.ts`.
+  6. Automated Testing:
+     - `backend/tests/test_browser_live.py`: 8 tests with `FakeLiveSession` over `TestClient` WebSocket.
+     - `frontend/src/features/sim/live/reducer.test.ts`: 10 tests covering all actions.
+     - `frontend/src/features/sim/SimPage.test.tsx`: 11 tests verifying keypad presence, mock mode button hiding, and response states.
+     - Full test suites: 150 backend tests passed (1 skipped), 127 frontend tests passed across 20 files. Linters: 0 errors.
+
 ---
 
 ## Human Decisions

@@ -362,5 +362,37 @@ Cumulative record of frontend updates and milestones:
   - **Demo Logins & Role Picker (`frontend/src/components/DemoRolePicker.tsx`):** Mounted accessible role selector on `/` without altering any screen components in `src/features/*`. Allows one-click anonymous sign-in, calls backend `POST /auth/demo-role` to assign role claims (`hospital` or `staff`), force-refreshes token, and navigates directly to `/hospital` or `/centre`.
   - **Firebase Hosting Configuration:** Configured `firebase.json` and `.firebaserc` serving `frontend/dist` with SPA rewrite to `/index.html` and 1-year immutable cache headers for hashed bundle assets.
   - **GitHub Actions CI/CD (`.github/workflows/frontend.yml`):** Configured automated lint, test, and build workflow on PRs, and automated HTTP mode build and deployment to Firebase Hosting via `FirebaseExtended/action-hosting-deploy@v0` on push to `main`.
-  - **Testing & Verification:** Added `http.test.ts` and `DemoRolePicker.test.tsx`. 115 tests passing cleanly across 19 suites in Vitest. Oxlint clean (0 warnings, 0 errors). Production bundles compile cleanly in both `VITE_API_MODE=mock` and `VITE_API_MODE=http`.
+  - **Testing & Verification:** Added `http.test.ts` and `DemoRolePicker.test.tsx`. 115 tests passing cleanly across 19 suites in Vitest. Oxlint clean (0 warnings, 0 errors). Both modes build successfully.
 - **Status:** Complete. 115 unit tests pass, lint clean (0 warnings, 0 errors), both modes build successfully.
+
+### Prompt #L3 — 2026-10-18
+- **Action:** Built browser Live call capability on `/sim` using Web Audio and WebSocket bridge to Gemini Live, reusing the L2 voice architecture:
+  - **Live Web Audio Architecture (`frontend/src/features/sim/live/audio.ts`):**
+    - `AudioContext` tap-to-create/resume compliance for iPhone Safari.
+    - Microphone capture downsampled to 16 kHz 16-bit mono linear PCM in 40 ms chunks via `AudioWorklet` with `ScriptProcessorNode` fallback.
+    - 24 kHz linear PCM playback queue (`PcmPlaybackQueue`) with instant buffer stopping and clearing upon interruption (`SERVER_CLEAR`).
+  - **Live Call State Reducer (`frontend/src/features/sim/live/reducer.ts`):**
+    - Pure message reducer handling `START_CONNECTING`, `CONNECTED`, `MIC_GRANTED`, `MIC_DENIED`, `SERVER_AUDIO`, `SERVER_TRANSCRIPT`, `SERVER_CLEAR`, `SERVER_RESULT`, `SERVER_FALLBACK`, `SERVER_ENDED`, `ERROR`, and `RESET`.
+  - **React Hook (`frontend/src/features/sim/live/useLiveCall.ts`):**
+    - Connects to `WS /sim/live/{callId}` (automatically resolving `wss://` in production).
+    - Streams authentication payload `{"type": "auth", "idToken": "..."}` with fresh Firebase token.
+    - Bidirectional PCM streaming, DTMF key injection (`sendKey`), barge-in clearing, and call termination.
+  - **Simulator UI Integration (`frontend/src/features/sim/SimPage.tsx`):**
+    - Prominent card label: `"Demo: the same call that rings on a donor's phone."`
+    - Voice controls: Primary button `"Answer with your voice (Gemini Live)"` and secondary button `"Use keypad"`.
+    - Microphone explanation with blocked alert: `"Microphone blocked, please use the keypad"`.
+    - Active call view: Listening / speaking indicator, real-time live captions labelled **You** and **Gemini** (`aria-live="polite"`), End call button, and always-visible telephone Keypad (1, 2, 9).
+    - Assertive result card (`aria-live="assertive"`): `"Gemini understood: I'm coming · about 20 min · 'varen 20 nimisham la'"` or `"Not clear, please use the keypad"`.
+    - Graceful fallback: `"Gemini isn't available right now, please use the keypad."`
+    - Mock mode guard: Hides the Live button and displays `"Live call needs the real backend"`.
+  - **Blood Centre Integration (`frontend/src/features/centre/`):**
+    - On-the-way rows render ETA chip (`20m away`) and verbatim donor quote under the donor alias, sorted automatically by ETA.
+  - **Bilingual Internationalization (`frontend/src/i18n/`):**
+    - Added all required string keys across English (`en.ts`) and Tamil (`ta.ts`).
+  - **Testing & Verification:**
+    - Authored unit test suite in `reducer.test.ts` (10 tests) and updated `SimPage.test.tsx` (11 tests).
+    - Full Vitest suite: 127 tests passing across 20 test files.
+    - Oxlint clean (0 warnings, 0 errors).
+    - Production build compiles cleanly with TypeScript strict mode.
+- **Status:** Complete. 127 unit tests pass, lint clean (0 warnings, 0 errors), production build clean.
+
