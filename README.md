@@ -18,7 +18,7 @@ During medical emergencies, families frequently scramble at odd hours forwarding
 > - **Real Gemini Request Desk:** Real Gemini Flash (`gemini-2.5-flash`) extracts entities from forwarded WhatsApp text and uploaded photos, with every quote validated word-for-word in deterministic code. Photos are processed memory-only with EXIF/GPS stripped.
 > - **Real Firestore live updates:** Real-time listeners and multi-database isolation (`u2u-demo` / `u2u-live`).
 > - **Real Cloud Run & Firebase deploy:** Continuous Cloud Run container deployment with OIDC scheduler ticks and Firebase Hosting frontend delivery.
-> - **Automated Test Coverage:** 294 automated tests (132 frontend Vitest/axe-core + 162 backend pytest) passing cleanly.
+> - **Automated Test Coverage:** 306 automated tests (144 frontend Vitest/axe-core + 162 backend pytest) passing cleanly.
 > - **Simulated data:** All donors, hospitals, and patients in this prototype are simulated.
 
 ### Google Services
@@ -272,11 +272,13 @@ Configured in [`.github/workflows/frontend.yml`](.github/workflows/frontend.yml)
 
 - [x] Milestone 0a: Repository structure, agent rules, and README skeleton.
 - [x] Milestone 0b: Canonical documentation set and architecture specifications.
-- [ ] Milestone 1: Frontend Vite scaffold, Tailwind v4 design system tokens, and core UI components.
-- [ ] Milestone 2: Hospital, Blood Centre, and Request Desk interactive views with mock service worker.
-- [ ] Milestone 3: Backend FastAPI modular monolith with core domain models and rule engine.
-- [ ] Milestone 4: Gemini Flash extraction pipeline and Vertex AI integration.
-- [ ] Milestone 5: Full integration, automated eval harness, and production deployment.
+- [x] Milestone 1: Frontend Vite scaffold, Tailwind v4 design system tokens, and core accessible UI components.
+- [x] Milestone 2: Interactive role screens (`/`, `/hospital`, `/centre`, `/desk`, `/join`, `/sim`) and client mock engine.
+- [x] Milestone 3: Backend FastAPI modular monolith with core domain models, state machines, and rule engine.
+- [x] Milestone 4: Gemini Flash extraction pipeline on Vertex AI, verbatim quote verification, and safety evals.
+- [x] Milestone 5: Full integration, real-time Firestore listeners, Cloud Run backend & Firebase Hosting deployment.
+- [x] Milestone F: Production hardening, live smoke verification (21/21 checks passing), and real Twilio telephony bridge.
+- [x] Milestone V1: Playwright automated 1080p demo scene recorder (8 scenes) and video walkthrough.
 
 ---
 

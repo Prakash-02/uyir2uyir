@@ -25,12 +25,12 @@ To maintain ethical safety, prevent clinical harm, and ensure regulatory complia
 
 ```mermaid
 flowchart LR
-    M0A["#0a: Monorepo Scaffold\n(Complete)"] --> M0B["#0b: System Docs Set\n(Current)"]
-    M0B --> M1["#1: Frontend Scaffold &\nDesign System"]
-    M1 --> M2["#2: UI Screens &\nClient Mock Layer"]
-    M2 --> M3["#3: Backend Monolith &\nRule Engine"]
-    M3 --> M4["#4: Gemini Flash\nAI Pipeline"]
-    M4 --> M5["#5: Integration, Live\nListeners & Deployment"]
+    M0A["#0a: Monorepo Scaffold\n(Complete)"] --> M0B["#0b: System Docs Set\n(Complete)"]
+    M0B --> M1["#1: Frontend Scaffold &\nDesign System (Complete)"]
+    M1 --> M2["#2: UI Screens &\nClient Mock Layer (Complete)"]
+    M2 --> M3["#3: Backend Monolith &\nRule Engine (Complete)"]
+    M3 --> M4["#4: Gemini Flash\nAI Pipeline (Complete)"]
+    M4 --> M5["#5: Integration, Live\nListeners & Deployment (Complete)"]
 ```
 
 ### Milestone 0a: Repository Scaffold & Agent Guardrails
