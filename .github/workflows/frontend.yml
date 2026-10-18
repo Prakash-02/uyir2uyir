@@ -51,7 +51,7 @@ jobs:
   deploy-hosting:
     name: Deploy to Firebase Hosting
     needs: lint-test-build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.FIREBASE_SERVICE_ACCOUNT_UYIR2UYIR_53929 != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
