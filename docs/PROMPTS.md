@@ -1540,10 +1540,19 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   8. Docs, Tests and Commit:
      - Updated `README.md`, `docs/FRONTEND.md`, `docs/TESTING.md` (162 backend tests count), and `docs/ROADMAP.md`.
      - All 144 frontend tests (including axe-core audit across 11 routes) and 162 backend tests pass cleanly.
+  9. Live Cloud Deployment & Smoke Testing:
+     - Deployed verified frontend production bundle (`VITE_API_MODE=http`, `VITE_API_BASE_URL` embedded) to Firebase Hosting at `https://uyir2uyir-53929.web.app`.
+     - Published benchmark evaluation (30 cases, 28/30 93.3%, 0 payment leaks, 0 wrong hospital IDs) to Firestore `config/evalLatest` via `backend/eval/publish_eval.py`.
+     - Reseeded Firestore `u2u-demo` database with OPEN request `req-sample-ip101` (IP-101 at Sample General Hospital, Chennai) and cleared legacy confirm links.
+     - Hardened payment phrase validation in `backend/app/desk/pipeline.py` with `PAYMENT_REGEX` to prevent Gemini from falsely flagging non-monetary phrases.
+     - Deployed Cloud Run revision `u2u-api-demo-00008-2jd` in `asia-south1`.
+     - Created `infra/smoke_live.py` (Python stdlib only) covering frontend (9 routes, connected client, nav links), backend (/health, /config, /openapi.json, CORS), AI eval (/eval/latest), Request Desk with real Gemini Flash (samples 1, 6, 9, 13, 25), security auth guards, and scenario story run through to FULFILLED.
+     - Verified: **19 / 19 live cloud checks passed cleanly (0 failures)**.
 - **Files Changed:**
   - `.gitignore`
   - `README.md`
   - `backend/app/clock/story.py`
+  - `backend/app/desk/pipeline.py`
   - `backend/eval/publish_eval.py`
   - `backend/scripts/seed.py`
   - `docs/FRONTEND.md`
@@ -1571,6 +1580,8 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `infra/check_staged_files.sh`
   - `infra/deploy_frontend.ps1`
   - `infra/deploy_frontend.sh`
+  - `infra/smoke_live.py`
+
 
 ---
 

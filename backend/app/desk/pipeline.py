@@ -179,7 +179,7 @@ def detect_payment_phrases(raw_text: str, gemini_phrases: list[str]) -> list[str
             continue
         if PROCESSING_CHARGE_REGEX.fullmatch(p_clean):
             continue
-        if p_clean not in detected:
+        if PAYMENT_REGEX.search(p_clean) and p_clean not in detected:
             detected.append(p_clean)
 
     return detected

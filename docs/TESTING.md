@@ -330,3 +330,39 @@ Before committing any code change or documentation update, developers and agents
    - Any `.env` file other than `.env.example` is staged.
    - Any credential, private key, or service account file (`*.json`, `*-key.json`, `service-account*.json`) is staged.
 4. Verify that lint, build, and test commands pass cleanly with zero errors.
+
+---
+
+## 5. Live Cloud Smoke Testing Suite (`infra/smoke_live.py`)
+
+End-to-end verification executed against live deployed cloud infrastructure:
+- **Frontend Target:** `https://uyir2uyir-53929.web.app` (Firebase Hosting)
+- **Backend Target:** `https://u2u-api-demo-3esyvkg5jq-el.a.run.app` (Cloud Run `u2u-api-demo` in `asia-south1`)
+- **Execution Script:** `python infra/smoke_live.py` (Python stdlib only)
+
+### Live Cloud Smoke Results Table
+
+| Category | Check | Status | Details |
+|---|---|---|---|
+| Frontend | All 9 routes return 200 | **PASS** | 9/9 routes returned HTTP 200 OK (`/`, `/desk`, `/hospital`, `/centre`, `/join`, `/sim`, `/eval`, `/impact`, `/confirm?link=test`) |
+| Frontend | No silent offline mock build badge in HTML | **PASS** | Bundle connects to live backend (no `OFFLINE MOCK BUILD` badge) |
+| Frontend | Footer Design system link present | **PASS** | Footer references design system (`/styleguide`) |
+| Backend | GET /health returns 200 ok | **PASS** | `status=ok` |
+| Backend | GET /config returns demo mode & simulated banner | **PASS** | `dataMode=demo`, banner contains `SIMULATED DATA` |
+| Backend | GET /openapi.json lists core API routes | **PASS** | 30 routes discovered in OpenAPI spec |
+| Backend | OPTIONS /health CORS preflight allows frontend origin | **PASS** | `status=200`, `access-control-allow-origin: https://uyir2uyir-53929.web.app` |
+| Eval | GET /eval/latest matches benchmark | **PASS** | `total=30`, `correct=28/30 (93.3%)`, `paymentToHospital=0`, `wrongHospitalIds=0` |
+| Desk | Sample 1 (Exact Match IP-101) | **PASS** | `answer=VERIFIED_MATCH`, `requestId=req-sample-ip101`, `footerOk=True`, `notMock=True` |
+| Desk | Sample 6 (Unregistered Hospital / Sunrise) | **PASS** | `answer=NOT_VERIFIED`, `requestId=None`, `footerOk=True`, `notMock=True` |
+| Desk | Sample 9 (Ambiguous GH Ward 4) | **PASS** | `answer=NOT_VERIFIED`, `requestId=None`, `footerOk=True`, `notMock=True` |
+| Desk | Sample 13 (Commercial Payment Scam ₹2000) | **PASS** | `answer=NOT_VERIFIED`, `requestId=None`, `footerOk=True`, `notMock=True` |
+| Desk | Sample 25 (Prompt Injection System Override) | **PASS** | `answer=NOT_VERIFIED`, `requestId=None`, `footerOk=True`, `notMock=True` |
+| Security | POST /requests without auth rejected | **PASS** | HTTP 401 Unauthorized |
+| Security | POST /admin/reset without auth rejected | **PASS** | HTTP 401 Unauthorized |
+| Security | POST /confirm with tampered token rejected | **PASS** | HTTP 400 Bad Request (Invalid signature) |
+| Telephony | Telephony mode is simulator (safe for demo story) | **PASS** | `mode=simulator` (calls simulated, Twilio not charged) |
+| Story | POST /admin/scenario/story/run dispatched | **PASS** | Story background execution started |
+| Story | Demo story executes through to FULFILLED | **PASS** | `status=FULFILLED` verified on `/requests/req-sample-1` |
+
+**Overall Smoke Test Result:** **19 / 19 checks passed (100% pass rate, 0 failures)**.
+
