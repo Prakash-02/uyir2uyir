@@ -1,0 +1,10 @@
+{
+  "name": "u2u",
+  "private": true,
+  "scripts": {
+    "video:silent": "npx tsx video/record_silent.ts"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}

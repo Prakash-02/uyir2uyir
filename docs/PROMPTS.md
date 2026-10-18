@@ -1583,6 +1583,34 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `infra/smoke_live.py`
 
 
+### Entry #V1
+- **Date:** 2026-10-18
+- **Goal:** Record the 8 demo scenes (silent, 1920x1080) to local Videos folder with an automated Playwright Chromium script.
+- **Prompt Summary:**
+  - Performed pre-checks: verified git status clean, confirmed all 21 live cloud checks passed via `infra/smoke_live.py`, and verified telephony engine reported `simulator`.
+  - Created `video/make_tamil_wav.py` utilizing Google Cloud Text-to-Speech API (`ta-IN-Standard-A` voice, 16 kHz mono Linear16 PCM WAV, 1s leading and trailing SSML silence) to synthesize `C:\Users\Prakash\Videos\U2U_demo\tamil_reply.wav` outside the repository.
+  - Initialized root `package.json` with Playwright dependency and `"video:silent": "npx tsx video/record_silent.ts"`.
+  - Implemented `video/record_silent.ts` with Playwright Chromium in headed mode (1920x1080 viewport, 1920x1080 recording), custom red cursor pointer and click ripple injections, 300ms typing delay, 1.5s post-click delays, smooth scrolling, and scene padding. Supported re-recording individual scenes via `--scene <NAME>` CLI arguments.
+  - Executed recordings against live deployment `https://uyir2uyir-53929.web.app` across all 8 scenes:
+    - `S1_landing.webm` (15s): Landing page hero and Three Promises section.
+    - `S2_desk_text.webm` (25s): Reset demo, Verified Match sample check with Gemini Flash, quote validation matrix inspection.
+    - `S3_desk_photo.webm` (20s): Upload photo tab, unknown hospital sample, NOT_VERIFIED status, Gemini OCR transcript, and photo alteration disclaimer.
+    - `S4_scam.webm` (12s): Commercial remuneration scam sample, NOT_VERIFIED status, and mandatory footer `"Nobody may charge you for a donor."`.
+    - `S5_hospital_to_centre.webm` (25s): Hospital sign-in, create O+ Red Cells 2 units request, live timeline triage on `/centre`.
+    - `S6_voice_call.webm` (25s): Web Audio + WebSocket bridge to Gemini Live on `/sim?live=1` using virtual audio device capture `--use-file-for-fake-audio-capture=tamil_reply.wav`; live Gemini turn-taking recognized Tamil speech (COMING / ETA 20) without keypad fallback.
+    - `S7_run_story.webm` (25s): Automated story execution observing $N+1$ counting rule and staff acceptance through to FULFILLED.
+    - `S8_close.webm` (18s): Impact dashboard, simulation disclosure, and landing hero finish.
+  - All 8 scene files renamed and verified in `C:\Users\Prakash\Videos\U2U_demo\`.
+  - Generated `timing.txt` with scene timestamps and durations; total combined length is 02:45 (strictly under 3:00 limit; Fallback: None).
+  - Documented video recording workflow and commands in Section 5 of `docs/DEMO.md`.
+- **Files Changed:**
+  - `docs/DEMO.md`
+  - `docs/PROMPTS.md`
+  - `package.json`
+  - `package-lock.json`
+  - `video/make_tamil_wav.py`
+  - `video/record_silent.ts`
+
 ---
 
 ## Human Decisions

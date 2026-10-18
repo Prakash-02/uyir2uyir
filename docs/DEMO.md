@@ -179,4 +179,35 @@ sequenceDiagram
 ![Browser Live Call with Gemini](images/live-call.png)
 *Browser Live Call with Gemini on `/sim`: Judges can answer directly through their microphone, speaking in Tamil or English, and inspect real-time transcription, result card, and keypad override.*
 
+---
+
+## 5. Recording the Demo Video (Playwright Silent Recorder)
+
+U2U includes an automated silent video recorder (`video/record_silent.ts`) using Playwright Chromium in headed mode (1920x1080 viewport, visible cursor pointer, and click ripple highlights).
+
+### Commands
+- **Record all 8 scenes:**
+  ```bash
+  npm run video:silent
+  ```
+- **Re-record a single scene:**
+  ```bash
+  npm run video:silent -- --scene S6
+  ```
+
+### Output Files & Location
+Videos are written strictly outside the repository to protect Git history:
+- Output folder: `C:\Users\Prakash\Videos\U2U_demo\`
+- Individual scenes:
+  - `S1_landing.webm` (15s): Landing hero & Three Promises smooth scroll.
+  - `S2_desk_text.webm` (25s): Reset demo, verified match sample check, quote validation matrix.
+  - `S3_desk_photo.webm` (20s): Photo upload tab, unregistered facility check, Gemini OCR transcript & disclaimer.
+  - `S4_scam.webm` (12s): Commercial remuneration scam check, payment warning, and mandatory footer.
+  - `S5_hospital_to_centre.webm` (25s): Sign in as Hospital demo, raise O+ Red Cells 2 units request, live timeline triage on `/centre`.
+  - `S6_voice_call.webm` (25s): Virtual audio mic (`tamil_reply.wav`), Gemini Live turn-taking response recognition, keypad fallback.
+  - `S7_run_story.webm` (25s): 5-step counting rule dispatch to FULFILLED on `/centre`.
+  - `S8_close.webm` (18s): Impact metrics dashboard, simulation disclaimer, and hero finish.
+- Combined timing manifest: `timing.txt` (total duration 02:45, strictly under 3:00).
+- If FFmpeg is installed (`winget install Gyan.FFmpeg`), concatenates scenes into silent `U2U_demo_silent.mp4`.
+
 
