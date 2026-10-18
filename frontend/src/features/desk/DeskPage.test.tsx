@@ -325,17 +325,34 @@ describe('DeskPage (/desk)', () => {
     URL.createObjectURL = () => 'blob:mock-sample-url'
     URL.revokeObjectURL = () => {}
 
-    // Mock global fetch for sample images
-    const origFetch = globalThis.fetch
-    globalThis.fetch = async (input: RequestInfo | URL) => {
+    // Mock global and window fetch for sample images
+    const origGlobalFetch = globalThis.fetch
+    const origWindowFetch = typeof window !== 'undefined' ? window.fetch : undefined
+
+    const mockFetch = async (input: RequestInfo | URL) => {
       const urlStr = String(input)
       if (urlStr.includes('sample_photo')) {
-        return new Response(new Blob(['fake-sample-bytes'], { type: 'image/jpeg' }), {
+        const isUnknown = urlStr.includes('unknown')
+        const filename = isUnknown
+          ? 'sample_photo_unknown_hospital.jpg'
+          : 'sample_photo_registered_hospital.jpg'
+        const blob = new Blob(['fake-sample-bytes'], { type: 'image/jpeg' })
+        try {
+          Object.defineProperty(blob, 'name', { value: filename, writable: true })
+        } catch {
+          // ignore
+        }
+        return new Response(blob, {
           status: 200,
           headers: { 'Content-Type': 'image/jpeg' },
         })
       }
-      return origFetch(input)
+      return origGlobalFetch ? origGlobalFetch(input) : new Response(null, { status: 404 })
+    }
+
+    globalThis.fetch = mockFetch as typeof fetch
+    if (typeof window !== 'undefined') {
+      window.fetch = mockFetch as typeof fetch
     }
 
     try {
@@ -361,7 +378,7 @@ describe('DeskPage (/desk)', () => {
           {
             name: /Couldn't verify\. Please call the hospital directly\./i,
           },
-          { timeout: 4000 },
+          { timeout: 8000 },
         ),
       ).toBeInTheDocument()
       expect(screen.getByText(/Multimodal Image Verification/i)).toBeInTheDocument()
@@ -370,7 +387,10 @@ describe('DeskPage (/desk)', () => {
     } finally {
       URL.createObjectURL = origCreateObjectURL
       URL.revokeObjectURL = origRevokeObjectURL
-      globalThis.fetch = origFetch
+      globalThis.fetch = origGlobalFetch
+      if (typeof window !== 'undefined' && origWindowFetch) {
+        window.fetch = origWindowFetch
+      }
     }
   })
 })

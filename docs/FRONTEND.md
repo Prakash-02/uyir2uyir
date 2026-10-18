@@ -424,3 +424,11 @@ Cumulative record of frontend updates and milestones:
   - **Testing & Verification:** Added 5 new Vitest unit tests in `DeskPage.test.tsx` verifying tab switching, file selection, clipboard paste, remove button, invalid/oversized file errors, and sample photo chips.
 - **Status:** Complete. All 132 frontend tests pass across 20 suites. Oxlint clean (0 warnings, 0 errors). Production build clean.
 
+### CI Fix — 2026-10-18
+- **Action:** Robustified Frontend CI test suite for sample photo verification (`DeskPage.test.tsx`):
+  - Mocked `window.fetch` alongside `globalThis.fetch` in test scope so jsdom component fetch requests are reliably intercepted in Linux CI runners.
+  - Preserved `.name` property on `Blob`/`File` instances passed to `mockCheckDeskImage`.
+  - Added a 1500ms safety resolution timer to `downscaleImageInBrowser` ensuring promises never hang in environments where canvas or image load events are deferred.
+  - Reduced simulated mock desk latency from 600ms to 10ms during test mode (`import.meta.env.MODE === 'test'`) eliminating runner latency and test timeouts.
+- **Status:** Complete. All 132 tests passing across 20 suites. Oxlint and build clean.
+

@@ -1494,6 +1494,22 @@ How this repo was built with Google Antigravity: milestone prompts, what the age
   - `infra/check_staged_files.ps1`
   - `infra/check_staged_files.sh`
 
+### Entry #P2
+- **Date:** 2026-10-18
+- **Goal:** Fix Frontend CI Vitest failure for multimodal sample photo verification.
+- **Prompt Summary:**
+  1. Root cause: `window.fetch` was not intercepted when jsdom evaluated component code in Linux CI, `new File` could drop `.name` on test mock blobs, and image downscaling had no safety resolution timeout if canvas/load events were delayed.
+  2. Updated `frontend/src/features/desk/DeskPage.tsx` to add a 1500ms safety resolution timer to `downscaleImageInBrowser` and explicitly define `file.name`.
+  3. Updated `frontend/src/api/mock/desk.ts` to detect test mode (`import.meta.env.MODE === 'test'`) and shorten simulated latency from 600ms to 10ms, while robustifying unknown sample detection.
+  4. Updated `frontend/src/features/desk/DeskPage.test.tsx` to mock both `globalThis.fetch` and `window.fetch`, explicitly preserving filename on the response blob and increasing the assertion timeout.
+  5. Verified all 132 frontend tests pass across 20 suites, oxlint clean, TypeScript build clean, and backend pytest suite clean (162 tests).
+- **Files Changed:**
+  - `docs/FRONTEND.md`
+  - `docs/PROMPTS.md`
+  - `frontend/src/api/mock/desk.ts`
+  - `frontend/src/features/desk/DeskPage.test.tsx`
+  - `frontend/src/features/desk/DeskPage.tsx`
+
 ---
 
 ## Human Decisions

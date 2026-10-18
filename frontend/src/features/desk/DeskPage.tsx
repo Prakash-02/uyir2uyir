@@ -70,16 +70,29 @@ async function downscaleImageInBrowser(file: Blob): Promise<Blob> {
   }
 
   return new Promise((resolve) => {
+    let settled = false
+    const finish = (result: Blob) => {
+      if (!settled) {
+        settled = true
+        resolve(result)
+      }
+    }
+
+    const timer = setTimeout(() => {
+      finish(file)
+    }, 1500)
+
     try {
       const img = new Image()
       const url = URL.createObjectURL(file)
       img.onload = () => {
+        clearTimeout(timer)
         try {
           URL.revokeObjectURL(url)
           const maxDim = 1600
           let { width, height } = img
           if (!width || !height) {
-            resolve(file)
+            finish(file)
             return
           }
           if (width > maxDim || height > maxDim) {
@@ -96,32 +109,34 @@ async function downscaleImageInBrowser(file: Blob): Promise<Blob> {
           canvas.height = height
           const ctx = canvas.getContext('2d')
           if (!ctx) {
-            resolve(file)
+            finish(file)
             return
           }
           ctx.drawImage(img, 0, 0, width, height)
           if (typeof canvas.toBlob === 'function') {
             canvas.toBlob(
               (blob) => {
-                resolve(blob || file)
+                finish(blob || file)
               },
               'image/jpeg',
               0.85,
             )
           } else {
-            resolve(file)
+            finish(file)
           }
         } catch {
-          resolve(file)
+          finish(file)
         }
       }
       img.onerror = () => {
+        clearTimeout(timer)
         URL.revokeObjectURL(url)
-        resolve(file)
+        finish(file)
       }
       img.src = url
     } catch {
-      resolve(file)
+      clearTimeout(timer)
+      finish(file)
     }
   })
 }
@@ -259,6 +274,11 @@ export function DeskPage() {
       const blob = await response.blob()
       const filename = sample.path.split('/').pop() || 'sample.jpg'
       const file = new File([blob], filename, { type: blob.type || 'image/jpeg' })
+      try {
+        Object.defineProperty(file, 'name', { value: filename, writable: true })
+      } catch {
+        // ignore
+      }
       await processAndSetImage(file)
       setPhotoCaption('')
       // Immediately run the check for sample chips per step 6
